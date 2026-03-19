@@ -112,15 +112,20 @@ textarea {
     border: 1px solid #c8c8c8 !important;
     box-sizing: border-box;
 }
-#page-ba, 
-#page-work-log,
-[id^="page-cat_"], /* 전기, 기계 등 카테고리 페이지 포함 */
-.add-form {
-    max-width: 100% !important; 
-    width: 100vw !important; /* 브라우저 가득 채우기 */
-    padding: 20px !important;
-    left: 0 !important;
-    margin: 0 !important;
+#page-home .content-box, 
+#page-home #content-inner {
+    max-width: 880px !important;
+    margin: 0 auto !important;
+}
+
+/* 2. 작업 기록 & 비포애프터 & 상세 페이지는 880px 제한을 풀고 꽉 채움 */
+#page-ba .content-box,
+#page-work-log .content-box,
+#page-manual-detail .content-box,
+.add-form,
+.content-box { 
+    max-width: none !important; /* 가로 제한 해제 */
+    width: 100% !important;
 }
 
 /* 모바일에서도 한 줄에 하나씩 큼직하게 보이도록 */
@@ -145,7 +150,7 @@ a{text-decoration:none;color:inherit}
 #header{height:var(--header-h);flex-shrink:0;background:var(--card);border-bottom:1.5px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:10px;z-index:30}
 #content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
 #content-inner{padding:20px 20px 24px;margin:0 auto;width:100%}
-.content-box{max-width:880px;}
+
 /* 바텀 네비 공간 확보 */
 @media(max-width:768px){#content-inner{padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom,0px) + 16px)}}
 #bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:50;background:var(--card);border-top:1.5px solid var(--border);padding-bottom:env(safe-area-inset-bottom,0)}
