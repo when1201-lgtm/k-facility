@@ -102,20 +102,29 @@ textarea {
     font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif !important;
 }
 
-/* 입력창을 '한글 2022' 용지 느낌으로 변경 */
-#page-ba textarea {
-    font-family: 'Pretendard', 'Malgun Gothic', sans-serif !important;
-    font-size: 20px !important;
-    line-height: 1.8 !important;
-    min-height: 600px !important; /* 시원하게 높이 확보 */
-    width: 100% !important;
-    border: 1px solid #c8c8c8 !important;
-    box-sizing: border-box;
-}
-#page-home .content-box, 
-#page-home #content-inner {
+/* 1. 메인(홈)은 880px로 예쁘게 고정 */
+#page-home #content-inner,
+#page-home .content-box {
     max-width: 880px !important;
     margin: 0 auto !important;
+}
+
+/* 2. 기록/상세 페이지는 껍데기부터 100% 확장 */
+#page-ba, #page-work-log, #page-manual-detail, [id^="page-cat_"] {
+    width: 100% !important;
+    max-width: none !important;
+}
+
+/* 3. 내부 박스 제한을 강제로 해제 */
+#page-ba #content-inner, 
+#page-work-log #content-inner,
+#page-ba .content-box,
+#page-work-log .content-box,
+.add-form {
+    max-width: 100% !important; 
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 20px !important;
 }
 
 /* 2. 작업 기록 & 비포애프터 & 상세 페이지는 880px 제한을 풀고 꽉 채움 */
