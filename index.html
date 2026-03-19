@@ -96,7 +96,35 @@ textarea {
   font-size: 18px !important;
   font-weight: bold;
 }
+/* 비포/애프터 전용: 한글 2022 스타일 적용 */
+#page-ba .ba-grid {
+    display: flex !important;
+    flex-direction: column !important; /* 좌우 배치를 위아래로 변경하여 폭 확보 */
+    gap: 30px !important;
+    width: 100% !important;
+    max-width: none !important;
+}
 
+#page-ba .ba-panel {
+    width: 100% !important; /* 창 너비를 화면 가득 채움 */
+    border: 2px solid #555 !important;
+}
+
+#page-ba textarea {
+    min-height: 450px !important; /* 입력창 높이를 대폭 확대 */
+    font-size: 22px !important;   /* 글자 크기를 큼직하게 */
+    line-height: 1.8 !important;  /* 줄 간격을 넓혀서 가독성 향상 */
+    padding: 20px !important;
+    background-color: #fff !important;
+    color: #000 !important;
+}
+
+/* 제목 및 레이블 크기 키우기 */
+#page-ba label, #page-ba .ba-ph {
+    font-size: 24px !important;
+    font-weight: bold !important;
+    margin-bottom: 10px !important;
+}
 /* 모바일에서도 한 줄에 하나씩 큼직하게 보이도록 */
 @media (max-width: 768px) {
   .grid-2, .grid-3 {
