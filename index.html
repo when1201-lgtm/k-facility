@@ -102,41 +102,44 @@ textarea {
     font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif !important;
 }
 
-/* 1. 메인 페이지: 예전처럼 다시 좁게 고정 */
+/* 1. 메인 화면: 기존의 예쁜 너비(880px)로 강제 고정 */
 #page-home #content-inner,
 #page-home .content-box {
     max-width: 880px !important;
     margin: 0 auto !important;
+    width: 100% !important;
 }
 
-/* 2. 글쓰기/상세 페이지: 메인과 상관없이 꽉 채움 */
+/* 2. 기록/상세 페이지: 모든 부모 요소를 무시하고 꽉 채움 */
+#page-ba, #page-work-log, #page-manual-detail, [id^="page-cat_"] {
+    width: 100% !important;
+    max-width: none !important;
+}
+
+/* 3. 내부 컨테이너의 제한을 완전히 해제 */
+#page-ba #content-inner, 
+#page-work-log #content-inner,
 #page-ba .content-box,
 #page-work-log .content-box,
-#page-manual-detail .content-box,
 .add-form {
-    max-width: none !important; /* 880px 제한 해제 */
+    max-width: 100% !important; 
     width: 100% !important;
     margin: 0 !important;
+    padding: 30px !important; /* 여백을 줘서 한글 문서 느낌으로 */
 }
 
-/* 3. 입력창 디자인: 한글 2022 스타일 (폰트 및 가독성) */
+/* 4. 입력창(textarea): 한글 2022 스타일 (폰트 및 크기) */
 textarea {
     font-family: 'Pretendard', 'Malgun Gothic', sans-serif !important;
-    font-size: 22px !important;   /* 큰 글씨 */
+    font-size: 22px !important;   /* 큼직한 글씨 */
     line-height: 1.8 !important;  /* 넓은 줄 간격 */
-    min-height: 600px !important; /* 시원한 높이 */
-    padding: 25px !important;
-    border: 2px solid #004085 !important;
-    background: #fff !important;
-    color: #000 !important;
-    box-sizing: border-box !important;
-}
-
-/* 4. 부모 컨테이너가 가두지 못하게 강제 확장 */
-#page-ba #content-inner, 
-#page-work-log #content-inner {
-    max-width: 100% !important;
+    min-height: 650px !important; /* 높이 대폭 확보 */
     width: 100% !important;
+    border: 2px solid #004085 !important; /* 진한 테두리 */
+    padding: 30px !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    box-sizing: border-box !important;
 }
 
 /* 모바일에서도 한 줄에 하나씩 큼직하게 보이도록 */
