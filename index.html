@@ -515,6 +515,90 @@ a{text-decoration:none;color:inherit}a.link{color:#0066cc;text-decoration-thickn
   .paper-editor{min-height:120px;font-size:14px;line-height:1.9}
   #ldesc-div{min-height:150px}
 }
+
+/* ── 풀페이지 작성 화면 ──────────────────────── */
+.fullpage-overlay{
+  position:fixed;
+  inset:0;
+  background:var(--bg);
+  z-index:200;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  /* 슬라이드 인 애니메이션 */
+  animation:slideUp .22s cubic-bezier(.25,.8,.25,1);
+}
+@keyframes slideUp{
+  from{transform:translateY(40px);opacity:0}
+  to{transform:translateY(0);opacity:1}
+}
+.fp-header{
+  position:sticky;
+  top:0;
+  background:var(--card);
+  border-bottom:1.5px solid var(--border);
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:0 20px;
+  height:var(--header-h);
+  z-index:10;
+  box-shadow:0 2px 8px rgba(0,0,0,.06);
+}
+.fp-back{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-size:15px;
+  font-weight:600;
+  color:var(--text-sub);
+  cursor:pointer;
+  padding:8px 12px;
+  border-radius:9px;
+  background:var(--bg);
+  border:1.5px solid var(--border);
+  transition:all .15s;
+  white-space:nowrap;
+}
+.fp-back:hover{background:var(--primary-dim);color:var(--primary);border-color:var(--primary)}
+.fp-back svg{width:16px;height:16px;stroke:currentColor;fill:none}
+.fp-title{
+  font-size:17px;
+  font-weight:900;
+  color:var(--text);
+  flex:1;
+  letter-spacing:-.02em;
+  font-family:var(--font-title);
+}
+.fp-save{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-size:15px;
+  font-weight:700;
+  color:#fff;
+  cursor:pointer;
+  padding:9px 18px;
+  border-radius:9px;
+  background:var(--primary);
+  border:none;
+  transition:all .15s;
+  white-space:nowrap;
+  min-height:40px;
+}
+.fp-save:hover{filter:brightness(1.1)}
+.fp-save svg{width:15px;height:15px;stroke:currentColor;fill:none}
+.fp-body{
+  padding:24px 24px 48px;
+  max-width:900px;
+  margin:0 auto;
+}
+@media(max-width:768px){
+  .fp-header{padding:0 14px;gap:8px}
+  .fp-back{padding:7px 10px;font-size:14px}
+  .fp-title{font-size:15px}
+  .fp-save{padding:8px 14px;font-size:14px}
+  .fp-body{padding:16px 16px 80px}
+}
 </style>
 
 </head>
@@ -1398,33 +1482,59 @@ const SC = {완료:'#059669',진행중:'#f59e0b',대기:'#64748b'};
 function today(){return new Date().toISOString().split('T')[0];}
 function showLogForm(editId=null){
   S.editLogId=editId;
-  const lbl=el('log-form-lbl');
+  const fp=el('fp-log');
+  const titleEl=el('fp-log-title');
   if(editId){
     const l=S.logs.find(x=>x.id===editId); if(!l) return;
-    lbl.textContent='✏️ 작업 기록 수정';
-    el('lcat').value=l.cat; el('lstat').value=l.status; el('ltitle').value=l.title;
-    el('lworker').value=l.worker||''; el('ldate').value=l.date||'';
-    const ld=el('ldesc-div');if(ld)ld.innerText=l.desc||'';
+    titleEl.textContent='✏️ 작업 기록 수정';
+    el('fp-lcat').value=l.cat; el('fp-lstat').value=l.status;
+    el('fp-ltitle').value=l.title; el('fp-lworker').value=l.worker||'';
+    el('fp-ldate').value=l.date||'';
+    const ld=el('fp-ldesc-div');if(ld)ld.innerText=l.desc||'';
   } else {
-    lbl.textContent='새 작업 기록';
-    ['ltitle','lworker'].forEach(id=>el(id).value='');
-    const ldc=el('ldesc-div');if(ldc)ldc.innerText='';
-    el('ldate').value=today(); el('lstat').value='완료';
+    titleEl.textContent='새 작업 기록';
+    ['fp-ltitle','fp-lworker'].forEach(id=>{const e=el(id);if(e)e.value='';});
+    const ldc=el('fp-ldesc-div');if(ldc)ldc.innerText='';
+    el('fp-ldate').value=today(); el('fp-lstat').value='완료';
   }
-  el('log-form-area').style.display='block';
-  el('log-form-area').scrollIntoView({behavior:'smooth',block:'start'});
+  fp.style.display='block';
+  document.body.style.overflow='hidden';
+  // 뒤로가기 지원
+  history.pushState({fpLog:true},'','#write-log');
+  setTimeout(()=>el('fp-ltitle')?.focus(),80);
 }
-function hideLogForm(){el('log-form-area').style.display='none';S.editLogId=null;}
+function closeFpLog(){
+  el('fp-log').style.display='none';
+  document.body.style.overflow='';
+  S.editLogId=null;
+  if(location.hash==='#write-log') history.back();
+}
+function hideLogForm(){ closeFpLog(); }
 function saveLog(){
-  const title=V('ltitle'); if(!title){showToast('작업 제목을 입력하세요');return;}
-  const d={cat:V('lcat')||el('lcat').value,status:V('lstat')||el('lstat').value,title,worker:V('lworker'),date:V('ldate'),desc:(el('ldesc-div')?.innerText||'').trim()};
+  // 풀페이지 필드 우선, 없으면 구버전 필드 fallback
+  const titleEl = el('fp-ltitle')||el('ltitle');
+  const title = titleEl?.value?.trim();
+  if(!title){showToast('작업 제목을 입력하세요');return;}
+  const catEl   = el('fp-lcat')  ||el('lcat');
+  const statEl  = el('fp-lstat') ||el('lstat');
+  const wkEl    = el('fp-lworker')||el('lworker');
+  const dtEl    = el('fp-ldate') ||el('ldate');
+  const descEl  = el('fp-ldesc-div')||el('ldesc-div');
+  const d={
+    cat:   catEl?.value||'기타',
+    status:statEl?.value||'완료',
+    title,
+    worker:wkEl?.value?.trim()||'',
+    date:  dtEl?.value?.trim()||'',
+    desc:  (descEl?.innerText||'').trim()
+  };
   if(S.editLogId){
-    const l=S.logs.find(x=>x.id===S.editLogId); if(l) Object.assign(l,d);
+    const l=S.logs.find(x=>x.id===S.editLogId);if(l)Object.assign(l,d);
     showToast('수정되었습니다');
   } else {
-    S.logs.unshift({id:Date.now(),...d}); showToast('작업 기록이 저장되었습니다');
+    S.logs.unshift({id:Date.now(),...d});showToast('작업 기록이 저장되었습니다');
   }
-  save(); hideLogForm(); renderLogs(); renderHomeRecent();
+  save(); closeFpLog(); renderLogs(); renderHomeRecent();
 }
 function delLog(id){
   if(!confirm('정말로 이 항목을 삭제하시겠습니까?')) return;
@@ -1486,24 +1596,42 @@ function renderHomeRecent(){
 let _baSide='before';
 function showBAForm(editId=null){
   S.editBAId=editId; S.baBeforePhotos=[]; S.baAfterPhotos=[];
-  const f=el('ba-form-area');
-  el('ba-form-title').textContent=editId?'✏️ 비포/애프터 수정':'✏️ 새 비포/애프터 기록';
+  const fp=el('fp-ba');
+  el('fp-ba-title').textContent=editId?'✏️ 비포/애프터 수정':'✏️ 새 비포/애프터 기록';
   if(editId){
     const b=S.ba.find(x=>x.id===editId); if(!b) return;
-    el('ba-title').value=b.title; el('ba-cat').value=b.cat; el('ba-date').value=b.date||'';
-    const bbt=el('ba-before-text-div');if(bbt)bbt.innerText=b.beforeText||'';
-    const bat=el('ba-after-text-div');if(bat)bat.innerText=b.afterText||'';
-    S.baBeforePhotos=[...(b.beforePhotos||[])]; S.baAfterPhotos=[...(b.afterPhotos||[])];
+    el('fp-ba-title-input').value=b.title;
+    el('fp-ba-cat').value=b.cat;
+    el('fp-ba-date').value=b.date||'';
+    const bb=el('fp-ba-before-div');if(bb)bb.innerText=b.beforeText||'';
+    const ba=el('fp-ba-after-div');if(ba)ba.innerText=b.afterText||'';
+    S.baBeforePhotos=[...(b.beforePhotos||[])];
+    S.baAfterPhotos=[...(b.afterPhotos||[])];
   } else {
-    el('ba-title').value='';
-    const bbt2=el('ba-before-text-div');if(bbt2)bbt2.innerText='';
-    const bat2=el('ba-after-text-div');if(bat2)bat2.innerText='';
-    el('ba-date').value=today();
+    el('fp-ba-title-input').value='';
+    const bb2=el('fp-ba-before-div');if(bb2)bb2.innerText='';
+    const ba2=el('fp-ba-after-div');if(ba2)ba2.innerText='';
+    el('fp-ba-date').value=today();
   }
-  renderBAThumbs(); f.style.display='block'; f.scrollIntoView({behavior:'smooth',block:'start'});
+  renderBAThumbs();
+  fp.style.display='block';
+  document.body.style.overflow='hidden';
+  history.pushState({fpBA:true},'','#write-ba');
+  setTimeout(()=>el('fp-ba-title-input')?.focus(),80);
 }
-function hideBAForm(){el('ba-form-area').style.display='none';S.editBAId=null;}
-function triggerBAPhoto(side){_baSide=side;el('ba-photo-input').click();}
+function closeFpBA(){
+  el('fp-ba').style.display='none';
+  document.body.style.overflow='';
+  S.editBAId=null;
+  if(location.hash==='#write-ba') history.back();
+}
+function hideBAForm(){ closeFpBA(); }
+function triggerBAPhoto(side){
+  _baSide=side;
+  // 풀페이지 input 우선, 없으면 기존 input
+  const inp=el('ba-photo-input-fp')||el('ba-photo-input');
+  inp.click();
+}
 function handleBAPhoto(e){
   const files=[...e.target.files];
   if(!files.length) return;
@@ -1525,15 +1653,37 @@ function handleBAPhoto(e){
   e.target.value='';
 }
 function renderBAThumbs(){
-  el('ba-before-thumbs').innerHTML=S.baBeforePhotos.map((s,i)=>`<img class="ba-thumb" src="${s}" onclick="previewImg('${s}')">`).join('');
-  el('ba-after-thumbs').innerHTML=S.baAfterPhotos.map((s,i)=>`<img class="ba-thumb" src="${s}" onclick="previewImg('${s}')">`).join('');
+  // 풀페이지 썸네일 컨테이너
+  const bb=el('fp-ba-before-thumbs')||el('ba-before-thumbs');
+  const ba=el('fp-ba-after-thumbs')||el('ba-after-thumbs');
+  if(bb) bb.innerHTML=S.baBeforePhotos.map(s=>`<img class="ba-thumb" src="${s}" onclick="previewImg('${s}')">`).join('');
+  if(ba) ba.innerHTML=S.baAfterPhotos.map(s=>`<img class="ba-thumb" src="${s}" onclick="previewImg('${s}')">`).join('');
+  // 기존 페이지 썸네일도 동기화 (목록 미리보기용)
+  const bb2=el('ba-before-thumbs'); const ba2=el('ba-after-thumbs');
+  if(bb2&&bb2!==bb) bb2.innerHTML=bb?.innerHTML||'';
+  if(ba2&&ba2!==ba) ba2.innerHTML=ba?.innerHTML||'';
 }
 function saveBA(){
-  const title=V('ba-title'); if(!title){showToast('제목을 입력하세요');return;}
-  const d={title,cat:el('ba-cat').value,date:V('ba-date'),beforeText:(el('ba-before-text-div')?.innerText||'').trim(),afterText:(el('ba-after-text-div')?.innerText||'').trim(),beforePhotos:[...S.baBeforePhotos],afterPhotos:[...S.baAfterPhotos]};
+  // 풀페이지 필드 우선
+  const titleEl=el('fp-ba-title-input')||el('ba-title');
+  const title=titleEl?.value?.trim();
+  if(!title){showToast('제목을 입력하세요');return;}
+  const catEl =el('fp-ba-cat') ||el('ba-cat');
+  const dateEl=el('fp-ba-date')||el('ba-date');
+  const bbEl  =el('fp-ba-before-div')||el('ba-before-text-div');
+  const baEl  =el('fp-ba-after-div') ||el('ba-after-text-div');
+  const d={
+    title,
+    cat:  catEl?.value||'기타',
+    date: dateEl?.value?.trim()||'',
+    beforeText:(bbEl?.innerText||'').trim(),
+    afterText: (baEl?.innerText||'').trim(),
+    beforePhotos:[...S.baBeforePhotos],
+    afterPhotos: [...S.baAfterPhotos]
+  };
   if(S.editBAId){const b=S.ba.find(x=>x.id===S.editBAId);if(b)Object.assign(b,d);showToast('수정되었습니다');}
   else{S.ba.unshift({id:Date.now(),...d});showToast('저장되었습니다');}
-  save();hideBAForm();renderBA();
+  save(); closeFpBA(); renderBA();
 }
 function delBA(id){
   if(!confirm('정말로 이 항목을 삭제하시겠습니까?')) return;
@@ -2162,6 +2312,21 @@ function previewImg(src){const ov=document.createElement('div');ov.className='im
 // ════════════════════════════════════════
 loadState();
 nav('home', false);
+
+// ── 뒤로가기 버튼으로 풀페이지 닫기
+window.addEventListener('popstate', ()=>{
+  const h=location.hash;
+  if(h!=='#write-log' && el('fp-log')?.style.display!=='none'){
+    el('fp-log').style.display='none';
+    document.body.style.overflow='';
+    S.editLogId=null;
+  }
+  if(h!=='#write-ba' && el('fp-ba')?.style.display!=='none'){
+    el('fp-ba').style.display='none';
+    document.body.style.overflow='';
+    S.editBAId=null;
+  }
+});
 </script>
 
 <script>
@@ -2216,5 +2381,77 @@ nav('home', false);
     onScriptError('firebase-storage-compat'));
 })();
 </script>
+
+<!-- ══ 풀페이지: 비포/애프터 작성 ══ -->
+<div id="fp-ba" class="fullpage-overlay" style="display:none">
+  <div class="fp-header">
+    <button class="fp-back" onclick="closeFpBA()">
+      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+      목록으로
+    </button>
+    <span class="fp-title" id="fp-ba-title">✏️ 새 비포/애프터 기록</span>
+    <button class="fp-save" onclick="saveBA()">
+      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+      저장
+    </button>
+  </div>
+  <div class="fp-body">
+    <div class="fg"><label>제목 (작업명)</label><input type="text" id="fp-ba-title-input" placeholder="예: 화장실 수도꼭지 누수 수리"></div>
+    <div class="form-row">
+      <div class="fg" style="margin:0"><label>분류</label><select id="fp-ba-cat"><option value="전기">전기</option><option value="기계">기계</option><option value="영선">영선</option><option value="소방">소방</option><option value="기타">기타</option></select></div>
+      <div class="fg" style="margin:0"><label>작업일</label><input type="date" id="fp-ba-date"></div>
+    </div>
+    <div style="height:14px"></div>
+    <div class="ba-grid">
+      <div class="ba-panel ba-before">
+        <div class="ba-ph"><svg viewBox="0 0 24 24" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>Before (고장 증상)</div>
+        <div class="ba-pb">
+          <div id="fp-ba-before-div" class="paper-editor" contenteditable="true" data-placeholder="고장 증상, 원인 모를 소음, 상태 메모..." role="textbox" aria-multiline="true"></div>
+          <div class="ba-photo-btn" onclick="triggerBAPhoto('before')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>사진 추가</div>
+          <div id="fp-ba-before-thumbs" class="ba-thumbs"></div>
+        </div>
+      </div>
+      <div class="ba-panel ba-after">
+        <div class="ba-ph"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m22 4-10 10.01-3-3"/></svg>After (수리 완료)</div>
+        <div class="ba-pb">
+          <div id="fp-ba-after-div" class="paper-editor" contenteditable="true" data-placeholder="수리 완료 후 정상 작동, 교체 부품, 해결 방법..." role="textbox" aria-multiline="true"></div>
+          <div class="ba-photo-btn" onclick="triggerBAPhoto('after')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>사진 추가</div>
+          <div id="fp-ba-after-thumbs" class="ba-thumbs"></div>
+        </div>
+      </div>
+    </div>
+    <input type="file" id="ba-photo-input-fp" accept="image/*" multiple style="display:none" onchange="handleBAPhoto(event)">
+  </div>
+</div>
+
+<!-- ══ 풀페이지: 작업 기록 작성 ══ -->
+<div id="fp-log" class="fullpage-overlay" style="display:none">
+  <div class="fp-header">
+    <button class="fp-back" onclick="closeFpLog()">
+      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+      목록으로
+    </button>
+    <span class="fp-title" id="fp-log-title">새 작업 기록</span>
+    <button class="fp-save" onclick="saveLog()">
+      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+      저장
+    </button>
+  </div>
+  <div class="fp-body">
+    <div class="form-row">
+      <div class="fg" style="margin:0"><label>작업 유형</label><select id="fp-lcat"><option value="전기">전기 설비</option><option value="기계">기계 설비</option><option value="영선">영선 / 보수</option><option value="소방">소방 설비</option><option value="기타">기타</option></select></div>
+      <div class="fg" style="margin:0"><label>상태</label><select id="fp-lstat"><option value="완료">완료</option><option value="진행중">진행중</option><option value="대기">대기</option></select></div>
+    </div>
+    <div class="fg"><label>작업 제목</label><input type="text" id="fp-ltitle" placeholder="작업 내용을 간략히 입력하세요"></div>
+    <div class="form-row">
+      <div class="fg" style="margin:0"><label>작업자</label><input type="text" id="fp-lworker" placeholder="이름"></div>
+      <div class="fg" style="margin:0"><label>작업일</label><input type="date" id="fp-ldate"></div>
+    </div>
+    <div class="fg"><label>상세 내용</label>
+      <div id="fp-ldesc-div" class="paper-editor" contenteditable="true" data-placeholder="작업 상세 내용, 특이사항 등..." role="textbox" aria-multiline="true"></div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
