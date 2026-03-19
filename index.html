@@ -134,7 +134,7 @@ a{text-decoration:none;color:inherit}
 #header{height:var(--header-h);flex-shrink:0;background:var(--card);border-bottom:1.5px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:10px;z-index:30}
 #content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
 #content-inner{padding:20px 20px 24px;margin:0 auto;width:100%}
-.content-box{min-width:880px;}
+.content-box{max-width:880px;}
 /* 바텀 네비 공간 확보 */
 @media(max-width:768px){#content-inner{padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom,0px) + 16px)}}
 #bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:50;background:var(--card);border-top:1.5px solid var(--border);padding-bottom:env(safe-area-inset-bottom,0)}
