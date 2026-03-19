@@ -113,11 +113,14 @@ textarea {
     box-sizing: border-box;
 }
 #page-ba, 
-#page-work-log, 
-#ba-form-area {
-    max-width: none !important; /* 너비 제한 해제 */
-    width: 100% !important;
+#page-work-log,
+[id^="page-cat_"], /* 전기, 기계 등 카테고리 페이지 포함 */
+.add-form {
+    max-width: 100% !important; 
+    width: 100vw !important; /* 브라우저 가득 채우기 */
     padding: 20px !important;
+    left: 0 !important;
+    margin: 0 !important;
 }
 
 /* 모바일에서도 한 줄에 하나씩 큼직하게 보이도록 */
