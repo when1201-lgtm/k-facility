@@ -31,6 +31,79 @@
   --red-bg:rgba(220,38,38,.2);--blue-bg:rgba(37,99,235,.2);
   --shadow:0 1px 4px rgba(0,0,0,.3),0 4px 16px rgba(0,0,0,.2);
 }
+:root {
+  /* 배경은 하얗게, 글자는 진하게 대비를 높였습니다 */
+  --bg: #ffffff; 
+  --card: #f8f9fa; 
+  --border: #ced4da;
+  --primary: #004085; /* 더 진한 파란색으로 변경 */
+  --text: #000000; 
+  --text-sub: #333333;
+  --radius: 8px; /* 한글 문서처럼 각진 느낌으로 변경 */
+  --shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+body {
+  font-family: 'Malgun Gothic', 'dotum', sans-serif;
+  font-size: 22px; /* 전체 글자 크기를 기본 22px로 확대 */
+  line-height: 1.8; /* 줄 간격을 넓혀서 겹쳐 보이지 않게 함 */
+  color: var(--text);
+  background: var(--bg);
+  margin: 0; padding: 0;
+}
+
+/* 제목을 아주 큼직하게 설정 */
+h2 { 
+  font-size: 36px !important; 
+  font-weight: 900; 
+  border-bottom: 3px solid var(--primary); 
+  padding-bottom: 10px;
+  margin-top: 40px;
+}
+
+h3 { 
+  font-size: 28px !important; 
+  font-weight: 700; 
+  color: var(--primary);
+}
+
+/* 버튼과 카드 크기 확대 */
+.card {
+  padding: 30px !important;
+  margin-bottom: 20px;
+  border: 2px solid var(--border) !important;
+  background: var(--card);
+}
+
+/* 입력창(메모장) 시원하게 만들기 */
+input, textarea, select {
+  font-size: 24px !important; /* 입력할 때 글자가 잘 보이게 */
+  padding: 15px !important;
+  border: 2px solid var(--border) !important;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+textarea {
+  min-height: 400px; /* 비포/애프터 기록창을 아주 넓게 */
+}
+
+/* 하단 메뉴 바 크기 확대 */
+.bottom-nav {
+  height: 80px !important;
+}
+.bottom-nav a {
+  font-size: 18px !important;
+  font-weight: bold;
+}
+
+/* 모바일에서도 한 줄에 하나씩 큼직하게 보이도록 */
+@media (max-width: 768px) {
+  .grid-2, .grid-3 {
+    grid-template-columns: 1fr !important;
+  }
+  body { font-size: 20px; }
+}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.6;-webkit-text-size-adjust:100%}
 button{cursor:pointer;border:none;background:none;font-family:inherit;font-size:inherit;color:inherit}
