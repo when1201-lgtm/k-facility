@@ -31,130 +31,12 @@
   --red-bg:rgba(220,38,38,.2);--blue-bg:rgba(37,99,235,.2);
   --shadow:0 1px 4px rgba(0,0,0,.3),0 4px 16px rgba(0,0,0,.2);
 }
-:root {
-  /* 배경은 하얗게, 글자는 진하게 대비를 높였습니다 */
-  --bg: #ffffff; 
-  --card: #f8f9fa; 
-  --border: #ced4da;
-  --primary: #004085; /* 더 진한 파란색으로 변경 */
-  --text: #000000; 
-  --text-sub: #333333;
-  --radius: 8px; /* 한글 문서처럼 각진 느낌으로 변경 */
-  --shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-body {
-  font-family: 'Malgun Gothic', 'dotum', sans-serif;
-  font-size: 22px; /* 전체 글자 크기를 기본 22px로 확대 */
-  line-height: 1.8; /* 줄 간격을 넓혀서 겹쳐 보이지 않게 함 */
-  color: var(--text);
-  background: var(--bg);
-  margin: 0; padding: 0;
-}
-
-/* 제목을 아주 큼직하게 설정 */
-h2 { 
-  font-size: 36px !important; 
-  font-weight: 900; 
-  border-bottom: 3px solid var(--primary); 
-  padding-bottom: 10px;
-  margin-top: 40px;
-}
-
-h3 { 
-  font-size: 28px !important; 
-  font-weight: 700; 
-  color: var(--primary);
-}
-
-/* 버튼과 카드 크기 확대 */
-.card {
-  padding: 30px !important;
-  margin-bottom: 20px;
-  border: 2px solid var(--border) !important;
-  background: var(--card);
-}
-
-/* 입력창(메모장) 시원하게 만들기 */
-input, textarea, select {
-  font-size: 24px !important; /* 입력할 때 글자가 잘 보이게 */
-  padding: 15px !important;
-  border: 2px solid var(--border) !important;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-textarea {
-  min-height: 400px; /* 비포/애프터 기록창을 아주 넓게 */
-}
-
-/* 하단 메뉴 바 크기 확대 */
-.bottom-nav {
-  height: 80px !important;
-}
-.bottom-nav a {
-  font-size: 18px !important;
-  font-weight: bold;
-}
-@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
-
-#page-ba {
-    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif !important;
-}
-
-/* 1. 메인 화면: 기존의 예쁜 너비(880px)로 강제 고정 */
-#page-home #content-inner,
-#page-home .content-box {
-    max-width: 880px !important;
-    margin: 0 auto !important;
-    width: 100% !important;
-}
-
-/* 2. 기록/상세 페이지: 모든 부모 요소를 무시하고 꽉 채움 */
-#page-ba, #page-work-log, #page-manual-detail, [id^="page-cat_"] {
-    width: 100% !important;
-    max-width: none !important;
-}
-
-/* 3. 내부 컨테이너의 제한을 완전히 해제 */
-#page-ba #content-inner, 
-#page-work-log #content-inner,
-#page-ba .content-box,
-#page-work-log .content-box,
-.add-form {
-    max-width: 100% !important; 
-    width: 100% !important;
-    margin: 0 !important;
-    padding: 30px !important; /* 여백을 줘서 한글 문서 느낌으로 */
-}
-
-/* 4. 입력창(textarea): 한글 2022 스타일 (폰트 및 크기) */
-textarea {
-    font-family: 'Pretendard', 'Malgun Gothic', sans-serif !important;
-    font-size: 22px !important;   /* 큼직한 글씨 */
-    line-height: 1.8 !important;  /* 넓은 줄 간격 */
-    min-height: 650px !important; /* 높이 대폭 확보 */
-    width: 100% !important;
-    border: 2px solid #004085 !important; /* 진한 테두리 */
-    padding: 30px !important;
-    background: #ffffff !important;
-    color: #000000 !important;
-    box-sizing: border-box !important;
-}
-
-/* 모바일에서도 한 줄에 하나씩 큼직하게 보이도록 */
-@media (max-width: 768px) {
-  .grid-2, .grid-3 {
-    grid-template-columns: 1fr !important;
-  }
-  body { font-size: 20px; }
-}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.6;-webkit-text-size-adjust:100%}
 button{cursor:pointer;border:none;background:none;font-family:inherit;font-size:inherit;color:inherit}
 input,textarea,select{font-family:inherit;font-size:inherit;color:var(--text);background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;outline:none;transition:border .15s,box-shadow .15s;width:100%}
 input:focus,textarea:focus,select:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-dim)}
-textarea{resize:vertical;}
+textarea{resize:vertical;min-height:80px}
 a{text-decoration:none;color:inherit}
 
 /* ── LAYOUT ── */
@@ -163,8 +45,7 @@ a{text-decoration:none;color:inherit}
 #main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
 #header{height:var(--header-h);flex-shrink:0;background:var(--card);border-bottom:1.5px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:10px;z-index:30}
 #content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
-#content-inner{padding:20px 20px 24px;margin:0 auto;width:100%}
-
+#content-inner{padding:20px 20px 24px;width:100%}
 /* 바텀 네비 공간 확보 */
 @media(max-width:768px){#content-inner{padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom,0px) + 16px)}}
 #bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:50;background:var(--card);border-top:1.5px solid var(--border);padding-bottom:env(safe-area-inset-bottom,0)}
@@ -498,6 +379,9 @@ a{text-decoration:none;color:inherit}
 /* PC: 사이드바 포함 전체 레이아웃 */
 @media(min-width:769px){
   #content-inner{padding:28px 32px 32px}
+  /* 메인 페이지만 max-width 제한 */
+  #page-home{max-width:880px;margin:0 auto}
+  #page-search{max-width:880px;margin:0 auto}
 }
 @media(max-width:900px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:768px){
@@ -516,6 +400,10 @@ a{text-decoration:none;color:inherit}
   .qbtn svg{width:24px;height:24px}
   .hbtn{padding:9px}
   .hbtn svg{width:20px;height:20px}
+  /* 홈·검색 페이지만 너비 제한 */
+  #page-home,#page-search{max-width:100%;margin:0}
+  /* page-ba, page-logs: 풀너비 — padding만 줄임 */
+  #page-ba,#page-logs{padding:0}
   /* 모바일 테이블 가로스크롤 */
   .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:12px}
   /* 모바일 폰트 조정 */
@@ -535,6 +423,41 @@ a{text-decoration:none;color:inherit}
   /* 모바일 작은 화면 */
   .step-num{width:38px;height:38px;font-size:16px}
   .step-label{font-size:12px}
+}
+
+/* ── 종이 에디터 (contenteditable) ── */
+.paper-editor{
+  min-height:160px;padding:16px 18px;
+  background:var(--card);
+  border:1.5px solid var(--border);border-radius:var(--radius-sm);
+  font-size:15px;line-height:2;color:var(--text);
+  outline:none;cursor:text;
+  white-space:pre-wrap;word-break:break-word;
+  transition:border .15s,box-shadow .15s;
+  /* 노트 줄 느낌 */
+  background-image:repeating-linear-gradient(
+    transparent,transparent calc(2em - 1px),
+    var(--border) calc(2em - 1px),var(--border) 2em
+  );
+}
+.paper-editor:focus{
+  border-color:var(--primary);
+  box-shadow:0 0 0 3px var(--primary-dim);
+  background-image:repeating-linear-gradient(
+    transparent,transparent calc(2em - 1px),
+    rgba(59,91,219,.1) calc(2em - 1px),rgba(59,91,219,.1) 2em
+  );
+}
+.paper-editor:empty::before{
+  content:attr(data-placeholder);color:var(--text-muted);pointer-events:none;
+}
+#ldesc-div{min-height:220px}
+#ba-before-text-div,#ba-after-text-div{min-height:180px}
+/* BA·LOGS 페이지 풀너비 */
+#page-ba .add-form,#page-logs .log-form-wrap{max-width:100%}
+@media(max-width:768px){
+  .paper-editor{min-height:120px;font-size:14px;line-height:1.9}
+  #ldesc-div{min-height:150px}
 }
 </style>
 
@@ -584,7 +507,7 @@ a{text-decoration:none;color:inherit}
     </div>
   </header>
 
-  <div id="content"><div id="content-inner" class="content-box">
+  <div id="content"><div id="content-inner">
 
     <!-- HOME -->
     <div id="page-home" class="page active">
@@ -656,7 +579,7 @@ a{text-decoration:none;color:inherit}
           <div class="ba-panel ba-before">
             <div class="ba-ph"><svg viewBox="0 0 24 24" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>Before (고장 증상)</div>
             <div class="ba-pb">
-              <textarea id="ba-before-text" placeholder="고장 증상, 원인 모를 소음, 상태 메모..." style="background:var(--card);min-height:90px"></textarea>
+              <div id="ba-before-text-div" class="paper-editor" contenteditable="true" data-placeholder="고장 증상, 원인 모를 소음, 상태 메모..." role="textbox" aria-multiline="true"></div>
               <div class="ba-photo-btn" onclick="triggerBAPhoto('before')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>사진 추가</div>
               <div id="ba-before-thumbs" class="ba-thumbs"></div>
             </div>
@@ -664,7 +587,7 @@ a{text-decoration:none;color:inherit}
           <div class="ba-panel ba-after">
             <div class="ba-ph"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m22 4-10 10.01-3-3"/></svg>After (수리 완료)</div>
             <div class="ba-pb">
-              <textarea id="ba-after-text" placeholder="수리 완료 후 정상 작동, 교체 부품, 해결 방법..." style="background:var(--card);min-height:90px"></textarea>
+              <div id="ba-after-text-div" class="paper-editor" contenteditable="true" data-placeholder="수리 완료 후 정상 작동, 교체 부품, 해결 방법..." role="textbox" aria-multiline="true"></div>
               <div class="ba-photo-btn" onclick="triggerBAPhoto('after')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>사진 추가</div>
               <div id="ba-after-thumbs" class="ba-thumbs"></div>
             </div>
@@ -713,7 +636,7 @@ a{text-decoration:none;color:inherit}
           <div class="fg" style="margin:0"><label>작업자</label><input type="text" id="lworker" placeholder="이름"></div>
           <div class="fg" style="margin:0"><label>작업일</label><input type="date" id="ldate"></div>
         </div>
-        <div class="fg"><label>상세 내용</label><textarea id="ldesc" placeholder="작업 상세 내용, 특이사항 등"></textarea></div>
+        <div class="fg"><label>상세 내용</label><div id="ldesc-div" class="paper-editor" contenteditable="true" data-placeholder="작업 상세 내용, 특이사항 등..." role="textbox" aria-multiline="true"></div></div>
         <div style="display:flex;gap:8px;justify-content:flex-end">
           <button class="btn btn-outline" onclick="hideLogForm()">취소</button>
           <button class="btn btn-primary" onclick="saveLog()">저장</button>
@@ -1423,10 +1346,12 @@ function showLogForm(editId=null){
     const l=S.logs.find(x=>x.id===editId); if(!l) return;
     lbl.textContent='✏️ 작업 기록 수정';
     el('lcat').value=l.cat; el('lstat').value=l.status; el('ltitle').value=l.title;
-    el('lworker').value=l.worker||''; el('ldate').value=l.date||''; el('ldesc').value=l.desc||'';
+    el('lworker').value=l.worker||''; el('ldate').value=l.date||'';
+    const ld=el('ldesc-div');if(ld)ld.innerText=l.desc||'';
   } else {
     lbl.textContent='새 작업 기록';
-    ['ltitle','lworker','ldesc'].forEach(id=>el(id).value='');
+    ['ltitle','lworker'].forEach(id=>el(id).value='');
+    const ldc=el('ldesc-div');if(ldc)ldc.innerText='';
     el('ldate').value=today(); el('lstat').value='완료';
   }
   el('log-form-area').style.display='block';
@@ -1435,7 +1360,7 @@ function showLogForm(editId=null){
 function hideLogForm(){el('log-form-area').style.display='none';S.editLogId=null;}
 function saveLog(){
   const title=V('ltitle'); if(!title){showToast('작업 제목을 입력하세요');return;}
-  const d={cat:V('lcat')||el('lcat').value,status:V('lstat')||el('lstat').value,title,worker:V('lworker'),date:V('ldate'),desc:V('ldesc')};
+  const d={cat:V('lcat')||el('lcat').value,status:V('lstat')||el('lstat').value,title,worker:V('lworker'),date:V('ldate'),desc:(el('ldesc-div')?.innerText||'').trim()};
   if(S.editLogId){
     const l=S.logs.find(x=>x.id===S.editLogId); if(l) Object.assign(l,d);
     showToast('수정되었습니다');
@@ -1509,10 +1434,13 @@ function showBAForm(editId=null){
   if(editId){
     const b=S.ba.find(x=>x.id===editId); if(!b) return;
     el('ba-title').value=b.title; el('ba-cat').value=b.cat; el('ba-date').value=b.date||'';
-    el('ba-before-text').value=b.beforeText||''; el('ba-after-text').value=b.afterText||'';
+    const bbt=el('ba-before-text-div');if(bbt)bbt.innerText=b.beforeText||'';
+    const bat=el('ba-after-text-div');if(bat)bat.innerText=b.afterText||'';
     S.baBeforePhotos=[...(b.beforePhotos||[])]; S.baAfterPhotos=[...(b.afterPhotos||[])];
   } else {
-    el('ba-title').value=''; el('ba-before-text').value=''; el('ba-after-text').value='';
+    el('ba-title').value='';
+    const bbt2=el('ba-before-text-div');if(bbt2)bbt2.innerText='';
+    const bat2=el('ba-after-text-div');if(bat2)bat2.innerText='';
     el('ba-date').value=today();
   }
   renderBAThumbs(); f.style.display='block'; f.scrollIntoView({behavior:'smooth',block:'start'});
@@ -1545,7 +1473,7 @@ function renderBAThumbs(){
 }
 function saveBA(){
   const title=V('ba-title'); if(!title){showToast('제목을 입력하세요');return;}
-  const d={title,cat:el('ba-cat').value,date:V('ba-date'),beforeText:el('ba-before-text').value.trim(),afterText:el('ba-after-text').value.trim(),beforePhotos:[...S.baBeforePhotos],afterPhotos:[...S.baAfterPhotos]};
+  const d={title,cat:el('ba-cat').value,date:V('ba-date'),beforeText:(el('ba-before-text-div')?.innerText||'').trim(),afterText:(el('ba-after-text-div')?.innerText||'').trim(),beforePhotos:[...S.baBeforePhotos],afterPhotos:[...S.baAfterPhotos]};
   if(S.editBAId){const b=S.ba.find(x=>x.id===S.editBAId);if(b)Object.assign(b,d);showToast('수정되었습니다');}
   else{S.ba.unshift({id:Date.now(),...d});showToast('저장되었습니다');}
   save();hideBAForm();renderBA();
