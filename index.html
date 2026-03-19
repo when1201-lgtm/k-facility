@@ -96,7 +96,22 @@ textarea {
   font-size: 18px !important;
   font-weight: bold;
 }
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
 
+#page-ba {
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif !important;
+}
+
+/* 입력창을 '한글 2022' 용지 느낌으로 변경 */
+#page-ba textarea {
+    font-family: 'Pretendard', sans-serif !important;
+    font-size: 20px !important;
+    background-color: #ffffff !important;
+    color: #222 !important;
+    border: 1px solid #d1d1d1 !important;
+    line-height: 1.8 !important; /* 줄 간격을 넓혀서 읽기 편하게 */
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+}
 /* 모바일에서도 한 줄에 하나씩 큼직하게 보이도록 */
 @media (max-width: 768px) {
   .grid-2, .grid-3 {
