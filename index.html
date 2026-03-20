@@ -1308,12 +1308,29 @@ function loadState(){
 }
 
 function save(){
-  // 항상 localStorage에도 저장 (오프라인 지원)
   const data = {logs:S.logs,ba:S.ba,contacts:S.contacts,schedules:S.schedules,checklistState:S.checklistState,manuals:S.manuals};
-  localStorage.setItem('kf_v4', JSON.stringify(data));
-  // Firebase에도 저장 (활성화된 경우)
+
+  // localStorage: base64 제외 (용량 절약)
+  try{
+    const localData = JSON.parse(JSON.stringify(data));
+    // ba의 사진 중 base64만 빈 배열로 (URL은 유지)
+    localData.ba = localData.ba.map(b=>({
+      ...b,
+      beforePhotos:(b.beforePhotos||[]).filter(u=>u&&!u.startsWith('data:')),
+      afterPhotos: (b.afterPhotos ||[]).filter(u=>u&&!u.startsWith('data:'))
+    }));
+    localStorage.setItem('kf_v4', JSON.stringify(localData));
+  }catch(e){ console.warn('localStorage 저장 실패:', e); }
+
+  // Firestore: base64 완전 제외 (1MB 제한)
   if(db){
-    db.doc(FB_DOC).set(data).catch(e=>console.warn('Firebase 저장 실패:', e));
+    const fbData = JSON.parse(JSON.stringify(data));
+    fbData.ba = fbData.ba.map(b=>({
+      ...b,
+      beforePhotos:(b.beforePhotos||[]).filter(u=>u&&!u.startsWith('data:')),
+      afterPhotos: (b.afterPhotos ||[]).filter(u=>u&&!u.startsWith('data:'))
+    }));
+    db.doc(FB_DOC).set(fbData).catch(e=>console.warn('Firebase 저장 실패:', e));
   }
 }
 
@@ -1895,26 +1912,7 @@ function handleBAPhoto(e){
 
       done++;
       if(done===total){
-        showToast(`📸 사진 ${total}장 추가됨`);
-        // Firebase Storage 업로드는 백그라운드에서 진행
-        if(storage){
-          const photos = side==='before' ? S.baBeforePhotos : S.baAfterPhotos;
-          // 마지막 total개 항목(방금 추가한 것)만 업로드
-          const startIdx = photos.length - total;
-          for(let i=0;i<total;i++){
-            const idx=startIdx+i;
-            if(photos[idx]?.startsWith('data:')){
-              try{
-                const path=`ba/${Date.now()}_${i}_${side}.jpg`;
-                const ref=storage.ref(path);
-                await ref.putString(photos[idx],'data_url');
-                photos[idx]=await ref.getDownloadURL();
-              }catch(err){
-                console.warn('Storage 업로드 실패, base64 유지:', err);
-              }
-            }
-          }
-        }
+        showToast(`📸 사진 ${total}장 선택됨 — 저장 시 업로드`);
       }
     };
     r.onerror=()=>{
@@ -1937,28 +1935,81 @@ function renderBAThumbs(){
   if(bb2&&bb2!==bb) bb2.innerHTML=bb?.innerHTML||'';
   if(ba2&&ba2!==ba) ba2.innerHTML=ba?.innerHTML||'';
 }
-function saveBA(){
-  // 풀페이지 필드 우선
+async function saveBA(){
   const titleEl=el('fp-ba-title-input')||el('ba-title');
   const title=titleEl?.value?.trim();
   if(!title){ showFieldError('fp-ba-title-input','작업 제목을 입력해 주세요'); return; }
+
   const catEl =el('fp-ba-cat') ||el('ba-cat');
-  // 분류: select 기본값 있으므로 별도 검증 불필요
   const dateEl=el('fp-ba-date')||el('ba-date');
   const bbEl  =el('fp-ba-before-div')||el('ba-before-text-div');
   const baEl  =el('fp-ba-after-div') ||el('ba-after-text-div');
-  const d={
-    title,
-    cat:  catEl?.value||'기타',
-    date: dateEl?.value?.trim()||'',
-    beforeText:(bbEl?.innerText||'').trim(),
-    afterText: (baEl?.innerText||'').trim(),
-    beforePhotos:[...S.baBeforePhotos],
-    afterPhotos: [...S.baAfterPhotos]
-  };
-  if(S.editBAId){const b=S.ba.find(x=>x.id===S.editBAId);if(b)Object.assign(b,d);showToast('수정되었습니다');}
-  else{S.ba.unshift({id:Date.now(),...d});showToast('저장되었습니다');}
-  save(); closeFpBA(); renderBA();
+
+  // ★ 저장 버튼 비활성화 (중복 저장 방지)
+  const saveBtn=document.querySelector('#fp-ba .fp-save');
+  if(saveBtn){ saveBtn.disabled=true; saveBtn.textContent='저장 중...'; }
+
+  // ★ base64 사진을 Storage에 먼저 업로드 → URL로 교체
+  async function uploadPhotos(photos, folder){
+    const result=[];
+    for(let i=0;i<photos.length;i++){
+      const p=photos[i];
+      if(p && p.startsWith('data:') && storage){
+        try{
+          const path=`ba/${folder}/${Date.now()}_${i}.jpg`;
+          const ref=storage.ref(path);
+          await ref.putString(p,'data_url');
+          result.push(await ref.getDownloadURL());
+        }catch(err){
+          console.warn('Storage 업로드 실패:', err);
+          result.push(''); // 실패한 사진은 빈 문자열 (저장은 계속)
+        }
+      } else {
+        result.push(p||''); // 이미 URL이거나 빈 값
+      }
+    }
+    return result.filter(u=>u); // 빈 문자열 제거
+  }
+
+  try{
+    showToast('💾 저장 중...');
+    const id = S.editBAId || Date.now();
+    const [bPhotos, aPhotos] = await Promise.all([
+      uploadPhotos(S.baBeforePhotos, `${id}_before`),
+      uploadPhotos(S.baAfterPhotos,  `${id}_after`)
+    ]);
+
+    const d={
+      title,
+      cat:  catEl?.value||'기타',
+      date: dateEl?.value?.trim()||'',
+      beforeText:(bbEl?.innerText||'').trim(),
+      afterText: (baEl?.innerText||'').trim(),
+      beforePhotos: bPhotos,
+      afterPhotos:  aPhotos
+    };
+
+    if(S.editBAId){
+      const b=S.ba.find(x=>x.id===S.editBAId);
+      if(b) Object.assign(b,d);
+      showToast('✅ 수정되었습니다');
+    } else {
+      S.ba.unshift({id, ...d});
+      showToast('✅ 저장되었습니다');
+    }
+
+    // Storage URL로 교체 후 배열 동기화
+    S.baBeforePhotos=[...bPhotos];
+    S.baAfterPhotos=[...aPhotos];
+
+    save(); closeFpBA(); renderBA();
+
+  } catch(err){
+    console.error('saveBA 실패:', err);
+    showToast('⚠️ 저장 실패 — 다시 시도해 주세요');
+  } finally{
+    if(saveBtn){ saveBtn.disabled=false; saveBtn.textContent='저장'; }
+  }
 }
 function delBA(id){
   if(!confirm('정말로 이 항목을 삭제하시겠습니까?')) return;
