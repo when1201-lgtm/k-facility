@@ -52,9 +52,9 @@ textarea{resize:vertical;min-height:80px}
 a{text-decoration:none;color:inherit}a.link{color:#0066cc;text-decoration-thickness:1px;text-underline-offset:3px}a.link:hover{color:#0052a3}
 
 /* ── LAYOUT ── */
-#app{display:flex;height:100dvh;overflow:clip}
+#app{display:flex;height:100dvh;overflow:hidden}
 #sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--card);border-right:1.5px solid var(--border);display:flex;flex-direction:column;overflow:hidden;z-index:40}
-#main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:clip}
+#main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
 #header{height:var(--header-h);flex-shrink:0;background:var(--card);border-bottom:1.5px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:10px;z-index:100;position:sticky;top:0}
 #content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
 #content-inner{padding:28px 24px 32px;width:100%}
@@ -517,31 +517,40 @@ a{text-decoration:none;color:inherit}a.link{color:#0066cc;text-decoration-thickn
 }
 
 /* ── 풀페이지 작성 화면 ──────────────────────── */
+/* fullpage = 일반 page처럼 동작 (nav 시스템 활용) */
+/* ══ 풀페이지 오버레이 ══ */
 .fullpage-overlay{
-  /* ★ body 기준 fixed — 부모 overflow:hidden 무력화 */
-  position:fixed !important;
-  top:0 !important;
-  left:0 !important;
-  right:0 !important;
-  bottom:0 !important;
+  display:none;
+  background:var(--bg);
+  animation:slideUp .18s ease;
+}
+.fullpage-overlay.active{display:block}
+@keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+/* fp-mode: 헤더 숨기고 content가 전체를 채움
+   사이드바는 그대로 유지 */
+body.fp-mode #header{display:none !important}
+body.fp-mode #bottom-nav{display:none !important}
+/* #main이 헤더 없이 전체 높이 차지 */
+body.fp-mode #main{height:100dvh}
+body.fp-mode #content{
+  overflow-y:auto;
+  flex:1;
+}
+body.fp-mode #content-inner{
+  padding:0 !important;
+  max-width:none !important;
   width:100% !important;
   height:100% !important;
-  background:var(--bg);
-  z-index:9999 !important;
-  overflow-y:auto;
-  -webkit-overflow-scrolling:touch;
-  /* contain 해제 — 부모 overflow/transform 무력화 */
-  transform:translateZ(0);
-  will-change:transform;
-  animation:slideUp .22s cubic-bezier(.25,.8,.25,1);
 }
-@keyframes slideUp{
-  from{transform:translateY(40px);opacity:0}
-  to{transform:translateY(0);opacity:1}
+/* 풀페이지: content-inner 전체 채움 */
+body.fp-mode .fullpage-overlay.active{
+  min-height:100%;
 }
 .fp-header{
   position:sticky;
   top:0;
+  z-index:50;
   background:var(--card);
   border-bottom:1.5px solid var(--border);
   display:flex;
@@ -549,7 +558,6 @@ a{text-decoration:none;color:inherit}a.link{color:#0066cc;text-decoration-thickn
   gap:12px;
   padding:0 20px;
   height:var(--header-h);
-  z-index:10;
   box-shadow:0 2px 8px rgba(0,0,0,.06);
 }
 .fp-back{
@@ -597,8 +605,7 @@ a{text-decoration:none;color:inherit}a.link{color:#0066cc;text-decoration-thickn
 .fp-save svg{width:15px;height:15px;stroke:currentColor;fill:none}
 .fp-body{
   padding:24px 24px 48px;
-  max-width:900px;
-  margin:0 auto;
+  max-width:100%;
 }
 @media(max-width:768px){
   .fp-header{padding:0 14px;gap:8px}
@@ -1088,7 +1095,11 @@ function save(){
 // ════════════════════════════════════════
 function nav(page, closeSb=true){
   if(closeSb && window.innerWidth<=768) closeSidebar();
+  // 풀페이지 닫기 (fp-mode 해제)
+  document.body.classList.remove('fp-mode');
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  // 풀페이지 overlay도 active 제거
+  document.querySelectorAll('.fullpage-overlay').forEach(p=>p.classList.remove('active'));
   const t = el('page-'+page); if(!t) return;
   t.classList.add('active'); S.page=page;
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.page===page));
@@ -1429,17 +1440,15 @@ function showLogForm(editId=null){
     const ldc=el('fp-ldesc-div');if(ldc)ldc.innerText='';
     el('fp-ldate').value=today(); el('fp-lstat').value='완료';
   }
-  fp.style.display='block';
-  document.body.style.overflow='hidden';
-  // 뒤로가기 지원
-  try{ history.pushState({fpLog:true},'','#write-log'); }catch(e){}
+  fp.classList.add('active');
+  document.body.classList.add('fp-mode');
+  el('fp-log').scrollTop=0;
   setTimeout(()=>el('fp-ltitle')?.focus(),80);
 }
 function closeFpLog(){
-  el('fp-log').style.display='none';
-  document.body.style.overflow='';
+  el('fp-log').classList.remove('active');
+  document.body.classList.remove('fp-mode');
   S.editLogId=null;
-  if(location.hash==='#write-log') history.back();
 }
 function hideLogForm(){ closeFpLog(); }
 function saveLog(){
@@ -1490,20 +1499,17 @@ function openLogDetail(id){
     }`;
   el('fp-log-det-del').onclick=()=>{ if(confirm('정말 삭제할까요?')){ delLogDetail(id); } };
   el('fp-log-det-edit').onclick=()=>{ closeLogDetail(); setTimeout(()=>showLogForm(id),50); };
-  document.body.appendChild(el('fp-log-detail'));
-  el('fp-log-detail').style.display='block';
-  document.body.style.overflow='hidden';
-  // file:// 환경에서 pushState 불가 → 안전하게 처리
-  try{ history.pushState({fpLogDetail:true},'','#log-detail'); }catch(e){}
+  el('fp-log-detail').classList.add('active');
+  document.body.classList.add('fp-mode');
+  el('fp-log-detail').scrollTop=0;
 }
 function delLogDetail(id){
   S.logs=S.logs.filter(l=>l.id!==id); save(); renderLogs(); renderHomeRecent();
   closeLogDetail(); showToast('삭제되었습니다');
 }
 function closeLogDetail(){
-  el('fp-log-detail').style.display='none';
-  document.body.style.overflow='';
-  if(location.hash==='#log-detail') history.back();
+  el('fp-log-detail').classList.remove('active');
+  document.body.classList.remove('fp-mode');
 }
 // 구버전 호환
 function closeLogModal(){ closeLogDetail(); }
@@ -1564,16 +1570,15 @@ function showBAForm(editId=null){
     el('fp-ba-date').value=today();
   }
   renderBAThumbs();
-  fp.style.display='block';
-  document.body.style.overflow='hidden';
-  try{ history.pushState({fpBA:true},'','#write-ba'); }catch(e){}
+  fp.classList.add('active');
+  document.body.classList.add('fp-mode');
+  el('fp-ba').scrollTop=0;
   setTimeout(()=>el('fp-ba-title-input')?.focus(),80);
 }
 function closeFpBA(){
-  el('fp-ba').style.display='none';
-  document.body.style.overflow='';
+  el('fp-ba').classList.remove('active');
+  document.body.classList.remove('fp-mode');
   S.editBAId=null;
-  if(location.hash==='#write-ba') history.back();
 }
 function hideBAForm(){ closeFpBA(); }
 function triggerBAPhoto(side){
@@ -1674,19 +1679,17 @@ function openBADetail(id){
     </div>`;
   el('fp-ba-det-del').onclick=()=>{ if(confirm('정말 삭제할까요?')){ delBADetail(id); } };
   el('fp-ba-det-edit').onclick=()=>{ closeBADetail(); setTimeout(()=>showBAForm(id),50); };
-  document.body.appendChild(el('fp-ba-detail'));
-  el('fp-ba-detail').style.display='block';
-  document.body.style.overflow='hidden';
-  try{ history.pushState({fpBADetail:true},'','#ba-detail'); }catch(e){}
+  el('fp-ba-detail').classList.add('active');
+  document.body.classList.add('fp-mode');
+  el('fp-ba-detail').scrollTop=0;
 }
 function delBADetail(id){
   S.ba=S.ba.filter(b=>b.id!==id); save(); renderBA();
   closeBADetail(); showToast('삭제되었습니다');
 }
 function closeBADetail(){
-  el('fp-ba-detail').style.display='none';
-  document.body.style.overflow='';
-  if(location.hash==='#ba-detail') history.back();
+  el('fp-ba-detail').classList.remove('active');
+  document.body.classList.remove('fp-mode');
 }
 // 구버전 호환
 function closeBAModal(){ closeBADetail(); }
@@ -2279,7 +2282,6 @@ function toggleSb(){
 function closeSidebar(){
   el('sidebar').classList.remove('open');
   el('sb-overlay').style.display='none';
-  document.body.style.overflow='';
 }
 let _tt;
 function showToast(msg){const t=el('toast');t.textContent=msg;t.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>t.classList.remove('show'),2200);}
@@ -2292,23 +2294,7 @@ loadState();
 nav('home', false);
 
 // ── 뒤로가기 버튼으로 풀페이지 닫기
-window.addEventListener('popstate', ()=>{
-  const h=location.hash;
-  // 작성 풀페이지
-  if(h!=='#write-log' && el('fp-log')?.style.display!=='none'){
-    el('fp-log').style.display='none'; document.body.style.overflow=''; S.editLogId=null;
-  }
-  if(h!=='#write-ba' && el('fp-ba')?.style.display!=='none'){
-    el('fp-ba').style.display='none'; document.body.style.overflow=''; S.editBAId=null;
-  }
-  // 상세 풀페이지
-  if(h!=='#log-detail' && el('fp-log-detail')?.style.display!=='none'){
-    el('fp-log-detail').style.display='none'; document.body.style.overflow='';
-  }
-  if(h!=='#ba-detail' && el('fp-ba-detail')?.style.display!=='none'){
-    el('fp-ba-detail').style.display='none'; document.body.style.overflow='';
-  }
-});
+// (popstate 제거: nav 기반 전환으로 불필요)
 </script>
 
 <script>
@@ -2367,7 +2353,7 @@ window.addEventListener('popstate', ()=>{
 <!-- ══════════════════════════════════
      풀페이지: 비포/애프터 작성
 ══════════════════════════════════ -->
-<div id="fp-ba" class="fullpage-overlay" style="display:none">
+<div id="fp-ba" class="fullpage-overlay">
   <div class="fp-header">
     <button class="fp-back" onclick="closeFpBA()">
       <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>목록으로
@@ -2417,7 +2403,7 @@ window.addEventListener('popstate', ()=>{
 <!-- ══════════════════════════════════
      풀페이지: 작업기록 작성
 ══════════════════════════════════ -->
-<div id="fp-log" class="fullpage-overlay" style="display:none">
+<div id="fp-log" class="fullpage-overlay">
   <div class="fp-header">
     <button class="fp-back" onclick="closeFpLog()">
       <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>목록으로
@@ -2448,7 +2434,7 @@ window.addEventListener('popstate', ()=>{
 
 <!-- ══ 풀페이지: 작업기록 상세 ══ -->
 <!-- ══ 풀페이지: 작업기록 상세 ══ -->
-<div id="fp-log-detail" class="fullpage-overlay" style="display:none">
+<div id="fp-log-detail" class="fullpage-overlay">
   <div class="fp-header">
     <button class="fp-back" onclick="closeLogDetail()">
       <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>목록으로
@@ -2463,7 +2449,7 @@ window.addEventListener('popstate', ()=>{
 </div>
 
 <!-- ══ 풀페이지: 비포/애프터 상세 ══ -->
-<div id="fp-ba-detail" class="fullpage-overlay" style="display:none">
+<div id="fp-ba-detail" class="fullpage-overlay">
   <div class="fp-header">
     <button class="fp-back" onclick="closeBADetail()">
       <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>목록으로
