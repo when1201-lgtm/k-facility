@@ -545,7 +545,8 @@ a{text-decoration:none;color:inherit}a.link{color:#0066cc;text-decoration-thickn
   position:absolute;
   top:0; left:0; right:0; bottom:0;
   z-index:500;
-  overflow-y:auto;
+  overflow-y:auto;          /* 풀페이지 자체 스크롤 */
+  -webkit-overflow-scrolling:touch;
   animation:slideUp .18s ease;
 }
 @keyframes slideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
@@ -554,13 +555,14 @@ a{text-decoration:none;color:inherit}a.link{color:#0066cc;text-decoration-thickn
 body.fp-mode #header{display:none !important}
 body.fp-mode #bottom-nav{display:none !important}
 body.fp-mode #content{
-  position:relative;  /* absolute 풀페이지의 기준점 */
-  overflow:hidden;
+  position:relative;
+  overflow:hidden;           /* 풀페이지가 absolute로 덮으므로 hidden OK */
 }
 .fp-header{
   position:sticky;
   top:0;
   z-index:50;
+  flex-shrink:0;             /* 헤더 높이 고정 — 줄어들지 않게 */
   background:var(--card);
   border-bottom:1.5px solid var(--border);
   display:flex;
@@ -614,8 +616,10 @@ body.fp-mode #content{
 .fp-save:hover{filter:brightness(1.1)}
 .fp-save svg{width:15px;height:15px;stroke:currentColor;fill:none}
 .fp-body{
-  padding:24px 24px 48px;
+  flex:1;                    /* 남은 공간 채우기 */
+  padding:28px 32px 60px;   /* 헤더와 충분한 간격 */
   max-width:100%;
+  box-sizing:border-box;
 }
 @media(max-width:768px){
   .fp-header{padding:0 10px;gap:6px;height:52px}
@@ -625,11 +629,13 @@ body.fp-mode #content{
   .fp-title{font-size:15px}
   .fp-save{padding:8px 12px;font-size:14px;gap:4px}
   .fp-save span{display:none} /* 저장 텍스트 숨기고 아이콘만 */
-  .fp-body{padding:14px 14px 80px}
+  /* 모바일: 헤더 아래 여백 넉넉하게 */
+  .fp-body{padding:20px 16px 80px}
   /* 수정/삭제 버튼 compact */
   .fp-back[id$="-edit"],.fp-back[id$="-del"]{
     padding:6px 8px;font-size:13px
   }
+
 }
 
 /* ── 사진 업로드 스피너 ── */
