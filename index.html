@@ -518,34 +518,30 @@ a{text-decoration:none;color:inherit}a.link{color:#0066cc;text-decoration-thickn
 
 /* ── 풀페이지 작성 화면 ──────────────────────── */
 /* fullpage = 일반 page처럼 동작 (nav 시스템 활용) */
-/* ══ 풀페이지 오버레이 ══ */
+/* ══ 풀페이지 오버레이 ══
+   #content 영역을 기준으로 absolute 덮어씌움
+   사이드바는 항상 유지 */
 .fullpage-overlay{
   display:none;
   background:var(--bg);
+}
+.fullpage-overlay.active{
+  display:flex;
+  flex-direction:column;
+  position:absolute;
+  top:0; left:0; right:0; bottom:0;
+  z-index:500;
+  overflow-y:auto;
   animation:slideUp .18s ease;
 }
-.fullpage-overlay.active{display:block}
-@keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes slideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 
-/* fp-mode: 헤더 숨기고 content가 전체를 채움
-   사이드바는 그대로 유지 */
+/* fp-mode: 헤더·바텀네비 숨김, #content를 기준점으로 */
 body.fp-mode #header{display:none !important}
 body.fp-mode #bottom-nav{display:none !important}
-/* #main이 헤더 없이 전체 높이 차지 */
-body.fp-mode #main{height:100dvh}
 body.fp-mode #content{
-  overflow-y:auto;
-  flex:1;
-}
-body.fp-mode #content-inner{
-  padding:0 !important;
-  max-width:none !important;
-  width:100% !important;
-  height:100% !important;
-}
-/* 풀페이지: content-inner 전체 채움 */
-body.fp-mode .fullpage-overlay.active{
-  min-height:100%;
+  position:relative;  /* absolute 풀페이지의 기준점 */
+  overflow:hidden;
 }
 .fp-header{
   position:sticky;
@@ -805,6 +801,104 @@ body.fp-mode .fullpage-overlay.active{
       <div class="detail-back" onclick="nav('admin',false)"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>관리자로</div>
       <div class="edit-form" id="manual-edit-form"></div>
     </div>
+
+
+<!-- ══ 풀페이지 오버레이 (content-inner 안에 위치) ══ -->
+<div id="fp-ba" class="fullpage-overlay">
+  <div class="fp-header">
+    <button class="fp-back" onclick="closeFpBA()">
+      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>목록으로
+    </button>
+    <div style="flex:1"></div>
+    <button class="fp-save" onclick="saveBA()">
+      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>저장
+    </button>
+  </div>
+  <div class="fp-body">
+    <p id="fp-ba-title" style="font-size:18px;font-weight:800;color:var(--primary);margin-bottom:16px;letter-spacing:-.02em">✏️ 새 비포/애프터 기록</p>
+    <div class="fg"><label>제목 (작업명)</label><input type="text" id="fp-ba-title-input" placeholder="예: 화장실 수도꼭지 누수 수리"></div>
+    <div class="form-row">
+      <div class="fg" style="margin:0"><label>분류</label><select id="fp-ba-cat"><option value="전기">전기</option><option value="기계">기계</option><option value="영선">영선</option><option value="소방">소방</option><option value="기타">기타</option></select></div>
+      <div class="fg" style="margin:0"><label>작업일</label><input type="date" id="fp-ba-date"></div>
+    </div>
+    <div style="height:12px"></div>
+    <div class="ba-grid">
+      <div class="ba-panel ba-before">
+        <div class="ba-ph"><svg viewBox="0 0 24 24" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>Before (고장 증상)</div>
+        <div class="ba-pb">
+          <div id="fp-ba-before-div" class="paper-editor" contenteditable="true" data-placeholder="고장 증상, 원인 모를 소음, 상태 메모..." role="textbox" aria-multiline="true"></div>
+          <div class="ba-photo-btn" onclick="triggerBAPhoto('before')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>사진 추가</div>
+          <div id="fp-ba-before-thumbs" class="ba-thumbs"></div>
+        </div>
+      </div>
+      <div class="ba-panel ba-after">
+        <div class="ba-ph"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m22 4-10 10.01-3-3"/></svg>After (수리 완료)</div>
+        <div class="ba-pb">
+          <div id="fp-ba-after-div" class="paper-editor" contenteditable="true" data-placeholder="수리 완료 후 정상 작동, 교체 부품, 해결 방법..." role="textbox" aria-multiline="true"></div>
+          <div class="ba-photo-btn" onclick="triggerBAPhoto('after')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>사진 추가</div>
+          <div id="fp-ba-after-thumbs" class="ba-thumbs"></div>
+        </div>
+      </div>
+    </div>
+    <input type="file" id="ba-photo-input" accept="image/*" multiple style="position:absolute;top:-999px;left:-999px;opacity:0;width:1px;height:1px">
+  </div>
+</div>
+
+<div id="fp-log" class="fullpage-overlay">
+  <div class="fp-header">
+    <button class="fp-back" onclick="closeFpLog()">
+      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>목록으로
+    </button>
+    <div style="flex:1"></div>
+    <button class="fp-save" onclick="saveLog()">
+      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>저장
+    </button>
+  </div>
+  <div class="fp-body">
+    <p id="fp-log-title" style="font-size:18px;font-weight:800;color:var(--primary);margin-bottom:16px;letter-spacing:-.02em">새 작업 기록</p>
+    <div class="form-row">
+      <div class="fg" style="margin:0"><label>작업 유형</label><select id="fp-lcat"><option value="전기">전기 설비</option><option value="기계">기계 설비</option><option value="영선">영선 / 보수</option><option value="소방">소방 설비</option><option value="기타">기타</option></select></div>
+      <div class="fg" style="margin:0"><label>상태</label><select id="fp-lstat"><option value="완료">완료</option><option value="진행중">진행중</option><option value="대기">대기</option></select></div>
+    </div>
+    <div class="fg"><label>작업 제목</label><input type="text" id="fp-ltitle" placeholder="작업 내용을 간략히 입력하세요"></div>
+    <div class="form-row">
+      <div class="fg" style="margin:0"><label>작업자</label><input type="text" id="fp-lworker" placeholder="이름"></div>
+      <div class="fg" style="margin:0"><label>작업일</label><input type="date" id="fp-ldate"></div>
+    </div>
+    <div class="fg">
+      <label>상세 내용</label>
+      <div id="fp-ldesc-div" class="paper-editor" contenteditable="true" data-placeholder="작업 상세 내용, 특이사항 등..." role="textbox" aria-multiline="true"></div>
+    </div>
+  </div>
+</div>
+
+<div id="fp-log-detail" class="fullpage-overlay">
+  <div class="fp-header">
+    <button class="fp-back" onclick="closeLogDetail()">
+      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>목록으로
+    </button>
+    <div style="flex:1"></div>
+    <div style="display:flex;gap:8px">
+      <button class="fp-back" id="fp-log-det-edit" style="color:var(--blue);border-color:var(--blue-bg);background:var(--blue-bg)">✏️ 수정</button>
+      <button class="fp-back" id="fp-log-det-del" style="color:var(--red);border-color:var(--red-bg);background:var(--red-bg)">🗑 삭제</button>
+    </div>
+  </div>
+  <div class="fp-body" id="fp-log-detail-body"></div>
+</div>
+
+<div id="fp-ba-detail" class="fullpage-overlay">
+  <div class="fp-header">
+    <button class="fp-back" onclick="closeBADetail()">
+      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>목록으로
+    </button>
+    <div style="flex:1"></div>
+    <div style="display:flex;gap:8px">
+      <button class="fp-back" id="fp-ba-det-edit" style="color:var(--blue);border-color:var(--blue-bg);background:var(--blue-bg)">✏️ 수정</button>
+      <button class="fp-back" id="fp-ba-det-del" style="color:var(--red);border-color:var(--red-bg);background:var(--red-bg)">🗑 삭제</button>
+    </div>
+  </div>
+  <div class="fp-body" id="fp-ba-detail-body"></div>
+</div>
 
   </div></div><!-- /content-inner /content -->
 
@@ -2350,117 +2444,5 @@ nav('home', false);
 })();
 </script>
 
-<!-- ══════════════════════════════════
-     풀페이지: 비포/애프터 작성
-══════════════════════════════════ -->
-<div id="fp-ba" class="fullpage-overlay">
-  <div class="fp-header">
-    <button class="fp-back" onclick="closeFpBA()">
-      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>목록으로
-    </button>
-    <div style="flex:1"></div>
-    <button class="fp-save" onclick="saveBA()">
-      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>저장
-    </button>
-  </div>
-  <div class="fp-body">
-    <p id="fp-ba-title" style="font-size:18px;font-weight:800;color:var(--primary);margin-bottom:16px;letter-spacing:-.02em">✏️ 새 비포/애프터 기록</p>
-    <div class="fg"><label>제목 (작업명)</label><input type="text" id="fp-ba-title-input" placeholder="예: 화장실 수도꼭지 누수 수리"></div>
-    <div class="form-row">
-      <div class="fg" style="margin:0"><label>분류</label><select id="fp-ba-cat"><option value="전기">전기</option><option value="기계">기계</option><option value="영선">영선</option><option value="소방">소방</option><option value="기타">기타</option></select></div>
-      <div class="fg" style="margin:0"><label>작업일</label><input type="date" id="fp-ba-date"></div>
-    </div>
-    <div style="height:12px"></div>
-    <div class="ba-grid">
-      <div class="ba-panel ba-before">
-        <div class="ba-ph"><svg viewBox="0 0 24 24" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>Before (고장 증상)</div>
-        <div class="ba-pb">
-          <div id="fp-ba-before-div" class="paper-editor" contenteditable="true" data-placeholder="고장 증상, 원인 모를 소음, 상태 메모..." role="textbox" aria-multiline="true"></div>
-          <div class="ba-photo-btn" onclick="triggerBAPhoto('before')">
-            <svg viewBox="0 0 24 24" stroke-width="2"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>사진 추가
-          </div>
-          <div id="fp-ba-before-thumbs" class="ba-thumbs"></div>
-        </div>
-      </div>
-      <div class="ba-panel ba-after">
-        <div class="ba-ph"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m22 4-10 10.01-3-3"/></svg>After (수리 완료)</div>
-        <div class="ba-pb">
-          <div id="fp-ba-after-div" class="paper-editor" contenteditable="true" data-placeholder="수리 완료 후 정상 작동, 교체 부품, 해결 방법..." role="textbox" aria-multiline="true"></div>
-          <div class="ba-photo-btn" onclick="triggerBAPhoto('after')">
-            <svg viewBox="0 0 24 24" stroke-width="2"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>사진 추가
-          </div>
-          <div id="fp-ba-after-thumbs" class="ba-thumbs"></div>
-        </div>
-      </div>
-    </div>
-    <!-- ★ 사진 input: capture 속성으로 모바일 카메라/갤러리 모두 지원 -->
-    <input type="file" id="ba-photo-input" accept="image/*" multiple
-      style="display:none;position:absolute;top:-9999px;left:-9999px"
-      onchange="handleBAPhoto(event)">
-  </div>
-</div>
-
-<!-- ══════════════════════════════════
-     풀페이지: 작업기록 작성
-══════════════════════════════════ -->
-<div id="fp-log" class="fullpage-overlay">
-  <div class="fp-header">
-    <button class="fp-back" onclick="closeFpLog()">
-      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>목록으로
-    </button>
-    <div style="flex:1"></div>
-    <button class="fp-save" onclick="saveLog()">
-      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>저장
-    </button>
-  </div>
-  <div class="fp-body">
-    <p id="fp-log-title" style="font-size:18px;font-weight:800;color:var(--primary);margin-bottom:16px;letter-spacing:-.02em">새 작업 기록</p>
-    <div class="form-row">
-      <div class="fg" style="margin:0"><label>작업 유형</label><select id="fp-lcat"><option value="전기">전기 설비</option><option value="기계">기계 설비</option><option value="영선">영선 / 보수</option><option value="소방">소방 설비</option><option value="기타">기타</option></select></div>
-      <div class="fg" style="margin:0"><label>상태</label><select id="fp-lstat"><option value="완료">완료</option><option value="진행중">진행중</option><option value="대기">대기</option></select></div>
-    </div>
-    <div class="fg"><label>작업 제목</label><input type="text" id="fp-ltitle" placeholder="작업 내용을 간략히 입력하세요"></div>
-    <div class="form-row">
-      <div class="fg" style="margin:0"><label>작업자</label><input type="text" id="fp-lworker" placeholder="이름"></div>
-      <div class="fg" style="margin:0"><label>작업일</label><input type="date" id="fp-ldate"></div>
-    </div>
-    <div class="fg">
-      <label>상세 내용</label>
-      <div id="fp-ldesc-div" class="paper-editor" contenteditable="true"
-        data-placeholder="작업 상세 내용, 특이사항 등..." role="textbox" aria-multiline="true"></div>
-    </div>
-  </div>
-</div>
-
-<!-- ══ 풀페이지: 작업기록 상세 ══ -->
-<!-- ══ 풀페이지: 작업기록 상세 ══ -->
-<div id="fp-log-detail" class="fullpage-overlay">
-  <div class="fp-header">
-    <button class="fp-back" onclick="closeLogDetail()">
-      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>목록으로
-    </button>
-    <div style="flex:1"></div>
-    <div style="display:flex;gap:8px">
-      <button class="fp-back" id="fp-log-det-edit" style="color:var(--blue);border-color:var(--blue-bg);background:var(--blue-bg)">✏️ 수정</button>
-      <button class="fp-back" id="fp-log-det-del" style="color:var(--red);border-color:var(--red-bg);background:var(--red-bg)">🗑 삭제</button>
-    </div>
-  </div>
-  <div class="fp-body" id="fp-log-detail-body"></div>
-</div>
-
-<!-- ══ 풀페이지: 비포/애프터 상세 ══ -->
-<div id="fp-ba-detail" class="fullpage-overlay">
-  <div class="fp-header">
-    <button class="fp-back" onclick="closeBADetail()">
-      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>목록으로
-    </button>
-    <div style="flex:1"></div>
-    <div style="display:flex;gap:8px">
-      <button class="fp-back" id="fp-ba-det-edit" style="color:var(--blue);border-color:var(--blue-bg);background:var(--blue-bg)">✏️ 수정</button>
-      <button class="fp-back" id="fp-ba-det-del" style="color:var(--red);border-color:var(--red-bg);background:var(--red-bg)">🗑 삭제</button>
-    </div>
-  </div>
-  <div class="fp-body" id="fp-ba-detail-body"></div>
-</div>
 </body>
 </html>
