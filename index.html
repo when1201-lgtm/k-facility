@@ -755,6 +755,7 @@ body.fp-mode #bottom-nav{display:none !important}
     </div>
     <div class="h-actions">
       <button class="hbtn" onclick="nav('search')"><svg viewBox="0 0 24 24" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.34-4.34"/></svg></button>
+      <span id="fb-indicator" title="Firebase 미연결 (로컬 모드)" style="font-size:11px;color:var(--text-muted);padding:4px 6px;border-radius:6px;background:var(--bg);border:1px solid var(--border);cursor:default;user-select:none;white-space:nowrap">☁</span>
       <button class="hbtn hbtn-theme" onclick="toggleTheme()" title="다크/라이트 모드 전환"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></svg></button>
     </div>
   </header>
@@ -941,7 +942,11 @@ body.fp-mode #bottom-nav{display:none !important}
         </div>
       </div>
     </div>
-    <input type="file" id="ba-photo-input" accept="image/*" multiple style="position:absolute;top:-999px;left:-999px;opacity:0;width:1px;height:1px">
+    
+    <!-- 사진 input: 풀페이지 안에 위치해야 z-index 문제 없음 -->
+    <input type="file" id="ba-photo-input" accept="image/*" multiple
+      style="position:absolute;top:-999px;left:-999px;opacity:0;width:1px;height:1px;pointer-events:none"
+      onchange="handleBAPhoto(event)">
   </div>
 </div>
 
@@ -1150,6 +1155,15 @@ const el = id => document.getElementById(id);
 const V = id => el(id).value.trim();
 
 // ════════════════════════════════════════
+
+// ════════════════════════════════════════
+// Firebase Storage CORS 설정 필요 (GitHub Pages 배포 시)
+// 아래 cors.json을 Storage 버킷에 적용하세요:
+// gsutil cors set cors.json gs://k-facility.firebasestorage.app
+//
+// cors.json 내용:
+// [{"origin":["https://when1201-lgtm.github.io","http://localhost:8080"],"method":["GET","POST","PUT","DELETE"],"maxAgeSeconds":3600}]
+// ════════════════════════════════════════
 // Firebase 설정값 (10.x compat)
 // ════════════════════════════════════════
 const FIREBASE_CONFIG = {
@@ -1228,7 +1242,9 @@ function initFirebase(){
     });
 
     console.log('✅ Firebase 연결 성공 (10.x compat)');
-    // 연결 성공 토스트 없음 — 사용자 방해 최소화
+    // 헤더 Firebase 상태 아이콘 업데이트
+    const fbInd=document.getElementById('fb-indicator');
+    if(fbInd){fbInd.title='Firebase 연결됨';fbInd.style.color='var(--green)';}
   } catch(e){
     console.error('❌ Firebase 초기화 실패:', e);
     showToast('⚠️ 로컬 모드로 실행 중');
@@ -1810,17 +1826,19 @@ function closeFpBA(){
 function hideBAForm(){ closeFpBA(); }
 function triggerBAPhoto(side){
   _baSide=side;
+  // 풀페이지 안에서 input 찾기 (z-index 문제 방지)
   let inp=el('ba-photo-input');
   if(!inp){
-    // 없으면 동적 생성
     inp=document.createElement('input');
     inp.type='file'; inp.id='ba-photo-input';
     inp.accept='image/*'; inp.multiple=true;
-    inp.style.cssText='position:fixed;top:-999px;left:-999px;opacity:0;width:1px;height:1px';
+    inp.style.cssText='position:absolute;top:-999px;left:-999px;opacity:0;width:1px;height:1px;pointer-events:none';
     inp.addEventListener('change',handleBAPhoto);
-    document.body.appendChild(inp);
+    // 풀페이지 안에 추가 (body 말고)
+    const fp=el('fp-ba');
+    (fp||document.body).appendChild(inp);
   }
-  inp.value=''; // 같은 파일 재선택 허용
+  inp.value='';
   inp.click();
 }
 function handleBAPhoto(e){
