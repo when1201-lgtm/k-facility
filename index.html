@@ -707,38 +707,6 @@ a{text-decoration:none;color:inherit}a.link{color:#0066cc;text-decoration-thickn
     <!-- 학습/개발 (Before/After) -->
     <div id="page-ba" class="page">
       <div class="ph-row"><div><h2>학습 / 개발</h2><p>고장 증상과 수리 결과를 비포·애프터로 기록하세요.</p></div><button class="btn btn-primary" onclick="showBAForm()"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M12 5v14"/><path d="M5 12h14"/></svg>새 기록</button></div>
-      <div id="ba-form-area" style="display:none" class="add-form">
-        <div class="add-form-title" id="ba-form-title">✏️ 새 비포/애프터 기록</div>
-        <div class="fg"><label>제목 (작업명)</label><input type="text" id="ba-title" placeholder="예: 화장실 수도꼭지 누수 수리"></div>
-        <div class="form-row">
-          <div class="fg" style="margin:0"><label>분류</label><select id="ba-cat"><option value="전기">전기</option><option value="기계">기계</option><option value="영선">영선</option><option value="소방">소방</option><option value="기타">기타</option></select></div>
-          <div class="fg" style="margin:0"><label>작업일</label><input type="date" id="ba-date"></div>
-        </div>
-        <div style="height:10px"></div>
-        <div class="ba-grid">
-          <div class="ba-panel ba-before">
-            <div class="ba-ph"><svg viewBox="0 0 24 24" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>Before (고장 증상)</div>
-            <div class="ba-pb">
-              <div id="ba-before-text-div" class="paper-editor" contenteditable="true" data-placeholder="고장 증상, 원인 모를 소음, 상태 메모..." role="textbox" aria-multiline="true"></div>
-              <div class="ba-photo-btn" onclick="triggerBAPhoto('before')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>사진 추가</div>
-              <div id="ba-before-thumbs" class="ba-thumbs"></div>
-            </div>
-          </div>
-          <div class="ba-panel ba-after">
-            <div class="ba-ph"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m22 4-10 10.01-3-3"/></svg>After (수리 완료)</div>
-            <div class="ba-pb">
-              <div id="ba-after-text-div" class="paper-editor" contenteditable="true" data-placeholder="수리 완료 후 정상 작동, 교체 부품, 해결 방법..." role="textbox" aria-multiline="true"></div>
-              <div class="ba-photo-btn" onclick="triggerBAPhoto('after')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>사진 추가</div>
-              <div id="ba-after-thumbs" class="ba-thumbs"></div>
-            </div>
-          </div>
-        </div>
-        <input type="file" id="ba-photo-input" accept="image/*" multiple style="display:none" onchange="handleBAPhoto(event)">
-        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
-          <button class="btn btn-outline" onclick="hideBAForm()">취소</button>
-          <button class="btn btn-primary" onclick="saveBA()">저장</button>
-        </div>
-      </div>
       <div id="ba-list"></div>
     </div>
 
@@ -765,23 +733,7 @@ a{text-decoration:none;color:inherit}a.link{color:#0066cc;text-decoration-thickn
     <!-- 작업 기록 -->
     <div id="page-logs" class="page">
       <div class="ph-row"><div><h2>작업 기록</h2><p>현장 작업 내역을 기록하고 관리합니다.</p></div><button class="btn btn-primary" onclick="showLogForm()"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M12 5v14"/><path d="M5 12h14"/></svg>기록 추가</button></div>
-      <div id="log-form-area" style="display:none" class="log-form-wrap">
-        <div style="font-size:13px;font-weight:800;margin-bottom:10px;color:var(--primary)" id="log-form-lbl">새 작업 기록</div>
-        <div class="form-row">
-          <div class="fg" style="margin:0"><label>작업 유형</label><select id="lcat"><option value="전기">전기 설비</option><option value="기계">기계 설비</option><option value="영선">영선 / 보수</option><option value="소방">소방 설비</option><option value="기타">기타</option></select></div>
-          <div class="fg" style="margin:0"><label>상태</label><select id="lstat"><option value="완료">완료</option><option value="진행중">진행중</option><option value="대기">대기</option></select></div>
-        </div>
-        <div class="fg"><label>작업 제목</label><input type="text" id="ltitle" placeholder="작업 내용을 간략히 입력하세요"></div>
-        <div class="form-row">
-          <div class="fg" style="margin:0"><label>작업자</label><input type="text" id="lworker" placeholder="이름"></div>
-          <div class="fg" style="margin:0"><label>작업일</label><input type="date" id="ldate"></div>
-        </div>
-        <div class="fg"><label>상세 내용</label><div id="ldesc-div" class="paper-editor" contenteditable="true" data-placeholder="작업 상세 내용, 특이사항 등..." role="textbox" aria-multiline="true"></div></div>
-        <div style="display:flex;gap:8px;justify-content:flex-end">
-          <button class="btn btn-outline" onclick="hideLogForm()">취소</button>
-          <button class="btn btn-primary" onclick="saveLog()">저장</button>
-        </div>
-      </div>
+
       <div class="filter-bar">
         <button class="fc active" onclick="filterLog(this,'전체')">전체</button>
         <button class="fc" onclick="filterLog(this,'전기')">전기</button>
@@ -1628,8 +1580,17 @@ function closeFpBA(){
 function hideBAForm(){ closeFpBA(); }
 function triggerBAPhoto(side){
   _baSide=side;
-  // 풀페이지 input 우선, 없으면 기존 input
-  const inp=el('ba-photo-input-fp')||el('ba-photo-input');
+  let inp=el('ba-photo-input');
+  if(!inp){
+    // 없으면 동적 생성
+    inp=document.createElement('input');
+    inp.type='file'; inp.id='ba-photo-input';
+    inp.accept='image/*'; inp.multiple=true;
+    inp.style.cssText='position:fixed;top:-999px;left:-999px;opacity:0;width:1px;height:1px';
+    inp.addEventListener('change',handleBAPhoto);
+    document.body.appendChild(inp);
+  }
+  inp.value=''; // 같은 파일 재선택 허용
   inp.click();
 }
 function handleBAPhoto(e){
@@ -2382,17 +2343,17 @@ window.addEventListener('popstate', ()=>{
 })();
 </script>
 
-<!-- ══ 풀페이지: 비포/애프터 작성 ══ -->
+<!-- ══════════════════════════════════
+     풀페이지: 비포/애프터 작성
+══════════════════════════════════ -->
 <div id="fp-ba" class="fullpage-overlay" style="display:none">
   <div class="fp-header">
     <button class="fp-back" onclick="closeFpBA()">
-      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
-      목록으로
+      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>목록으로
     </button>
     <span class="fp-title" id="fp-ba-title">✏️ 새 비포/애프터 기록</span>
     <button class="fp-save" onclick="saveBA()">
-      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-      저장
+      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>저장
     </button>
   </div>
   <div class="fp-body">
@@ -2401,13 +2362,15 @@ window.addEventListener('popstate', ()=>{
       <div class="fg" style="margin:0"><label>분류</label><select id="fp-ba-cat"><option value="전기">전기</option><option value="기계">기계</option><option value="영선">영선</option><option value="소방">소방</option><option value="기타">기타</option></select></div>
       <div class="fg" style="margin:0"><label>작업일</label><input type="date" id="fp-ba-date"></div>
     </div>
-    <div style="height:14px"></div>
+    <div style="height:12px"></div>
     <div class="ba-grid">
       <div class="ba-panel ba-before">
         <div class="ba-ph"><svg viewBox="0 0 24 24" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>Before (고장 증상)</div>
         <div class="ba-pb">
           <div id="fp-ba-before-div" class="paper-editor" contenteditable="true" data-placeholder="고장 증상, 원인 모를 소음, 상태 메모..." role="textbox" aria-multiline="true"></div>
-          <div class="ba-photo-btn" onclick="triggerBAPhoto('before')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>사진 추가</div>
+          <div class="ba-photo-btn" onclick="triggerBAPhoto('before')">
+            <svg viewBox="0 0 24 24" stroke-width="2"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>사진 추가
+          </div>
           <div id="fp-ba-before-thumbs" class="ba-thumbs"></div>
         </div>
       </div>
@@ -2415,26 +2378,31 @@ window.addEventListener('popstate', ()=>{
         <div class="ba-ph"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m22 4-10 10.01-3-3"/></svg>After (수리 완료)</div>
         <div class="ba-pb">
           <div id="fp-ba-after-div" class="paper-editor" contenteditable="true" data-placeholder="수리 완료 후 정상 작동, 교체 부품, 해결 방법..." role="textbox" aria-multiline="true"></div>
-          <div class="ba-photo-btn" onclick="triggerBAPhoto('after')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>사진 추가</div>
+          <div class="ba-photo-btn" onclick="triggerBAPhoto('after')">
+            <svg viewBox="0 0 24 24" stroke-width="2"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>사진 추가
+          </div>
           <div id="fp-ba-after-thumbs" class="ba-thumbs"></div>
         </div>
       </div>
     </div>
-    <input type="file" id="ba-photo-input-fp" accept="image/*" multiple style="display:none" onchange="handleBAPhoto(event)">
+    <!-- ★ 사진 input: capture 속성으로 모바일 카메라/갤러리 모두 지원 -->
+    <input type="file" id="ba-photo-input" accept="image/*" multiple
+      style="display:none;position:absolute;top:-9999px;left:-9999px"
+      onchange="handleBAPhoto(event)">
   </div>
 </div>
 
-<!-- ══ 풀페이지: 작업 기록 작성 ══ -->
+<!-- ══════════════════════════════════
+     풀페이지: 작업기록 작성
+══════════════════════════════════ -->
 <div id="fp-log" class="fullpage-overlay" style="display:none">
   <div class="fp-header">
     <button class="fp-back" onclick="closeFpLog()">
-      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
-      목록으로
+      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>목록으로
     </button>
     <span class="fp-title" id="fp-log-title">새 작업 기록</span>
     <button class="fp-save" onclick="saveLog()">
-      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-      저장
+      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>저장
     </button>
   </div>
   <div class="fp-body">
@@ -2447,11 +2415,12 @@ window.addEventListener('popstate', ()=>{
       <div class="fg" style="margin:0"><label>작업자</label><input type="text" id="fp-lworker" placeholder="이름"></div>
       <div class="fg" style="margin:0"><label>작업일</label><input type="date" id="fp-ldate"></div>
     </div>
-    <div class="fg"><label>상세 내용</label>
-      <div id="fp-ldesc-div" class="paper-editor" contenteditable="true" data-placeholder="작업 상세 내용, 특이사항 등..." role="textbox" aria-multiline="true"></div>
+    <div class="fg">
+      <label>상세 내용</label>
+      <div id="fp-ldesc-div" class="paper-editor" contenteditable="true"
+        data-placeholder="작업 상세 내용, 특이사항 등..." role="textbox" aria-multiline="true"></div>
     </div>
   </div>
 </div>
-
 </body>
 </html>
