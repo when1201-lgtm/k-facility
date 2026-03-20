@@ -400,6 +400,8 @@ a{text-decoration:none;color:inherit}a.link{color:#0066cc;text-decoration-thickn
 .sw input{padding-left:40px;padding-right:40px;font-size:15px;height:48px;border-radius:12px;border:2px solid var(--border)}
 .sw input:focus{border-color:var(--primary);box-shadow:0 0 0 4px var(--primary-dim)}
 .search-box-wrap{background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:14px;margin-bottom:16px;box-shadow:var(--shadow)}
+/* 검색바 sticky 고정 */
+#page-search .search-box-wrap{position:sticky;top:0;z-index:10;border-radius:0;margin:0 -24px 16px;padding:12px 24px;border-left:none;border-right:none;border-top:none}
 .search-filter-bar{display:flex;gap:7px;overflow-x:auto;padding:10px 0 4px;-webkit-overflow-scrolling:touch;margin-top:10px}
 .search-filter-bar::-webkit-scrollbar{height:2px}
 .sfc{padding:7px 14px;border-radius:999px;font-size:13px;font-weight:600;border:1.5px solid var(--border);background:var(--bg);color:var(--text-sub);cursor:pointer;white-space:nowrap;transition:all .15s;flex-shrink:0}
@@ -466,6 +468,8 @@ a{text-decoration:none;color:inherit}a.link{color:#0066cc;text-decoration-thickn
   #page-ba,#page-logs{padding:0}
   /* 모바일 테이블 가로스크롤 */
   .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:12px}
+  /* 모바일 검색바 */
+  #page-search .search-box-wrap{margin:0 -14px 14px;padding:10px 14px}
   /* 모바일: html 기본 16px × 1.0625 ≈ 17px */
   body{font-size:1.0625rem;line-height:1.9} /* 모바일: ~17px */
   .step-title{font-size:17px}
@@ -627,6 +631,27 @@ body.fp-mode #content{
     padding:6px 8px;font-size:13px
   }
 }
+
+/* ── 사진 업로드 스피너 ── */
+.ba-thumb-loading{
+  width:130px;height:100px;border-radius:10px;
+  background:var(--bg);border:2px dashed var(--border);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+  color:var(--text-muted);font-size:12px;
+}
+.ba-thumb-loading .spin{
+  width:24px;height:24px;
+  border:2.5px solid var(--border);
+  border-top-color:var(--primary);
+  border-radius:50%;
+  animation:spin .7s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ba-thumb{
+  transition:opacity .2s,transform .2s;
+  animation:thumbIn .25s ease;
+}
+@keyframes thumbIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
 </style>
 
 </head>
@@ -1713,18 +1738,47 @@ function triggerBAPhoto(side){
 function handleBAPhoto(e){
   const files=[...e.target.files];
   if(!files.length) return;
-  showToast('사진 업로드 중...');
+  const side=_baSide;
+  const total=files.length;
+  let done=0;
+
+  // 스피너 즉시 표시 (파일 개수만큼)
+  const thumbContainer = side==='before'
+    ? (el('fp-ba-before-thumbs')||el('ba-before-thumbs'))
+    : (el('fp-ba-after-thumbs')||el('ba-after-thumbs'));
+
+  // 스피너 placeholder 추가
+  const spinners = files.map((_,i)=>{
+    const d=document.createElement('div');
+    d.className='ba-thumb-loading';
+    d.id=`spin_${side}_${i}`;
+    d.innerHTML='<div class="spin"></div><span>업로드 중</span>';
+    if(thumbContainer) thumbContainer.appendChild(d);
+    return d;
+  });
+
   files.forEach((f,fi)=>{
     const r=new FileReader();
     r.onload=async ev=>{
       const base64=ev.target.result;
-      const side=_baSide;
       const storagePath=`ba/${Date.now()}_${fi}_${side}.jpg`;
       const url=await uploadPhotoToStorage(base64, storagePath);
+
+      // 스피너 제거 후 썸네일 추가
+      const spin=el(`spin_${side}_${fi}`);
+      if(spin) spin.remove();
+
       if(side==='before') S.baBeforePhotos.push(url);
       else S.baAfterPhotos.push(url);
+
+      done++;
       renderBAThumbs();
-      showToast('사진이 추가되었습니다');
+      if(done===total) showToast(`📸 사진 ${total}장 추가됨`);
+    };
+    r.onerror=()=>{
+      const spin=el(`spin_${side}_${fi}`);
+      if(spin){ spin.innerHTML='<span style="color:var(--red);font-size:11px">실패</span>'; }
+      done++;
     };
     r.readAsDataURL(f);
   });
