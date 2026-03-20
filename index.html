@@ -96,6 +96,9 @@ a{text-decoration:none;color:inherit}a.link{color:#0066cc;text-decoration-thickn
 
 /* ── PAGES ── */
 .page{display:none;animation:fadeIn .18s ease}
+/* 전환 시 깜빡임 방지 */
+#app{will-change:contents}
+#content-inner{contain:layout style}
 .page.active{display:block}
 @keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
 
@@ -429,9 +432,16 @@ a{text-decoration:none;color:inherit}a.link{color:#0066cc;text-decoration-thickn
   .step-title{font-size:18px}
   .step-desc{font-size:17px}
   #content-inner{padding:36px 48px 48px}
-  /* 메인 페이지만 max-width 제한 */
-  #page-home{max-width:880px;margin:0 auto}
-  #page-search{max-width:880px;margin:0 auto}
+  /* 일반 목록·본문 페이지: 900px 제한 (읽기 편하게) */
+  #page-home,#page-search,#page-roadmap,#page-contacts,#page-admin{
+    max-width:900px;
+    margin:0 auto;
+  }
+  /* 카테고리 매뉴얼 페이지도 900px */
+  [id^="page-cat_"]{max-width:900px;margin:0 auto}
+  /* 풀페이지·작성·편집 → 풀너비 유지 */
+  #page-ba,#page-logs,
+  .fullpage-overlay{max-width:none;margin:0}
 }
 @media(max-width:900px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:768px){
@@ -450,9 +460,9 @@ a{text-decoration:none;color:inherit}a.link{color:#0066cc;text-decoration-thickn
   .qbtn svg{width:24px;height:24px}
   .hbtn{padding:9px}
   .hbtn svg{width:20px;height:20px}
-  /* 홈·검색 페이지만 너비 제한 */
-  #page-home,#page-search{max-width:100%;margin:0}
-  /* page-ba, page-logs: 풀너비 — padding만 줄임 */
+  /* 모바일: 모든 페이지 풀너비 */
+  #page-home,#page-search,#page-roadmap,#page-contacts,#page-admin,
+  [id^="page-cat_"]{max-width:100%;margin:0}
   #page-ba,#page-logs{padding:0}
   /* 모바일 테이블 가로스크롤 */
   .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:12px}
@@ -604,11 +614,18 @@ body.fp-mode #content{
   max-width:100%;
 }
 @media(max-width:768px){
-  .fp-header{padding:0 14px;gap:8px}
-  .fp-back{padding:7px 10px;font-size:14px}
+  .fp-header{padding:0 10px;gap:6px;height:52px}
+  .fp-back{padding:7px 10px;font-size:14px;gap:4px}
+  /* 모바일: 목록으로 버튼 텍스트 줄임 */
+  .fp-back .fp-back-text{display:none}
   .fp-title{font-size:15px}
-  .fp-save{padding:8px 14px;font-size:14px}
-  .fp-body{padding:16px 16px 80px}
+  .fp-save{padding:8px 12px;font-size:14px;gap:4px}
+  .fp-save span{display:none} /* 저장 텍스트 숨기고 아이콘만 */
+  .fp-body{padding:14px 14px 80px}
+  /* 수정/삭제 버튼 compact */
+  .fp-back[id$="-edit"],.fp-back[id$="-del"]{
+    padding:6px 8px;font-size:13px
+  }
 }
 </style>
 
@@ -807,11 +824,11 @@ body.fp-mode #content{
 <div id="fp-ba" class="fullpage-overlay">
   <div class="fp-header">
     <button class="fp-back" onclick="closeFpBA()">
-      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>목록으로
+      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg><span class="fp-back-text">목록으로</span>
     </button>
     <div style="flex:1"></div>
     <button class="fp-save" onclick="saveBA()">
-      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>저장
+      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg><span>저장</span>
     </button>
   </div>
   <div class="fp-body">
@@ -847,11 +864,11 @@ body.fp-mode #content{
 <div id="fp-log" class="fullpage-overlay">
   <div class="fp-header">
     <button class="fp-back" onclick="closeFpLog()">
-      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>목록으로
+      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg><span class="fp-back-text">목록으로</span>
     </button>
     <div style="flex:1"></div>
     <button class="fp-save" onclick="saveLog()">
-      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>저장
+      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg><span>저장</span>
     </button>
   </div>
   <div class="fp-body">
@@ -875,7 +892,7 @@ body.fp-mode #content{
 <div id="fp-log-detail" class="fullpage-overlay">
   <div class="fp-header">
     <button class="fp-back" onclick="closeLogDetail()">
-      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>목록으로
+      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg><span class="fp-back-text">목록으로</span>
     </button>
     <div style="flex:1"></div>
     <div style="display:flex;gap:8px">
@@ -889,7 +906,7 @@ body.fp-mode #content{
 <div id="fp-ba-detail" class="fullpage-overlay">
   <div class="fp-header">
     <button class="fp-back" onclick="closeBADetail()">
-      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>목록으로
+      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg><span class="fp-back-text">목록으로</span>
     </button>
     <div style="flex:1"></div>
     <div style="display:flex;gap:8px">
@@ -1201,15 +1218,18 @@ function nav(page, closeSb=true){
     const pg=n.dataset.page;
     n.classList.toggle('active',pg===page||(pg&&page.startsWith(pg)));
   });
-  if(page==='home') renderHomeRecent();
-  else if(page==='logs') renderLogs();
-  else if(page==='ba') renderBA();
-  else if(page==='roadmap') renderRoadmap();
-  else if(page==='contacts') renderContacts();
-  else if(page==='admin') renderAdmin();
-  else if(page.startsWith('cat_')) renderCat(page.replace('cat_',''));
-  else if(page==='search'){el('search-input').value='';el('search-results').innerHTML='';_lastQuery='';const st=el('search-stats');if(st)st.style.display='none';setTimeout(()=>el('search-input').focus(),100);}
-  el('content').scrollTop=0;
+  // rAF으로 렌더 — 깜빡임 방지
+  requestAnimationFrame(()=>{
+    if(page==='home') renderHomeRecent();
+    else if(page==='logs') renderLogs();
+    else if(page==='ba') renderBA();
+    else if(page==='roadmap') renderRoadmap();
+    else if(page==='contacts') renderContacts();
+    else if(page==='admin') renderAdmin();
+    else if(page.startsWith('cat_')) renderCat(page.replace('cat_',''));
+    else if(page==='search'){el('search-input').value='';el('search-results').innerHTML='';_lastQuery='';const st=el('search-stats');if(st)st.style.display='none';setTimeout(()=>el('search-input').focus(),100);}
+    el('content').scrollTop=0;
+  });
 }
 
 // ════════════════════════════════════════
@@ -1362,7 +1382,7 @@ function showManual(cat, id){
     </div>` : '';
 
   pg.innerHTML = `
-    <div class="detail-back" onclick="nav('cat_${cat}',false)"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>목록으로</div>
+    <div class="detail-back" onclick="nav('cat_${cat}',false)"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg><span class="fp-back-text">목록으로</span></div>
     <div style="margin-bottom:6px">
       <span class="badge" style="background:var(--bg);color:var(--text-sub);border:1.5px solid var(--border);font-size:13px">${CAT_NAMES[cat]||cat}</span>
     </div>
