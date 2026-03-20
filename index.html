@@ -52,9 +52,9 @@ textarea{resize:vertical;min-height:80px}
 a{text-decoration:none;color:inherit}a.link{color:#0066cc;text-decoration-thickness:1px;text-underline-offset:3px}a.link:hover{color:#0052a3}
 
 /* ── LAYOUT ── */
-#app{display:flex;height:100dvh;overflow:hidden;position:relative}
+#app{display:flex;height:100dvh;overflow:clip}
 #sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--card);border-right:1.5px solid var(--border);display:flex;flex-direction:column;overflow:hidden;z-index:40}
-#main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+#main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:clip}
 #header{height:var(--header-h);flex-shrink:0;background:var(--card);border-bottom:1.5px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:10px;z-index:100;position:sticky;top:0}
 #content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
 #content-inner{padding:28px 24px 32px;width:100%}
@@ -414,7 +414,7 @@ a{text-decoration:none;color:inherit}a.link{color:#0066cc;text-decoration-thickn
 .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:12px;border:1.5px solid var(--border)}
 
 /* ── TOAST ── */
-#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--text);color:var(--card);padding:9px 18px;border-radius:999px;font-size:13px;font-weight:600;z-index:200;opacity:0;transition:all .25s;pointer-events:none;white-space:nowrap}
+#toast{position:fixed;bottom:24px;left:50%;z-index:10000;transform:translateX(-50%) translateY(16px);background:var(--text);color:var(--card);padding:9px 18px;border-radius:999px;font-size:13px;font-weight:600;z-index:200;opacity:0;transition:all .25s;pointer-events:none;white-space:nowrap}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
 /* 이미지 미리보기 */
@@ -518,13 +518,21 @@ a{text-decoration:none;color:inherit}a.link{color:#0066cc;text-decoration-thickn
 
 /* ── 풀페이지 작성 화면 ──────────────────────── */
 .fullpage-overlay{
-  position:fixed;
-  inset:0;
+  /* ★ body 기준 fixed — 부모 overflow:hidden 무력화 */
+  position:fixed !important;
+  top:0 !important;
+  left:0 !important;
+  right:0 !important;
+  bottom:0 !important;
+  width:100% !important;
+  height:100% !important;
   background:var(--bg);
-  z-index:200;
+  z-index:9999 !important;
   overflow-y:auto;
   -webkit-overflow-scrolling:touch;
-  /* 슬라이드 인 애니메이션 */
+  /* contain 해제 — 부모 overflow/transform 무력화 */
+  transform:translateZ(0);
+  will-change:transform;
   animation:slideUp .22s cubic-bezier(.25,.8,.25,1);
 }
 @keyframes slideUp{
@@ -1482,6 +1490,7 @@ function openLogDetail(id){
     }`;
   el('fp-log-det-del').onclick=()=>{ if(confirm('정말 삭제할까요?')){ delLogDetail(id); } };
   el('fp-log-det-edit').onclick=()=>{ closeLogDetail(); setTimeout(()=>showLogForm(id),50); };
+  document.body.appendChild(el('fp-log-detail'));
   el('fp-log-detail').style.display='block';
   document.body.style.overflow='hidden';
   // file:// 환경에서 pushState 불가 → 안전하게 처리
@@ -1665,6 +1674,7 @@ function openBADetail(id){
     </div>`;
   el('fp-ba-det-del').onclick=()=>{ if(confirm('정말 삭제할까요?')){ delBADetail(id); } };
   el('fp-ba-det-edit').onclick=()=>{ closeBADetail(); setTimeout(()=>showBAForm(id),50); };
+  document.body.appendChild(el('fp-ba-detail'));
   el('fp-ba-detail').style.display='block';
   document.body.style.overflow='hidden';
   try{ history.pushState({fpBADetail:true},'','#ba-detail'); }catch(e){}
