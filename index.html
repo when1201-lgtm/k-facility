@@ -945,7 +945,7 @@ body.fp-mode #bottom-nav{display:none !important}
     
     <!-- 사진 input: 풀페이지 안에 위치해야 z-index 문제 없음 -->
     <input type="file" id="ba-photo-input" accept="image/*" multiple
-      style="position:absolute;top:-999px;left:-999px;opacity:0;width:1px;height:1px;pointer-events:none"
+      style="position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0;"
       onchange="handleBAPhoto(event)">
   </div>
 </div>
@@ -1826,19 +1826,24 @@ function closeFpBA(){
 function hideBAForm(){ closeFpBA(); }
 function triggerBAPhoto(side){
   _baSide=side;
-  // 풀페이지 안에서 input 찾기 (z-index 문제 방지)
-  let inp=el('ba-photo-input');
-  if(!inp){
-    inp=document.createElement('input');
-    inp.type='file'; inp.id='ba-photo-input';
-    inp.accept='image/*'; inp.multiple=true;
-    inp.style.cssText='position:absolute;top:-999px;left:-999px;opacity:0;width:1px;height:1px;pointer-events:none';
-    inp.addEventListener('change',handleBAPhoto);
-    // 풀페이지 안에 추가 (body 말고)
-    const fp=el('fp-ba');
-    (fp||document.body).appendChild(inp);
-  }
-  inp.value='';
+  // 기존 input 제거 후 새로 생성 (재사용 시 이벤트 중복 방지)
+  const old=el('ba-photo-input');
+  if(old) old.remove();
+
+  const inp=document.createElement('input');
+  inp.type='file';
+  inp.id='ba-photo-input';
+  inp.accept='image/*';
+  inp.multiple=true;
+  // 화면 밖에 위치 (pointer-events 없이)
+  inp.style.cssText='position:fixed;top:0;left:0;width:0;height:0;opacity:0;overflow:hidden';
+  inp.addEventListener('change', handleBAPhoto);
+
+  // 풀페이지 오버레이 안에 추가
+  const fp = el('fp-ba') || document.body;
+  fp.appendChild(inp);
+
+  // 직접 클릭
   inp.click();
 }
 function handleBAPhoto(e){
