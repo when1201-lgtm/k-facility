@@ -265,9 +265,10 @@ a{text-decoration:none;color:inherit}a.link{color:#0066cc;text-decoration-thickn
   cursor:pointer;
   border:2px solid var(--border);
   background:var(--bg);
-  transition:transform .15s,border-color .15s;
+  transition:transform .2s,border-color .15s,opacity .2s;
+  animation:thumbIn .25s ease;
 }
-.ba-thumb:hover{transform:scale(1.03);border-color:var(--primary)}
+.ba-thumb:hover{transform:scale(1.03);border-color:var(--primary);box-shadow:0 4px 12px rgba(0,0,0,.15)}
 .ba-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:10px}
 .ba-ch{padding:12px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);cursor:pointer}
 .ba-cb{display:flex;flex-direction:column;gap:2px}
@@ -668,10 +669,7 @@ body.fp-mode #bottom-nav{display:none !important}
   animation:spin .7s linear infinite;
 }
 @keyframes spin{to{transform:rotate(360deg)}}
-.ba-thumb{
-  transition:opacity .2s,transform .2s;
-  animation:thumbIn .25s ease;
-}
+
 @keyframes thumbIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
 
 /* 입력 오류 흔들림 */
@@ -892,7 +890,7 @@ body.fp-mode #bottom-nav{display:none !important}
     <div class="fg"><label>제목 (작업명)</label><input type="text" id="fp-ba-title-input" placeholder="예: 화장실 수도꼭지 누수 수리"></div>
     <div class="form-row">
       <div class="fg" style="margin:0"><label>분류</label><select id="fp-ba-cat"><option value="전기">전기</option><option value="기계">기계</option><option value="영선">영선</option><option value="소방">소방</option><option value="기타">기타</option></select></div>
-      <div class="fg" style="margin:0"><label>작업일</label><input type="date" id="fp-ba-date" onblur="if(!this.value)this.value=today()"></div>
+      <div class="fg" style="margin:0"><label>작업일</label><input type="date" id="fp-ba-date" onblur="if(!this.value&&!S.editBAId)this.value=today()"></div>
     </div>
     <div style="height:12px"></div>
     <div class="ba-grid">
@@ -936,7 +934,7 @@ body.fp-mode #bottom-nav{display:none !important}
     <div class="fg"><label>작업 제목</label><input type="text" id="fp-ltitle" placeholder="작업 내용을 간략히 입력하세요"></div>
     <div class="form-row">
       <div class="fg" style="margin:0"><label>작업자</label><input type="text" id="fp-lworker" placeholder="이름"></div>
-      <div class="fg" style="margin:0"><label>작업일</label><input type="date" id="fp-ldate" onblur="if(!this.value)this.value=today()"></div>
+      <div class="fg" style="margin:0"><label>작업일</label><input type="date" id="fp-ldate" onblur="if(!this.value&&!S.editLogId)this.value=today()"></div>
     </div>
     <div class="fg">
       <label>상세 내용</label>
@@ -1600,8 +1598,8 @@ function showFieldError(inputId, msg){
   const inp = el(inputId);
   if(!inp) return showToast('⚠️ ' + msg);
   // 빨간 테두리 + 흔들림
-  inp.style.borderColor = 'var(--red)';
-  inp.style.boxShadow = '0 0 0 3px var(--red-dim)';
+  inp.style.borderColor = 'var(--red,#ff4d4f)';
+  inp.style.boxShadow = '0 0 0 3px var(--red-dim,rgba(220,38,38,.15))';
   inp.classList.add('shake-error');
   inp.scrollIntoView({behavior:'smooth', block:'nearest'});
   setTimeout(()=>{
@@ -1610,7 +1608,7 @@ function showFieldError(inputId, msg){
     inp.classList.remove('shake-error');
   }, 1800);
   showToast('⚠️ ' + msg);
-  setTimeout(()=>inp.focus(), 100);
+  setTimeout(()=>{try{inp.focus();}catch(e){}}, 200);
 }
 function today(){return new Date().toISOString().split('T')[0];}
 function showLogForm(editId=null){
@@ -1852,7 +1850,7 @@ function saveBA(){
   const title=titleEl?.value?.trim();
   if(!title){ showFieldError('fp-ba-title-input','작업 제목을 입력해 주세요'); return; }
   const catEl =el('fp-ba-cat') ||el('ba-cat');
-  if(!catEl?.value){ showFieldError('fp-ba-cat','분류를 선택해 주세요'); return; }
+  // 분류: select 기본값 있으므로 별도 검증 불필요
   const dateEl=el('fp-ba-date')||el('ba-date');
   const bbEl  =el('fp-ba-before-div')||el('ba-before-text-div');
   const baEl  =el('fp-ba-after-div') ||el('ba-after-text-div');
