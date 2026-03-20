@@ -821,35 +821,7 @@ a{text-decoration:none;color:inherit}a.link{color:#0066cc;text-decoration-thickn
   </div>
 </div>
 
-<!-- MODAL 작업기록 상세 -->
-<div id="log-detail-modal" style="display:none">
-  <div class="modal-overlay" onclick="if(event.target===this)closeLogModal()">
-    <div class="modal-box">
-      <div class="modal-hd"><h3 id="ldm-title" style="font-size:15px"></h3><button class="modal-x" onclick="closeLogModal()"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></div>
-      <div id="ldm-body"></div>
-      <div class="modal-ft">
-        <button class="btn btn-danger" id="ldm-del">삭제</button>
-        <button class="btn btn-edit" id="ldm-edit">수정</button>
-        <button class="btn btn-outline" onclick="closeLogModal()">닫기</button>
-      </div>
-    </div>
-  </div>
-</div>
 
-<!-- MODAL BA 상세 -->
-<div id="ba-detail-modal" style="display:none">
-  <div class="modal-overlay" onclick="if(event.target===this)closeBAModal()">
-    <div class="modal-box modal-box-wide">
-      <div class="modal-hd"><h3 id="badm-title" style="font-size:15px"></h3><button class="modal-x" onclick="closeBAModal()"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></div>
-      <div id="badm-body"></div>
-      <div class="modal-ft">
-        <button class="btn btn-danger" id="badm-del">삭제</button>
-        <button class="btn btn-edit" id="badm-edit">수정</button>
-        <button class="btn btn-outline" onclick="closeBAModal()">닫기</button>
-      </div>
-    </div>
-  </div>
-</div>
 
 <div id="toast"></div>
 <div id="sb-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:39" onclick="toggleSb()"></div>
@@ -1452,7 +1424,7 @@ function showLogForm(editId=null){
   fp.style.display='block';
   document.body.style.overflow='hidden';
   // 뒤로가기 지원
-  history.pushState({fpLog:true},'','#write-log');
+  try{ history.pushState({fpLog:true},'','#write-log'); }catch(e){}
   setTimeout(()=>el('fp-ltitle')?.focus(),80);
 }
 function closeFpLog(){
@@ -1495,20 +1467,37 @@ function delLog(id){
 }
 function openLogDetail(id){
   const l=S.logs.find(x=>x.id===id); if(!l) return;
-  el('ldm-title').textContent=l.title;
-  el('ldm-body').innerHTML=`
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
-      <span class="badge" style="background:var(--primary-dim);color:var(--primary)">${l.cat}</span>
-      <span class="badge" style="background:${SC[l.status]}22;color:${SC[l.status]}">${l.status}</span>
-      ${l.date?`<span class="badge" style="background:var(--bg);color:var(--text-sub)">${l.date}</span>`:''}
-      ${l.worker?`<span class="badge" style="background:var(--bg);color:var(--text-sub)">👤 ${l.worker}</span>`:''}
+  // 제목을 본문 상단에 렌더 (배지들 위에)
+  el('fp-log-detail-body').innerHTML=`
+    <h2 style="font-size:22px;font-weight:900;letter-spacing:-.03em;margin-bottom:14px;line-height:1.3;font-family:var(--font-title)">${l.title}</h2>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
+      <span class="badge" style="background:var(--primary-dim);color:var(--primary);font-size:15px">${l.cat}</span>
+      <span class="badge" style="background:${SC[l.status]}22;color:${SC[l.status]};font-size:15px">${l.status}</span>
+      ${l.date?`<span class="badge" style="background:var(--bg);color:var(--text-sub);font-size:15px">📅 ${l.date}</span>`:''}
+      ${l.worker?`<span class="badge" style="background:var(--bg);color:var(--text-sub);font-size:15px">👤 ${l.worker}</span>`:''}
     </div>
-    ${l.desc?`<div style="font-size:13px;color:var(--text-sub);line-height:1.7;white-space:pre-wrap;background:var(--bg);border-radius:9px;padding:11px">${l.desc}</div>`:'<p style="color:var(--text-muted);font-size:13px">상세 내용 없음</p>'}`;
-  el('ldm-del').onclick=()=>delLog(id);
-  el('ldm-edit').onclick=()=>{closeLogModal();nav('logs');setTimeout(()=>showLogForm(id),50);};
-  el('log-detail-modal').style.display='flex';
+    ${l.desc
+      ?`<div style="font-size:16px;color:var(--text-sub);line-height:1.9;white-space:pre-wrap;background:var(--bg);border-radius:12px;padding:18px 20px;border:1.5px solid var(--border)">${l.desc}</div>`
+      :`<p style="color:var(--text-muted);font-size:16px">상세 내용 없음</p>`
+    }`;
+  el('fp-log-det-del').onclick=()=>{ if(confirm('정말 삭제할까요?')){ delLogDetail(id); } };
+  el('fp-log-det-edit').onclick=()=>{ closeLogDetail(); setTimeout(()=>showLogForm(id),50); };
+  el('fp-log-detail').style.display='block';
+  document.body.style.overflow='hidden';
+  // file:// 환경에서 pushState 불가 → 안전하게 처리
+  try{ history.pushState({fpLogDetail:true},'','#log-detail'); }catch(e){}
 }
-function closeLogModal(){el('log-detail-modal').style.display='none';}
+function delLogDetail(id){
+  S.logs=S.logs.filter(l=>l.id!==id); save(); renderLogs(); renderHomeRecent();
+  closeLogDetail(); showToast('삭제되었습니다');
+}
+function closeLogDetail(){
+  el('fp-log-detail').style.display='none';
+  document.body.style.overflow='';
+  if(location.hash==='#log-detail') history.back();
+}
+// 구버전 호환
+function closeLogModal(){ closeLogDetail(); }
 function filterLog(btn,cat){document.querySelectorAll('.fc').forEach(c=>c.classList.remove('active'));btn.classList.add('active');S.logFilter=cat;renderLogs();}
 function renderLogs(){
   const list=el('log-list'); if(!list) return;
@@ -1568,7 +1557,7 @@ function showBAForm(editId=null){
   renderBAThumbs();
   fp.style.display='block';
   document.body.style.overflow='hidden';
-  history.pushState({fpBA:true},'','#write-ba');
+  try{ history.pushState({fpBA:true},'','#write-ba'); }catch(e){}
   setTimeout(()=>el('fp-ba-title-input')?.focus(),80);
 }
 function closeFpBA(){
@@ -1648,31 +1637,49 @@ function saveBA(){
 }
 function delBA(id){
   if(!confirm('정말로 이 항목을 삭제하시겠습니까?')) return;
-  S.ba=S.ba.filter(b=>b.id!==id);save();renderBA();closeBAModal();showToast('삭제되었습니다');
+  S.ba=S.ba.filter(b=>b.id!==id);save();renderBA();closeBADetail();showToast('삭제되었습니다');
 }
 function openBADetail(id){
   const b=S.ba.find(x=>x.id===id);if(!b)return;
-  el('badm-title').textContent=b.title;
-  el('badm-body').innerHTML=`
-    <div style="display:flex;gap:6px;margin-bottom:12px">
-      <span class="badge" style="background:var(--primary-dim);color:var(--primary)">${b.cat}</span>
-      ${b.date?`<span class="badge" style="background:var(--bg);color:var(--text-sub)">${b.date}</span>`:''}
+  el('fp-ba-detail-body').innerHTML=`
+    <h2 style="font-size:22px;font-weight:900;letter-spacing:-.03em;margin-bottom:14px;line-height:1.3;font-family:var(--font-title)">${b.title}</h2>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
+      <span class="badge" style="background:var(--primary-dim);color:var(--primary);font-size:15px">${b.cat}</span>
+      ${b.date?`<span class="badge" style="background:var(--bg);color:var(--text-sub);font-size:15px">📅 ${b.date}</span>`:''}
     </div>
     <div class="ba-grid">
-      <div class="ba-panel ba-before"><div class="ba-ph"><svg viewBox="0 0 24 24" stroke-width="2" width="13" height="13"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>Before</div>
-        <div class="ba-pb"><p style="font-size:12px;white-space:pre-wrap;color:var(--text-sub);line-height:1.6">${b.beforeText||'내용 없음'}</p>
-        ${b.beforePhotos?.length?`<div class="ba-thumbs" style="margin-top:8px">${b.beforePhotos.map(s=>`<img class="ba-thumb" src="${s}" onclick="previewImg('${s}')">`).join('')}</div>`:''}</div>
+      <div class="ba-panel ba-before">
+        <div class="ba-ph"><svg viewBox="0 0 24 24" stroke-width="2" width="14" height="14"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>Before (고장 증상)</div>
+        <div class="ba-pb">
+          <p style="font-size:16px;white-space:pre-wrap;color:var(--text-sub);line-height:1.85;min-height:60px">${b.beforeText||'<span style="color:var(--text-muted)">내용 없음</span>'}</p>
+          ${b.beforePhotos?.length?`<div class="ba-thumbs" style="margin-top:12px">${b.beforePhotos.map(s=>`<img class="ba-thumb" src="${s}" onclick="previewImg('${s}')" style="cursor:zoom-in">`).join('')}</div>`:''}
+        </div>
       </div>
-      <div class="ba-panel ba-after"><div class="ba-ph"><svg viewBox="0 0 24 24" stroke-width="2" width="13" height="13"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m22 4-10 10.01-3-3"/></svg>After</div>
-        <div class="ba-pb"><p style="font-size:12px;white-space:pre-wrap;color:var(--text-sub);line-height:1.6">${b.afterText||'내용 없음'}</p>
-        ${b.afterPhotos?.length?`<div class="ba-thumbs" style="margin-top:8px">${b.afterPhotos.map(s=>`<img class="ba-thumb" src="${s}" onclick="previewImg('${s}')">`).join('')}</div>`:''}</div>
+      <div class="ba-panel ba-after">
+        <div class="ba-ph"><svg viewBox="0 0 24 24" stroke-width="2" width="14" height="14"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m22 4-10 10.01-3-3"/></svg>After (수리 결과)</div>
+        <div class="ba-pb">
+          <p style="font-size:16px;white-space:pre-wrap;color:var(--text-sub);line-height:1.85;min-height:60px">${b.afterText||'<span style="color:var(--text-muted)">내용 없음</span>'}</p>
+          ${b.afterPhotos?.length?`<div class="ba-thumbs" style="margin-top:12px">${b.afterPhotos.map(s=>`<img class="ba-thumb" src="${s}" onclick="previewImg('${s}')" style="cursor:zoom-in">`).join('')}</div>`:''}
+        </div>
       </div>
     </div>`;
-  el('badm-del').onclick=()=>delBA(id);
-  el('badm-edit').onclick=()=>{closeBAModal();showBAForm(id);};
-  el('ba-detail-modal').style.display='flex';
+  el('fp-ba-det-del').onclick=()=>{ if(confirm('정말 삭제할까요?')){ delBADetail(id); } };
+  el('fp-ba-det-edit').onclick=()=>{ closeBADetail(); setTimeout(()=>showBAForm(id),50); };
+  el('fp-ba-detail').style.display='block';
+  document.body.style.overflow='hidden';
+  try{ history.pushState({fpBADetail:true},'','#ba-detail'); }catch(e){}
 }
-function closeBAModal(){el('ba-detail-modal').style.display='none';}
+function delBADetail(id){
+  S.ba=S.ba.filter(b=>b.id!==id); save(); renderBA();
+  closeBADetail(); showToast('삭제되었습니다');
+}
+function closeBADetail(){
+  el('fp-ba-detail').style.display='none';
+  document.body.style.overflow='';
+  if(location.hash==='#ba-detail') history.back();
+}
+// 구버전 호환
+function closeBAModal(){ closeBADetail(); }
 function renderBA(){
   const list=el('ba-list'); if(!list) return;
   if(!S.ba.length){list.innerHTML=`<div class="empty-state"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg><p>비포·애프터 기록을 작성해보세요</p></div>`;return;}
@@ -2277,15 +2284,19 @@ nav('home', false);
 // ── 뒤로가기 버튼으로 풀페이지 닫기
 window.addEventListener('popstate', ()=>{
   const h=location.hash;
+  // 작성 풀페이지
   if(h!=='#write-log' && el('fp-log')?.style.display!=='none'){
-    el('fp-log').style.display='none';
-    document.body.style.overflow='';
-    S.editLogId=null;
+    el('fp-log').style.display='none'; document.body.style.overflow=''; S.editLogId=null;
   }
   if(h!=='#write-ba' && el('fp-ba')?.style.display!=='none'){
-    el('fp-ba').style.display='none';
-    document.body.style.overflow='';
-    S.editBAId=null;
+    el('fp-ba').style.display='none'; document.body.style.overflow=''; S.editBAId=null;
+  }
+  // 상세 풀페이지
+  if(h!=='#log-detail' && el('fp-log-detail')?.style.display!=='none'){
+    el('fp-log-detail').style.display='none'; document.body.style.overflow='';
+  }
+  if(h!=='#ba-detail' && el('fp-ba-detail')?.style.display!=='none'){
+    el('fp-ba-detail').style.display='none'; document.body.style.overflow='';
   }
 });
 </script>
@@ -2351,12 +2362,13 @@ window.addEventListener('popstate', ()=>{
     <button class="fp-back" onclick="closeFpBA()">
       <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>목록으로
     </button>
-    <span class="fp-title" id="fp-ba-title">✏️ 새 비포/애프터 기록</span>
+    <div style="flex:1"></div>
     <button class="fp-save" onclick="saveBA()">
       <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>저장
     </button>
   </div>
   <div class="fp-body">
+    <p id="fp-ba-title" style="font-size:18px;font-weight:800;color:var(--primary);margin-bottom:16px;letter-spacing:-.02em">✏️ 새 비포/애프터 기록</p>
     <div class="fg"><label>제목 (작업명)</label><input type="text" id="fp-ba-title-input" placeholder="예: 화장실 수도꼭지 누수 수리"></div>
     <div class="form-row">
       <div class="fg" style="margin:0"><label>분류</label><select id="fp-ba-cat"><option value="전기">전기</option><option value="기계">기계</option><option value="영선">영선</option><option value="소방">소방</option><option value="기타">기타</option></select></div>
@@ -2400,12 +2412,13 @@ window.addEventListener('popstate', ()=>{
     <button class="fp-back" onclick="closeFpLog()">
       <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>목록으로
     </button>
-    <span class="fp-title" id="fp-log-title">새 작업 기록</span>
+    <div style="flex:1"></div>
     <button class="fp-save" onclick="saveLog()">
       <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>저장
     </button>
   </div>
   <div class="fp-body">
+    <p id="fp-log-title" style="font-size:18px;font-weight:800;color:var(--primary);margin-bottom:16px;letter-spacing:-.02em">새 작업 기록</p>
     <div class="form-row">
       <div class="fg" style="margin:0"><label>작업 유형</label><select id="fp-lcat"><option value="전기">전기 설비</option><option value="기계">기계 설비</option><option value="영선">영선 / 보수</option><option value="소방">소방 설비</option><option value="기타">기타</option></select></div>
       <div class="fg" style="margin:0"><label>상태</label><select id="fp-lstat"><option value="완료">완료</option><option value="진행중">진행중</option><option value="대기">대기</option></select></div>
@@ -2421,6 +2434,37 @@ window.addEventListener('popstate', ()=>{
         data-placeholder="작업 상세 내용, 특이사항 등..." role="textbox" aria-multiline="true"></div>
     </div>
   </div>
+</div>
+
+<!-- ══ 풀페이지: 작업기록 상세 ══ -->
+<!-- ══ 풀페이지: 작업기록 상세 ══ -->
+<div id="fp-log-detail" class="fullpage-overlay" style="display:none">
+  <div class="fp-header">
+    <button class="fp-back" onclick="closeLogDetail()">
+      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>목록으로
+    </button>
+    <div style="flex:1"></div>
+    <div style="display:flex;gap:8px">
+      <button class="fp-back" id="fp-log-det-edit" style="color:var(--blue);border-color:var(--blue-bg);background:var(--blue-bg)">✏️ 수정</button>
+      <button class="fp-back" id="fp-log-det-del" style="color:var(--red);border-color:var(--red-bg);background:var(--red-bg)">🗑 삭제</button>
+    </div>
+  </div>
+  <div class="fp-body" id="fp-log-detail-body"></div>
+</div>
+
+<!-- ══ 풀페이지: 비포/애프터 상세 ══ -->
+<div id="fp-ba-detail" class="fullpage-overlay" style="display:none">
+  <div class="fp-header">
+    <button class="fp-back" onclick="closeBADetail()">
+      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>목록으로
+    </button>
+    <div style="flex:1"></div>
+    <div style="display:flex;gap:8px">
+      <button class="fp-back" id="fp-ba-det-edit" style="color:var(--blue);border-color:var(--blue-bg);background:var(--blue-bg)">✏️ 수정</button>
+      <button class="fp-back" id="fp-ba-det-del" style="color:var(--red);border-color:var(--red-bg);background:var(--red-bg)">🗑 삭제</button>
+    </div>
+  </div>
+  <div class="fp-body" id="fp-ba-detail-body"></div>
 </div>
 </body>
 </html>
