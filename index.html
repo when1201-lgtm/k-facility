@@ -1151,6 +1151,7 @@ let S = {
   adminMode:false,
   activeMonth:new Date().getMonth()+1,
   baSide:'before', baBeforePhotos:[], baAfterPhotos:[],
+  baBeforeFiles:[], baAfterFiles:[], // 원본 File 객체 임시 보관
   // 매뉴얼 편집용
   editCat:null, editManualId:null,
   efSteps:[], efSupplies:[], efCautions:[], efChecklist:[],
@@ -1819,6 +1820,7 @@ function renderHomeRecent(){
 let _baSide='before';
 function showBAForm(editId=null){
   S.editBAId=editId; S.baBeforePhotos=[]; S.baAfterPhotos=[];
+  S.baBeforeFiles=[]; S.baAfterFiles=[]; // 임시 File 객체 초기화
   const fp=el('fp-ba');
   el('fp-ba-title').textContent=editId?'✏️ 비포/애프터 수정':'✏️ 새 비포/애프터 기록';
   if(editId){
@@ -1906,9 +1908,9 @@ function handleBAPhoto(e){
         spinEl.replaceWith(img);
       }
 
-      // 배열에 base64 먼저 저장 (즉시 사용 가능)
-      if(side==='before') S.baBeforePhotos.push(base64);
-      else S.baAfterPhotos.push(base64);
+      // base64: 미리보기용, File: 업로드용
+      if(side==='before'){ S.baBeforePhotos.push(base64); S.baBeforeFiles.push(f); }
+      else { S.baAfterPhotos.push(base64); S.baAfterFiles.push(f); }
 
       done++;
       if(done===total){
@@ -1936,79 +1938,104 @@ function renderBAThumbs(){
   if(ba2&&ba2!==ba) ba2.innerHTML=ba?.innerHTML||'';
 }
 async function saveBA(){
-  const titleEl=el('fp-ba-title-input')||el('ba-title');
-  const title=titleEl?.value?.trim();
+  const titleEl = el('fp-ba-title-input')||el('ba-title');
+  const title   = titleEl?.value?.trim();
   if(!title){ showFieldError('fp-ba-title-input','작업 제목을 입력해 주세요'); return; }
 
-  const catEl =el('fp-ba-cat') ||el('ba-cat');
-  const dateEl=el('fp-ba-date')||el('ba-date');
-  const bbEl  =el('fp-ba-before-div')||el('ba-before-text-div');
-  const baEl  =el('fp-ba-after-div') ||el('ba-after-text-div');
+  const catEl  = el('fp-ba-cat') ||el('ba-cat');
+  const dateEl = el('fp-ba-date')||el('ba-date');
+  const bbEl   = el('fp-ba-before-div')||el('ba-before-text-div');
+  const baEl   = el('fp-ba-after-div') ||el('ba-after-text-div');
 
-  // ★ 저장 버튼 비활성화 (중복 저장 방지)
-  const saveBtn=document.querySelector('#fp-ba .fp-save');
-  if(saveBtn){ saveBtn.disabled=true; saveBtn.textContent='저장 중...'; }
+  const saveBtn = document.querySelector('#fp-ba .fp-save');
+  if(saveBtn){ saveBtn.disabled=true; saveBtn.innerHTML='<svg viewBox="0 0 24 24" stroke-width="2" width="15" height="15" style="animation:spin .7s linear infinite;stroke:currentColor;fill:none"><path d="M21 12a9 9 0 1 1-6.22-8.56"/></svg> 저장 중...'; }
 
-  // ★ base64 사진을 Storage에 먼저 업로드 → URL로 교체
-  async function uploadPhotos(photos, folder){
-    const result=[];
-    for(let i=0;i<photos.length;i++){
-      const p=photos[i];
-      if(p && p.startsWith('data:') && storage){
-        try{
-          const path=`ba/${folder}/${Date.now()}_${i}.jpg`;
-          const ref=storage.ref(path);
-          await ref.putString(p,'data_url');
-          result.push(await ref.getDownloadURL());
-        }catch(err){
-          console.warn('Storage 업로드 실패:', err);
-          result.push(''); // 실패한 사진은 빈 문자열 (저장은 계속)
+  /* ─── 업로드 헬퍼 ───────────────────────────────────
+     photos: base64/URL 혼합 배열 (표시용)
+     files:  원본 File 객체 배열 (업로드용, 같은 인덱스)
+     이미 URL인 항목(수정 모드 기존 사진)은 그대로 유지 */
+  async function uploadGroup(photos, files, folder){
+    const urls = [];
+    for(let i=0; i<photos.length; i++){
+      const photo = photos[i];
+      // 이미 https URL → 그대로 유지
+      if(photo && photo.startsWith('http')){ urls.push(photo); continue; }
+      // base64 → File 객체로 업로드
+      if(!storage){
+        // Storage 없으면 건너뜀 (사진 없이 저장)
+        console.warn('Storage 미연결 — 사진 제외하고 저장');
+        continue;
+      }
+      try{
+        const file = files[i];
+        const ext  = (file?.type||'image/jpeg').split('/')[1] || 'jpg';
+        const path = `ba/${folder}/${i}_${Date.now()}.${ext}`;
+        const ref  = storage.ref(path);
+        if(file instanceof File){
+          // File 객체 직접 업로드 (가장 신뢰성 높음)
+          await ref.put(file);
+        } else if(photo?.startsWith('data:')){
+          // File 없으면 base64 문자열로 업로드
+          await ref.putString(photo, 'data_url');
+        } else {
+          continue; // 빈 항목 스킵
         }
-      } else {
-        result.push(p||''); // 이미 URL이거나 빈 값
+        urls.push(await ref.getDownloadURL());
+      }catch(err){
+        console.error(`사진 ${i} 업로드 실패:`, err.code||err.message);
+        // 실패해도 나머지 계속 (부분 저장 허용)
       }
     }
-    return result.filter(u=>u); // 빈 문자열 제거
+    return urls;
   }
 
   try{
-    showToast('💾 저장 중...');
+    showToast('💾 사진 업로드 중...');
     const id = S.editBAId || Date.now();
-    const [bPhotos, aPhotos] = await Promise.all([
-      uploadPhotos(S.baBeforePhotos, `${id}_before`),
-      uploadPhotos(S.baAfterPhotos,  `${id}_after`)
+
+    // Before / After 병렬 업로드
+    const [bUrls, aUrls] = await Promise.all([
+      uploadGroup(S.baBeforePhotos, S.baBeforeFiles, `${id}/before`),
+      uploadGroup(S.baAfterPhotos,  S.baAfterFiles,  `${id}/after`)
     ]);
 
-    const d={
+    const d = {
       title,
-      cat:  catEl?.value||'기타',
-      date: dateEl?.value?.trim()||'',
-      beforeText:(bbEl?.innerText||'').trim(),
-      afterText: (baEl?.innerText||'').trim(),
-      beforePhotos: bPhotos,
-      afterPhotos:  aPhotos
+      cat:         catEl?.value  || '기타',
+      date:        dateEl?.value?.trim() || '',
+      beforeText:  (bbEl?.innerText||'').trim(),
+      afterText:   (baEl?.innerText||'').trim(),
+      beforePhotos: bUrls,  // URL만, base64 없음
+      afterPhotos:  aUrls
     };
 
     if(S.editBAId){
-      const b=S.ba.find(x=>x.id===S.editBAId);
-      if(b) Object.assign(b,d);
+      const b = S.ba.find(x=>x.id===S.editBAId);
+      if(b) Object.assign(b, d);
       showToast('✅ 수정되었습니다');
     } else {
       S.ba.unshift({id, ...d});
       showToast('✅ 저장되었습니다');
     }
 
-    // Storage URL로 교체 후 배열 동기화
-    S.baBeforePhotos=[...bPhotos];
-    S.baAfterPhotos=[...aPhotos];
+    // 임시 배열 정리
+    S.baBeforePhotos=[...bUrls];
+    S.baAfterPhotos =[...aUrls];
+    S.baBeforeFiles =[];
+    S.baAfterFiles  =[];
 
-    save(); closeFpBA(); renderBA();
+    save();       // base64 필터링 후 localStorage/Firestore 저장
+    closeFpBA();
+    renderBA();
 
-  } catch(err){
-    console.error('saveBA 실패:', err);
-    showToast('⚠️ 저장 실패 — 다시 시도해 주세요');
-  } finally{
-    if(saveBtn){ saveBtn.disabled=false; saveBtn.textContent='저장'; }
+  }catch(err){
+    console.error('saveBA 오류:', err);
+    showToast('⚠️ 저장 실패: '+(err.code||err.message||'알 수 없는 오류'));
+  }finally{
+    if(saveBtn){
+      saveBtn.disabled=false;
+      saveBtn.innerHTML='<svg viewBox="0 0 24 24" stroke-width="2" width="15" height="15" style="stroke:currentColor;fill:none"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg><span>저장</span>';
+    }
   }
 }
 function delBA(id){
