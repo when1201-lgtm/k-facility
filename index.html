@@ -255,8 +255,19 @@ a{text-decoration:none;color:inherit}a.link{color:#0066cc;text-decoration-thickn
 .ba-photo-btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border:2px dashed var(--border);border-radius:8px;font-size:12px;color:var(--text-muted);cursor:pointer;transition:all .15s;margin-top:8px}
 .ba-photo-btn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-dim)}
 .ba-photo-btn svg{width:16px;height:16px;stroke:currentColor;fill:none}
-.ba-thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-top:10px}
-.ba-thumb{width:100%;max-width:280px;max-height:200px;border-radius:10px;object-fit:contain;cursor:pointer;border:2px solid var(--border);background:var(--bg)}
+.ba-thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;margin-top:10px}
+.ba-thumb{
+  width:100%;
+  aspect-ratio:4/3;
+  max-height:140px;
+  border-radius:10px;
+  object-fit:cover;
+  cursor:pointer;
+  border:2px solid var(--border);
+  background:var(--bg);
+  transition:transform .15s,border-color .15s;
+}
+.ba-thumb:hover{transform:scale(1.03);border-color:var(--primary)}
 .ba-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:10px}
 .ba-ch{padding:12px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);cursor:pointer}
 .ba-cb{display:flex;flex-direction:column;gap:2px}
@@ -662,6 +673,16 @@ body.fp-mode #bottom-nav{display:none !important}
   animation:thumbIn .25s ease;
 }
 @keyframes thumbIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+
+/* 입력 오류 흔들림 */
+@keyframes shakeX{
+  0%,100%{transform:translateX(0)}
+  20%{transform:translateX(-6px)}
+  40%{transform:translateX(6px)}
+  60%{transform:translateX(-4px)}
+  80%{transform:translateX(4px)}
+}
+.shake-error{animation:shakeX .4s ease}
 </style>
 
 </head>
@@ -871,7 +892,7 @@ body.fp-mode #bottom-nav{display:none !important}
     <div class="fg"><label>제목 (작업명)</label><input type="text" id="fp-ba-title-input" placeholder="예: 화장실 수도꼭지 누수 수리"></div>
     <div class="form-row">
       <div class="fg" style="margin:0"><label>분류</label><select id="fp-ba-cat"><option value="전기">전기</option><option value="기계">기계</option><option value="영선">영선</option><option value="소방">소방</option><option value="기타">기타</option></select></div>
-      <div class="fg" style="margin:0"><label>작업일</label><input type="date" id="fp-ba-date"></div>
+      <div class="fg" style="margin:0"><label>작업일</label><input type="date" id="fp-ba-date" onblur="if(!this.value)this.value=today()"></div>
     </div>
     <div style="height:12px"></div>
     <div class="ba-grid">
@@ -915,7 +936,7 @@ body.fp-mode #bottom-nav{display:none !important}
     <div class="fg"><label>작업 제목</label><input type="text" id="fp-ltitle" placeholder="작업 내용을 간략히 입력하세요"></div>
     <div class="form-row">
       <div class="fg" style="margin:0"><label>작업자</label><input type="text" id="fp-lworker" placeholder="이름"></div>
-      <div class="fg" style="margin:0"><label>작업일</label><input type="date" id="fp-ldate"></div>
+      <div class="fg" style="margin:0"><label>작업일</label><input type="date" id="fp-ldate" onblur="if(!this.value)this.value=today()"></div>
     </div>
     <div class="fg">
       <label>상세 내용</label>
@@ -1571,6 +1592,26 @@ function quickLog(cat,title){
 // LOGS
 // ════════════════════════════════════════
 const SC = {완료:'#059669',진행중:'#f59e0b',대기:'#64748b'};
+
+// ════════════════════════════════════════
+// 입력값 검증 헬퍼
+// ════════════════════════════════════════
+function showFieldError(inputId, msg){
+  const inp = el(inputId);
+  if(!inp) return showToast('⚠️ ' + msg);
+  // 빨간 테두리 + 흔들림
+  inp.style.borderColor = 'var(--red)';
+  inp.style.boxShadow = '0 0 0 3px var(--red-dim)';
+  inp.classList.add('shake-error');
+  inp.scrollIntoView({behavior:'smooth', block:'nearest'});
+  setTimeout(()=>{
+    inp.style.borderColor = '';
+    inp.style.boxShadow = '';
+    inp.classList.remove('shake-error');
+  }, 1800);
+  showToast('⚠️ ' + msg);
+  setTimeout(()=>inp.focus(), 100);
+}
 function today(){return new Date().toISOString().split('T')[0];}
 function showLogForm(editId=null){
   S.editLogId=editId;
@@ -1604,7 +1645,7 @@ function saveLog(){
   // 풀페이지 필드 우선, 없으면 구버전 필드 fallback
   const titleEl = el('fp-ltitle')||el('ltitle');
   const title = titleEl?.value?.trim();
-  if(!title){showToast('작업 제목을 입력하세요');return;}
+  if(!title){ showFieldError('fp-ltitle','작업 제목을 입력해 주세요'); return; }
   const catEl   = el('fp-lcat')  ||el('lcat');
   const statEl  = el('fp-lstat') ||el('lstat');
   const wkEl    = el('fp-lworker')||el('lworker');
@@ -1809,8 +1850,9 @@ function saveBA(){
   // 풀페이지 필드 우선
   const titleEl=el('fp-ba-title-input')||el('ba-title');
   const title=titleEl?.value?.trim();
-  if(!title){showToast('제목을 입력하세요');return;}
+  if(!title){ showFieldError('fp-ba-title-input','작업 제목을 입력해 주세요'); return; }
   const catEl =el('fp-ba-cat') ||el('ba-cat');
+  if(!catEl?.value){ showFieldError('fp-ba-cat','분류를 선택해 주세요'); return; }
   const dateEl=el('fp-ba-date')||el('ba-date');
   const bbEl  =el('fp-ba-before-div')||el('ba-before-text-div');
   const baEl  =el('fp-ba-after-div') ||el('ba-after-text-div');
