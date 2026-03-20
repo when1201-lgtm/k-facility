@@ -255,20 +255,27 @@ a{text-decoration:none;color:inherit}a.link{color:#0066cc;text-decoration-thickn
 .ba-photo-btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border:2px dashed var(--border);border-radius:8px;font-size:12px;color:var(--text-muted);cursor:pointer;transition:all .15s;margin-top:8px}
 .ba-photo-btn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-dim)}
 .ba-photo-btn svg{width:16px;height:16px;stroke:currentColor;fill:none}
-.ba-thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;margin-top:10px}
+.ba-thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:12px}
+@media(min-width:900px){
+  .ba-thumbs{grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+}
 .ba-thumb{
   width:100%;
   aspect-ratio:4/3;
-  max-height:140px;
+  max-height:160px;
   border-radius:10px;
   object-fit:cover;
-  cursor:pointer;
+  cursor:zoom-in;
   border:2px solid var(--border);
   background:var(--bg);
-  transition:transform .2s,border-color .15s,opacity .2s;
+  transition:transform .2s,border-color .15s,opacity .2s,box-shadow .2s;
   animation:thumbIn .25s ease;
+  display:block;
 }
-.ba-thumb:hover{transform:scale(1.03);border-color:var(--primary);box-shadow:0 4px 12px rgba(0,0,0,.15)}
+.ba-thumb:hover{transform:scale(1.04);border-color:var(--primary);box-shadow:0 6px 20px rgba(0,0,0,.18)}
+@media(min-width:900px){
+  .ba-thumb{max-height:200px}
+}
 .ba-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:10px}
 .ba-ch{padding:12px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);cursor:pointer}
 .ba-cb{display:flex;flex-direction:column;gap:2px}
@@ -681,6 +688,29 @@ body.fp-mode #bottom-nav{display:none !important}
   80%{transform:translateX(4px)}
 }
 .shake-error{animation:shakeX .4s ease}
+
+/* 다크모드 토글 버튼 강조 */
+.hbtn-theme{background:var(--primary-dim);color:var(--primary) !important;border-radius:9px}
+.hbtn-theme:hover{background:var(--primary);color:#fff !important}
+[data-theme="dark"] .hbtn-theme svg path{stroke:#fbbf24}
+
+/* 긴 텍스트 자동 줄바꿈 (가로 스크롤 방지) */
+.ba-pb p,.step-desc,.log-desc,.step-supplies li,.step-cautions li{
+  word-break:break-word;
+  overflow-wrap:anywhere;
+  white-space:pre-wrap;
+}
+/* 카드 제목: 한 줄 ellipsis */
+.ba-ct,.log-title,.mi-title,.sch-title{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  max-width:100%;
+}
+/* PC 와이드: BA 패널 텍스트 최대 너비 */
+@media(min-width:900px){
+  .ba-pb p{max-width:none;line-height:1.9}
+}
 </style>
 
 </head>
@@ -725,7 +755,7 @@ body.fp-mode #bottom-nav{display:none !important}
     </div>
     <div class="h-actions">
       <button class="hbtn" onclick="nav('search')"><svg viewBox="0 0 24 24" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.34-4.34"/></svg></button>
-      <button class="hbtn" onclick="toggleTheme()"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></svg></button>
+      <button class="hbtn hbtn-theme" onclick="toggleTheme()" title="다크/라이트 모드 전환"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></svg></button>
     </div>
   </header>
 
@@ -1237,7 +1267,16 @@ function loadState(){
       S.schedules=JSON.parse(JSON.stringify(DEFAULT_SCHEDULES));
       S.manuals=JSON.parse(JSON.stringify(DEFAULT_MANUALS));
     }
-    if(localStorage.getItem('kf_theme')==='dark') document.documentElement.setAttribute('data-theme','dark');
+    // 테마 초기화: 저장값 > OS 설정 > 라이트
+    const savedTheme = localStorage.getItem('kf_theme');
+    if(savedTheme === 'dark'){
+      document.documentElement.setAttribute('data-theme','dark');
+    } else if(savedTheme === 'light'){
+      document.documentElement.removeAttribute('data-theme');
+    } else if(window.matchMedia('(prefers-color-scheme: dark)').matches){
+      // OS가 다크면 자동 적용 (저장값 없을 때만)
+      document.documentElement.setAttribute('data-theme','dark');
+    }
   }catch(e){
     S.schedules=JSON.parse(JSON.stringify(DEFAULT_SCHEDULES));
     S.manuals=JSON.parse(JSON.stringify(DEFAULT_MANUALS));
@@ -2481,12 +2520,16 @@ function doSearch(q){
 // ════════════════════════════════════════
 // UTILS
 // ════════════════════════════════════════
+function syncDarkToggle(){
+  const isDark=document.documentElement.getAttribute('data-theme')==='dark';
+  const t=el('dark-toggle');if(t)t.classList.toggle('on',isDark);
+}
 function toggleTheme(){
   const isDark=document.documentElement.getAttribute('data-theme')==='dark';
   if(isDark)document.documentElement.removeAttribute('data-theme');
   else document.documentElement.setAttribute('data-theme','dark');
   localStorage.setItem('kf_theme',isDark?'light':'dark');
-  const t=el('dark-toggle');if(t)t.classList.toggle('on',!isDark);
+  syncDarkToggle();
 }
 function toggleSb(){
   // 모바일(768px 이하)에서만 오버레이 사이드바 동작
@@ -2510,6 +2553,14 @@ function previewImg(src){const ov=document.createElement('div');ov.className='im
 // ════════════════════════════════════════
 loadState();
 nav('home', false);
+
+// OS 다크모드 변경 실시간 감지
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e=>{
+  if(localStorage.getItem('kf_theme')) return; // 수동 설정 우선
+  if(e.matches) document.documentElement.setAttribute('data-theme','dark');
+  else document.documentElement.removeAttribute('data-theme');
+  syncDarkToggle();
+});
 
 // ── 뒤로가기 버튼으로 풀페이지 닫기
 // (popstate 제거: nav 기반 전환으로 불필요)
