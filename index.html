@@ -44,11 +44,11 @@
   --shadow:0 1px 4px rgba(0,0,0,.3),0 4px 16px rgba(0,0,0,.2);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{font-size:100%}body{height:100%;font-family:var(--font-body);background:var(--bg);color:var(--text);font-size:1.125rem;line-height:1.95;letter-spacing:-.01em;-webkit-text-size-adjust:100%;text-size-adjust:100%;word-break:keep-all;overflow-wrap:break-word}
+html{font-size:100%}body{height:100%;font-family:var(--font-body);background:var(--bg);color:var(--text);font-size:1.125rem;line-height:1.9;letter-spacing:-.01em;-webkit-text-size-adjust:100%;text-size-adjust:100%;word-break:keep-all;overflow-wrap:break-word}
 button{cursor:pointer;border:none;background:none;font-family:inherit;font-size:inherit;color:inherit}
-input,textarea,select{font-family:var(--font-body);font-size:1rem;line-height:1.7;color:var(--text);background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 13px;outline:none;transition:border .15s,box-shadow .15s;width:100%}
+input,textarea,select{font-family:var(--font-body);font-size:1rem;line-height:1.7;color:var(--text);background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;outline:none;transition:border .15s,box-shadow .15s;width:100%}
 input:focus,textarea:focus,select:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-dim)}
-textarea{resize:vertical;min-height:80px}
+textarea{resize:vertical;min-height:120px}
 a{text-decoration:none;color:inherit}a.link{color:#0066cc;text-decoration-thickness:1px;text-underline-offset:3px}a.link:hover{color:#0052a3}
 
 /* ── LAYOUT ── */
@@ -218,7 +218,7 @@ a{text-decoration:none;color:inherit}a.link{color:#0066cc;text-decoration-thickn
 .log-form-wrap{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:16px}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
 .fg{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}
-.fg label{font-size:0.95rem;font-weight:700;color:var(--text-sub);letter-spacing:-.01em}
+.fg label{font-size:0.95rem;font-weight:700;color:var(--text-sub);letter-spacing:-.01em;display:block;margin-bottom:6px}
 .log-list{display:flex;flex-direction:column;gap:8px}
 .log-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:13px 14px;display:flex;gap:10px;align-items:flex-start;cursor:pointer;transition:border-color .15s}
 .log-card:hover{border-color:var(--primary)}
@@ -517,8 +517,8 @@ a{text-decoration:none;color:inherit}a.link{color:#0066cc;text-decoration-thickn
 .paper-editor:empty::before{
   content:attr(data-placeholder);color:var(--text-muted);pointer-events:none;
 }
-#ldesc-div{min-height:220px}
-#ba-before-text-div,#ba-after-text-div{min-height:180px}
+#ldesc-div{min-height:240px}
+#ba-before-text-div,#ba-after-text-div{min-height:200px}
 /* BA·LOGS 페이지 풀너비 */
 #page-ba .add-form,#page-logs .log-form-wrap{max-width:100%}
 @media(max-width:768px){
