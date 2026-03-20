@@ -568,8 +568,15 @@ a{text-decoration:none;color:inherit}a.link{color:#0066cc;text-decoration-thickn
   height:100dvh !important;
   z-index:9999 !important;
   overflow:hidden !important;
-  background-color:var(--bg) !important;  /* 뒤 내용 완전 차단 */
+  background-color:var(--bg) !important;
   animation:slideUp .18s ease;
+  isolation:isolate;           /* 레이아웃 완전 격리 */
+}
+/* 비활성 풀페이지: DOM에 있어도 레이아웃에 영향 없게 */
+.fullpage-overlay:not(.active){
+  display:none !important;
+  position:fixed !important;   /* flow 밖으로 */
+  visibility:hidden !important;
 }
 @keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 
@@ -1853,42 +1860,66 @@ function handleBAPhoto(e){
   const total=files.length;
   let done=0;
 
-  // 스피너 즉시 표시 (파일 개수만큼)
   const thumbContainer = side==='before'
     ? (el('fp-ba-before-thumbs')||el('ba-before-thumbs'))
     : (el('fp-ba-after-thumbs')||el('ba-after-thumbs'));
 
-  // 스피너 placeholder 추가
-  const spinners = files.map((_,i)=>{
-    const d=document.createElement('div');
-    d.className='ba-thumb-loading';
-    d.id=`spin_${side}_${i}`;
-    d.innerHTML='<div class="spin"></div><span>업로드 중</span>';
-    if(thumbContainer) thumbContainer.appendChild(d);
-    return d;
-  });
-
   files.forEach((f,fi)=>{
+    // 고유 ID (타임스탬프 + 인덱스)
+    const uid = `spin_${side}_${Date.now()}_${fi}`;
+
+    // 스피너 추가
+    const spinner=document.createElement('div');
+    spinner.className='ba-thumb-loading';
+    spinner.id=uid;
+    spinner.innerHTML='<div class="spin"></div><span>처리 중</span>';
+    if(thumbContainer) thumbContainer.appendChild(spinner);
+
     const r=new FileReader();
     r.onload=async ev=>{
       const base64=ev.target.result;
-      const storagePath=`ba/${Date.now()}_${fi}_${side}.jpg`;
-      const url=await uploadPhotoToStorage(base64, storagePath);
 
-      // 스피너 제거 후 썸네일 추가
-      const spin=el(`spin_${side}_${fi}`);
-      if(spin) spin.remove();
+      // ★ 스피너를 즉시 썸네일로 교체 (base64 미리보기 — Storage 기다리지 않음)
+      const spinEl=document.getElementById(uid);
+      if(spinEl){
+        const img=document.createElement('img');
+        img.className='ba-thumb';
+        img.src=base64;
+        img.onclick=()=>previewImg(base64);
+        spinEl.replaceWith(img);
+      }
 
-      if(side==='before') S.baBeforePhotos.push(url);
-      else S.baAfterPhotos.push(url);
+      // 배열에 base64 먼저 저장 (즉시 사용 가능)
+      if(side==='before') S.baBeforePhotos.push(base64);
+      else S.baAfterPhotos.push(base64);
 
       done++;
-      renderBAThumbs();
-      if(done===total) showToast(`📸 사진 ${total}장 추가됨`);
+      if(done===total){
+        showToast(`📸 사진 ${total}장 추가됨`);
+        // Firebase Storage 업로드는 백그라운드에서 진행
+        if(storage){
+          const photos = side==='before' ? S.baBeforePhotos : S.baAfterPhotos;
+          // 마지막 total개 항목(방금 추가한 것)만 업로드
+          const startIdx = photos.length - total;
+          for(let i=0;i<total;i++){
+            const idx=startIdx+i;
+            if(photos[idx]?.startsWith('data:')){
+              try{
+                const path=`ba/${Date.now()}_${i}_${side}.jpg`;
+                const ref=storage.ref(path);
+                await ref.putString(photos[idx],'data_url');
+                photos[idx]=await ref.getDownloadURL();
+              }catch(err){
+                console.warn('Storage 업로드 실패, base64 유지:', err);
+              }
+            }
+          }
+        }
+      }
     };
     r.onerror=()=>{
-      const spin=el(`spin_${side}_${fi}`);
-      if(spin){ spin.innerHTML='<span style="color:var(--red);font-size:11px">실패</span>'; }
+      const spinEl=document.getElementById(uid);
+      if(spinEl) spinEl.innerHTML='<span style="color:var(--red);font-size:12px">❌ 실패</span>';
       done++;
     };
     r.readAsDataURL(f);
