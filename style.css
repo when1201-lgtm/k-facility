@@ -504,3 +504,68 @@ textarea{caret-color:var(--orange)}
   .pi{padding:12px 12px 40px}
   .rm-year-grid{grid-template-columns:repeat(3,1fr)}
 }
+
+/* =====================================================
+   BEFORE / AFTER 업로드 & 상세 스타일
+===================================================== */
+
+/* 모달 내 사진 업로드 섹션 */
+.ba-upload-section{
+  border-radius:12px;overflow:hidden;
+  border:1px solid rgba(255,255,255,.12);
+}
+.ba-upload-header{
+  padding:10px 14px;font-size:12px;font-weight:700;
+  display:flex;align-items:center;gap:7px;
+}
+.ba-upload-before{
+  background:rgba(244,63,94,.18);color:rgba(255,160,160,.9);
+  border-bottom:1px solid rgba(244,63,94,.25);
+}
+.ba-upload-after{
+  background:rgba(16,185,129,.18);color:rgba(110,231,183,.9);
+  border-bottom:1px solid rgba(16,185,129,.25);
+}
+.ba-upload-section .photo-preview-wrap{
+  padding:10px 12px;background:rgba(255,255,255,.04);min-height:50px;
+}
+.ba-upload-section .btn-gh{
+  margin:0 12px 12px;font-size:12px;min-height:38px;
+}
+
+/* 상세 페이지 Before/After 그리드 */
+.ba-detail-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:14px;
+}
+.ba-detail-col{
+  border-radius:12px;overflow:hidden;
+  border:1px solid rgba(255,255,255,.12);
+}
+.ba-col-header{
+  padding:10px 14px;font-size:11px;font-weight:700;
+  letter-spacing:.06em;text-transform:uppercase;
+}
+.ba-col-before{
+  background:rgba(244,63,94,.20);color:rgba(255,160,160,.9);
+}
+.ba-col-after{
+  background:rgba(16,185,129,.20);color:rgba(110,231,183,.9);
+}
+.ba-col-body{
+  padding:10px;background:rgba(255,255,255,.04);
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:7px;
+}
+.ba-detail-img{
+  width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;
+  cursor:zoom-in;border:1px solid rgba(255,255,255,.10);
+  transition:transform .2s,box-shadow .2s;display:block;
+}
+.ba-detail-img:hover{transform:scale(1.04);box-shadow:0 6px 20px rgba(0,0,0,.5)}
+.ba-no-photo{
+  font-size:12px;color:var(--t4);padding:16px;text-align:center;grid-column:1/-1;
+}
+
+@media(max-width:640px){
+  .ba-detail-grid{grid-template-columns:1fr}
+  .ba-detail-col{margin-bottom:0}
+}
