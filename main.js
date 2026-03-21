@@ -817,41 +817,39 @@ function openManualModal(catKey, id) {
     <div class="modal-section-divider">📦 섹션 1 — 준비물 / 자재</div>
     <div class="lf-group">
       <label class="lf-label">한 줄에 하나씩 입력</label>
-      <textarea class="lf-textarea" id="m-manual-tools" rows="4"
+      <textarea class="lf-textarea" id="mf-supplies" rows="4"
         placeholder="드라이버(+/-)&#10;절연 장갑&#10;검전기&#10;교체용 MCB (동일 규격)">${esc((m?.supplies||[]).join('\n'))}</textarea>
     </div>
 
     <div class="modal-section-divider">⚠️ 섹션 2 — 안전주의사항</div>
     <div class="lf-group">
       <label class="lf-label">한 줄에 하나씩 입력</label>
-      <textarea class="lf-textarea" id="m-manual-safety" rows="4"
+      <textarea class="lf-textarea" id="mf-safety" rows="4"
         placeholder="주 차단기 OFF 후 작업&#10;검전기로 무전압 확인&#10;동일 용량 MCB만 사용">${esc((m?.cautions||[]).join('\n'))}</textarea>
     </div>
 
     <div class="modal-section-divider">🔧 섹션 3 — 상세 작업 절차</div>
     <div class="lf-group">
       <label class="lf-label">형식: <code style="background:rgba(255,255,255,.1);padding:1px 6px;border-radius:4px">제목|설명</code> — 한 줄에 하나씩</label>
-      <textarea class="lf-textarea" id="m-manual-steps" rows="6"
+      <textarea class="lf-textarea" id="mf-steps-raw" rows="6"
         placeholder="전원 차단 및 잠금|주 차단기를 OFF하고 검전기로 무전압 확인&#10;기존 MCB 제거|전선 분리 후 단자 위치 사진 촬영&#10;신규 MCB 설치|동일 규격 MCB를 딘레일에 고정&#10;투입 테스트|정상 전압 공급 확인">${esc(stepsText)}</textarea>
     </div>
 
     <div class="modal-section-divider">✅ 섹션 4 — 점검 체크리스트</div>
     <div class="lf-group">
       <label class="lf-label">한 줄에 하나씩 입력</label>
-      <textarea class="lf-textarea" id="m-manual-check" rows="5"
+      <textarea class="lf-textarea" id="mf-check" rows="5"
         placeholder="주 차단기 OFF 확인&#10;검전기 무전압 확인&#10;MCB 사양 메모&#10;결선 사진 촬영&#10;투입 후 전압 측정">${esc(ckText)}</textarea>
     </div>
 
-    <div class="modal-section-divider">💡 섹션 5 — 주의 및 Tip</div>
+    <div class="modal-section-divider">💡 섹션 5 — 주의사항 / Tip</div>
     <div class="lf-group">
-      <label class="lf-label" id="m-manual-tip-label">최종 주의사항 (한 줄)</label>
-      <input class="lf-input" id="m-manual-tip" type="text"
-        value="${esc(m?.caution||'')}" placeholder="활선 작업 절대 금지. 반드시 정전 확인 후 진행"/>
-    </div>
-    <div class="lf-group">
-      <label class="lf-label">Tip (한 줄)</label>
-      <input class="lf-input" id="mf-tip" type="text"
-        value="${esc(m?.tip||'')}" placeholder="교체 후 12시간 모니터링 권장"/>
+      <label class="lf-label">주의사항과 Tip을 각각 한 줄씩 입력</label>
+      <textarea class="lf-textarea" id="mf-tip" rows="3"
+        placeholder="주의: 활선 작업 절대 금지&#10;Tip: 교체 후 12시간 모니터링 권장">${esc([m?.caution, m?.tip].filter(Boolean).join('\n'))}</textarea>
+      <p style="font-size:12px;color:var(--t4);margin-top:4px">
+        첫 줄 → 주의사항(⚠️), 이후 줄 → Tip(💡)으로 자동 분리 저장됩니다
+      </p>
     </div>
 
     <!-- 사진 등록 (file input 모달 내 직접 embed) -->
@@ -930,13 +928,13 @@ async function saveManual() {
   /* ── ① 5섹션 파싱 ── */
 
   /* 섹션1: 준비물 */
-  const supplies = ($('m-manual-tools')?.value||'').split('\n').map(s=>s.trim()).filter(Boolean);
+  const supplies = ($('mf-supplies')?.value||'').split('\n').map(s=>s.trim()).filter(Boolean);
 
   /* 섹션2: 안전주의사항 */
-  const cautions = ($('m-manual-safety')?.value||'').split('\n').map(s=>s.trim()).filter(Boolean);
+  const cautions = ($('mf-safety')?.value||'').split('\n').map(s=>s.trim()).filter(Boolean);
 
   /* 섹션3: 절차 — "제목|설명" 형식 파싱 */
-  const steps = ($('m-manual-steps')?.value||'').split('\n')
+  const steps = ($('mf-steps-raw')?.value||'').split('\n')
     .map(line => line.trim()).filter(Boolean)
     .map(line => {
       const sep = line.indexOf('|');
@@ -945,11 +943,12 @@ async function saveManual() {
     });
 
   /* 섹션4: 체크리스트 */
-  const checklist = ($('m-manual-check')?.value||'').split('\n').map(s=>s.trim()).filter(Boolean);
+  const checklist = ($('mf-check')?.value||'').split('\n').map(s=>s.trim()).filter(Boolean);
 
-  /* 섹션5: 주의 + Tip */
-  const caution = $('m-manual-tip')?.value.trim() || '';
-  const tip     = $('mf-tip')?.value.trim()       || '';
+  /* 섹션5: mf-tip textarea — 첫 줄=주의사항, 나머지=Tip */
+  const tipLines = ($('mf-tip')?.value||'').split('\n').map(l=>l.trim()).filter(Boolean);
+  const caution  = tipLines[0] || '';
+  const tip      = tipLines.slice(1).join(' / ') || '';
 
   /* ── ② 대표 사진 Storage 업로드 ── */
   let imageUrl         = '';
