@@ -4,171 +4,314 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>K-Facility | 시설관리 대시보드</title>
-<script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
-<!-- Firebase SDK – 기능 구현 시 주석 해제 -->
+<!-- Firebase SDK — 준비되면 주석 해제 -->
 <!-- <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script> -->
 <!-- <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script> -->
 <!-- <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script> -->
 <!-- <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script> -->
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;font-family:'Noto Sans KR',sans-serif}
-body{background:var(--bg);color:var(--text1);min-height:100vh;transition:background .2s}
+/* ══════════════════════════════════════
+   RESET & BASE
+══════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Noto Sans KR',sans-serif;background:#080c18;color:#fff;-webkit-font-smoothing:antialiased}
+
+/* ══════════════════════════════════════
+   CSS VARIABLES
+══════════════════════════════════════ */
 :root{
-  --bg:#f5f0e8;--card:#ffffff;--sidebar:#1c1917;
-  --orange:#e05c0a;--orange-light:#fff3eb;
-  --blue:#1d4ed8;--blue-light:#eff6ff;
-  --text1:#1c1917;--text2:#57534e;--text3:#a8a29e;--border:#e7e3db;
-  --radius:14px;--radius-sm:10px;
+  --orange:#e05c0a;
+  --orange-g:rgba(224,92,10,.35);
+  --blue:#1d4ed8;
+  --blue-g:rgba(29,78,216,.35);
+  --green:#10b981;
+  --green-g:rgba(16,185,129,.30);
+  --amber:#f59e0b;
+  --red:#f43f5e;
+  --purple:#7c3aed;
+  --t1:rgba(255,255,255,1);
+  --t2:rgba(255,255,255,.72);
+  --t3:rgba(255,255,255,.42);
+  --t4:rgba(255,255,255,.22);
+  --gb:rgba(255,255,255,.08);
+  --gborder:rgba(255,255,255,.15);
+  --blur:16px;
+  --r:14px;
+  --rl:20px;
+  --sidebar:66px;
+  --hh:58px;
 }
-body.dark{
-  --bg:#1c1917;--card:#292524;--border:#3c3530;
-  --text1:#fafaf9;--text2:#d6d3d1;--text3:#78716c;
-  --orange-light:#3a1a08;--blue-light:#0d2040;
-}
-.app{display:flex;height:100vh;overflow:hidden}
 
-/* SIDEBAR */
-.sidebar{width:64px;background:#1c1917;display:flex;flex-direction:column;align-items:center;padding:16px 0;gap:4px;flex-shrink:0}
-.logo{color:#fff;font-size:11px;font-weight:700;letter-spacing:.08em;padding:8px 0 12px;opacity:.9}
-.s-div{width:32px;height:1px;background:#3c3530;margin:4px 0}
-.nav-btn{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#a8a29e;cursor:pointer;border:none;background:transparent;font-size:16px;transition:background .15s,color .15s;position:relative}
-.nav-btn:hover{background:#2d2520;color:#fff}
-.nav-btn.active{background:var(--orange);color:#fff}
-.tip{position:absolute;left:52px;background:#111;color:#fff;font-size:11px;padding:4px 8px;border-radius:6px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s;z-index:99;border:1px solid #333}
-.nav-btn:hover .tip{opacity:1}
+/* ══════════════════════════════════════
+   BACKGROUND ORBS
+══════════════════════════════════════ */
+.bg-layer{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.orb{position:absolute;border-radius:50%;filter:blur(90px);opacity:.52;will-change:transform}
+.o1{width:620px;height:620px;background:radial-gradient(circle,#1a4fff 0%,transparent 70%);top:-160px;left:-110px;animation:fOrb 11s ease-in-out infinite}
+.o2{width:500px;height:500px;background:radial-gradient(circle,#e05c0a 0%,transparent 70%);top:60px;right:-90px;animation:fOrb 13s ease-in-out infinite 1.5s}
+.o3{width:460px;height:460px;background:radial-gradient(circle,#0d9488 0%,transparent 70%);bottom:40px;left:22%;animation:fOrb 15s ease-in-out infinite 3s}
+.o4{width:340px;height:340px;background:radial-gradient(circle,#7c3aed 0%,transparent 70%);bottom:-60px;right:9%;animation:fOrb 9s ease-in-out infinite .8s}
+@keyframes fOrb{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-20px) scale(1.04)}}
 
-/* MAIN */
-.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+/* ══════════════════════════════════════
+   GLASS UTILITIES
+══════════════════════════════════════ */
+.glass{background:var(--gb);border:1px solid var(--gborder);backdrop-filter:blur(var(--blur)) saturate(160%);-webkit-backdrop-filter:blur(var(--blur)) saturate(160%);border-radius:var(--r)}
+.glass-s{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);border-radius:var(--r)}
+.gc{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:12px;transition:background .2s,border-color .2s,transform .2s,box-shadow .2s}
+.gc:hover{background:rgba(255,255,255,.10);border-color:rgba(255,255,255,.20);transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.35)}
 
-/* HEADER */
-.header{background:var(--card);border-bottom:1px solid var(--border);padding:0 20px;height:56px;display:flex;align-items:center;gap:12px;flex-shrink:0;transition:background .2s,border-color .2s}
-.h-logo{font-size:15px;font-weight:700;color:var(--text1);white-space:nowrap}
+/* ══════════════════════════════════════
+   APP SHELL
+══════════════════════════════════════ */
+#app{position:relative;z-index:1;display:flex;height:100vh;width:100vw}
+
+/* ══════════════════════════════════════
+   SIDEBAR
+══════════════════════════════════════ */
+#sidebar{width:var(--sidebar);height:100vh;display:flex;flex-direction:column;align-items:center;padding:14px 0;gap:3px;flex-shrink:0;background:rgba(8,12,24,.65);border-right:1px solid rgba(255,255,255,.08);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);z-index:10;overflow-y:auto;scrollbar-width:none}
+#sidebar::-webkit-scrollbar{display:none}
+.s-logo{color:#fff;font-size:12px;font-weight:700;letter-spacing:.06em;padding:6px 0 10px;text-align:center}
+.s-logo em{color:var(--orange);font-style:normal}
+.s-div{width:32px;height:1px;background:rgba(255,255,255,.10);margin:5px 0;flex-shrink:0}
+.nb{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--t3);cursor:pointer;border:none;background:transparent;font-size:17px;transition:background .15s,color .15s;position:relative;flex-shrink:0}
+.nb:hover{background:rgba(255,255,255,.10);color:var(--t1)}
+.nb.active{background:var(--orange);color:#fff;box-shadow:0 4px 14px var(--orange-g)}
+.nb.active:hover{background:var(--orange)}
+.tip{position:absolute;left:54px;top:50%;transform:translateY(-50%);background:rgba(8,12,24,.92);border:1px solid rgba(255,255,255,.14);color:var(--t1);font-size:12px;font-weight:500;padding:5px 11px;border-radius:8px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s;z-index:100}
+.nb:hover .tip{opacity:1}
+
+/* ══════════════════════════════════════
+   MAIN
+══════════════════════════════════════ */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+
+/* ── HEADER ── */
+#hdr{height:var(--hh);display:flex;align-items:center;gap:12px;padding:0 20px;background:rgba(8,12,24,.60);border-bottom:1px solid rgba(255,255,255,.08);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);flex-shrink:0;z-index:5}
+.h-logo{font-size:16px;font-weight:700;color:var(--t1);white-space:nowrap}
 .h-logo em{color:var(--orange);font-style:normal}
-.srch{flex:1;max-width:480px;position:relative}
-.srch input{width:100%;height:36px;border:1.5px solid var(--border);border-radius:99px;padding:0 14px 0 36px;font-size:13px;color:var(--text1);background:#faf8f4;outline:none;transition:border .15s;font-family:inherit}
-.srch input:focus{border-color:var(--orange)}
-body.dark .srch input{background:#1c1917;color:#fafaf9}
-.srch i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:13px}
-.h-right{display:flex;align-items:center;gap:8px;margin-left:auto}
-.ibtn{width:36px;height:36px;border-radius:99px;display:flex;align-items:center;justify-content:center;background:#faf8f4;border:1px solid var(--border);cursor:pointer;color:var(--text2);font-size:14px;transition:background .15s}
-.ibtn:hover{background:#f0ece2}
-body.dark .ibtn{background:#2d2520;border-color:#3c3530;color:#d6d3d1}
-.ibtn.has-dot{position:relative}
-.ibtn.has-dot::after{content:'';position:absolute;top:7px;right:7px;width:7px;height:7px;background:var(--orange);border-radius:50%;border:2px solid var(--card)}
-.ava{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#e05c0a,#1d4ed8);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:600;cursor:pointer;border:2px solid var(--border)}
-.uname{font-size:13px;font-weight:500;color:var(--text1)}
-.tsw{width:44px;height:24px;background:#e7e3db;border-radius:99px;position:relative;cursor:pointer;border:none;transition:background .2s}
-.tsw-k{width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:3px;left:3px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.srch{flex:1;max-width:460px;position:relative}
+.srch input{width:100%;height:38px;border:1px solid rgba(255,255,255,.14);border-radius:99px;padding:0 14px 0 38px;font-size:13px;color:var(--t1);background:rgba(255,255,255,.07);backdrop-filter:blur(8px);outline:none;font-family:inherit;transition:border-color .15s,background .15s}
+.srch input::placeholder{color:var(--t3)}
+.srch input:focus{border-color:rgba(255,255,255,.32);background:rgba(255,255,255,.11)}
+.srch i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--t3);font-size:13px}
+.h-right{display:flex;align-items:center;gap:9px;margin-left:auto}
+.ibtn{width:38px;height:38px;border-radius:99px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);cursor:pointer;color:var(--t2);font-size:15px;transition:background .15s;position:relative}
+.ibtn:hover{background:rgba(255,255,255,.14)}
+.ibtn.dot::after{content:'';position:absolute;top:8px;right:8px;width:7px;height:7px;background:var(--orange);border-radius:50%;border:2px solid #080c18}
+.ava{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--orange),var(--blue));display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700;cursor:pointer;border:2px solid rgba(255,255,255,.15);transition:transform .15s}
+.ava:hover{transform:scale(1.08)}
+.uname{font-size:13px;font-weight:500;color:var(--t2);white-space:nowrap}
+.tsw{width:46px;height:26px;background:rgba(255,255,255,.12);border-radius:99px;border:none;cursor:pointer;position:relative;transition:background .2s}
+.tsk{width:20px;height:20px;background:#fff;border-radius:50%;position:absolute;top:3px;left:22px;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,.3)}
 
-/* PAGE */
-.page{flex:1;overflow-y:auto;padding:20px}
+/* ── PAGE ── */
+#page{flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.15) transparent}
+#page::-webkit-scrollbar{width:5px}
+#page::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:99px}
+.pi{padding:20px 20px 40px}
 
-/* BENTO */
+/* ══════════════════════════════════════
+   COMMON COMPONENTS
+══════════════════════════════════════ */
+.breadcrumb{display:flex;align-items:center;gap:7px;margin-bottom:18px}
+.bc-home{font-size:11px;color:var(--t3);cursor:pointer}
+.bc-sep{font-size:11px;color:var(--t4)}
+.bc-cur{font-size:12px;font-weight:600;color:var(--t2)}
+.bc-date{margin-left:auto;font-size:11px;color:var(--t3)}
+.slbl{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--t3);margin-bottom:10px}
+.ctitle{font-size:15px;font-weight:600;color:var(--t1);margin-bottom:4px}
+
+/* STATUS PILL */
+.spill{display:flex;align-items:center;gap:6px;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.28);border-radius:99px;padding:5px 13px;white-space:nowrap;flex-shrink:0}
+.sdot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pDot 2s ease-in-out infinite}
+@keyframes pDot{0%,100%{opacity:1}50%{opacity:.4}}
+.stxt{font-size:11px;font-weight:600;color:var(--green)}
+
+/* BADGES */
+.rb{display:inline-block;font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px}
+.rb-done{background:rgba(16,185,129,.15);color:#6ee7b7;border:1px solid rgba(16,185,129,.25)}
+.rb-prog{background:rgba(224,92,10,.15);color:#fba87a;border:1px solid rgba(224,92,10,.25)}
+.rb-todo{background:rgba(255,255,255,.07);color:var(--t3);border:1px solid rgba(255,255,255,.10)}
+
+/* BUTTONS */
+.btn-o{background:var(--orange);color:#fff;border:none;border-radius:10px;padding:8px 15px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;transition:opacity .2s,transform .15s;box-shadow:0 4px 12px var(--orange-g)}
+.btn-o:hover{opacity:.88;transform:translateY(-1px)}
+.btn-b{background:rgba(29,78,216,.22);color:#93c5fd;border:1px solid rgba(29,78,216,.38);border-radius:10px;padding:8px 15px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;transition:background .2s,transform .15s}
+.btn-b:hover{background:rgba(29,78,216,.35);transform:translateY(-1px)}
+.btn-gh{background:transparent;color:var(--t2);border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:8px 15px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;transition:background .2s,transform .15s}
+.btn-gh:hover{background:rgba(255,255,255,.09);transform:translateY(-1px)}
+.act-row{display:flex;gap:10px;margin-bottom:4px}
+.act-p{flex:2;padding:14px;border-radius:14px;border:none;background:linear-gradient(135deg,var(--blue),#2563eb);color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:opacity .2s,transform .15s}
+.act-p:hover{opacity:.88;transform:translateY(-1px)}
+.act-g{flex:1;padding:14px;border-radius:14px;cursor:pointer;color:var(--t2);font-size:13px;font-weight:600;font-family:inherit;border:none;transition:background .2s,transform .15s}
+.act-g:hover{background:rgba(255,255,255,.12);transform:translateY(-1px)}
+
+/* ══════════════════════════════════════
+   HOME — BENTO TOP
+══════════════════════════════════════ */
 .bento{display:grid;grid-template-columns:1fr 1fr 300px;gap:14px}
 
-/* CARD */
-.card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);padding:18px;transition:box-shadow .15s,background .2s,border-color .2s}
-.card:hover{box-shadow:0 4px 20px rgba(0,0,0,.07)}
-.clabel{font-size:11px;font-weight:600;letter-spacing:.07em;color:var(--text3);text-transform:uppercase;margin-bottom:10px}
-.ctitle{font-size:15px;font-weight:600;color:var(--text1);margin-bottom:4px}
+/* Work card */
+.wcard{padding:18px;overflow:hidden}
+.thead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:14px}
+.trow{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+.thumb{flex:1;aspect-ratio:16/9;border-radius:9px;overflow:hidden;position:relative;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09)}
+.tph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:5px}
+.tph .pi2{font-size:18px;opacity:.3}
+.tph .pt2{font-size:10px;color:var(--t4);font-weight:500}
+.tlbl{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.5);color:#fff;font-size:9px;font-weight:600;padding:3px 7px;letter-spacing:.05em}
+.arw{color:var(--orange);font-size:15px;flex-shrink:0;padding:0 5px}
+.mini-row{display:flex;gap:7px;flex-wrap:wrap}
+.mini{flex:1;min-width:100px;padding:9px 11px;border-radius:9px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}
+.ml{font-size:10px;color:var(--t3);margin-bottom:3px}
+.mv{font-size:12px;font-weight:600;color:var(--t1)}
+.md{font-size:10px;color:var(--t4);margin-top:2px}
 
-/* CARD A */
-.card-a{grid-column:1;grid-row:1}
-.trow{display:flex;gap:8px;margin:10px 0;align-items:center}
-.thumb{flex:1;aspect-ratio:16/9;border-radius:8px;overflow:hidden;position:relative;background:var(--border)}
-.thumb img{width:100%;height:100%;object-fit:cover}
-.tlabel{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.45);color:#fff;font-size:10px;padding:3px 6px;font-weight:500}
-.tph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#f0ece2}
-body.dark .tph{background:#3c3530}
-.btn-o{background:var(--orange);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;transition:background .15s;font-family:inherit;display:flex;align-items:center;gap:5px}
-.btn-o:hover{background:#c24e08}
-.btn-g{background:transparent;color:var(--blue);border:1.5px solid #bfdbfe;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;transition:background .15s;font-family:inherit;display:flex;align-items:center;gap:5px}
-.btn-g:hover{background:var(--blue-light)}
-.mini-card{flex:1;min-width:110px;background:#faf8f4;border-radius:8px;padding:8px 10px;border:1px solid var(--border)}
-body.dark .mini-card{background:#1c1917}
-
-/* CARD B */
-.card-b{grid-column:2;grid-row:1}
-.ri{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)}
+/* Roadmap card */
+.rcard{padding:18px;overflow:hidden}
+.ri{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)}
 .ri:last-child{border-bottom:none}
-.ri-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.ri-dot.done{background:#22c55e}.ri-dot.prog{background:var(--orange)}.ri-dot.todo{background:#d4cfc9}
-.ri-txt{font-size:13px;color:var(--text1);flex:1}
-.ri-dt{font-size:11px;color:var(--text3);white-space:nowrap}
-.badge{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:99px}
-.bdone{background:#dcfce7;color:#16a34a}.bprog{background:#fff3eb;color:var(--orange)}.btodo{background:#f5f0e8;color:var(--text3)}
+.rdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.rdot.done{background:var(--green);box-shadow:0 0 6px var(--green)}
+.rdot.prog{background:var(--orange);box-shadow:0 0 6px var(--orange)}
+.rdot.todo{background:rgba(255,255,255,.2)}
+.rtxt{font-size:13px;color:var(--t2);flex:1}
+.rdt{font-size:11px;color:var(--t4);white-space:nowrap}
 
-/* CHECKLIST CARD */
-.card-c{grid-column:3;grid-row:1/3}
-.prog-wrap{background:#f0ece2;border-radius:99px;height:6px;margin:8px 0 14px}
-body.dark .prog-wrap{background:#3c3530}
-.prog-fill{height:100%;border-radius:99px;background:var(--orange);transition:width .3s}
-.ci{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px}
-.ci:last-child{border-bottom:none}
-.chk{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--border);background:var(--card);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:9px;color:transparent;transition:background .15s,color .15s}
+/* Check card */
+.ccard{padding:18px;grid-row:1/3}
+.pw{background:rgba(255,255,255,.08);border-radius:99px;height:5px;margin:8px 0 14px}
+.pf{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--orange),#f97316);transition:width .4s ease}
+.ci{display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:13px}
+.ci:last-of-type{border-bottom:none}
+.chk{width:18px;height:18px;border-radius:5px;border:1.5px solid rgba(255,255,255,.22);background:transparent;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;color:transparent;transition:background .15s,border-color .15s,color .15s}
 .chk.on{background:var(--orange);border-color:var(--orange);color:#fff}
-.ct{color:var(--text1)}.ct.done{text-decoration:line-through;color:var(--text3)}
-.srow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
-.sbox{background:#faf8f4;border-radius:10px;padding:12px;text-align:center;border:1px solid var(--border)}
-body.dark .sbox{background:#1c1917}
-.snum{font-size:22px;font-weight:700;color:var(--text1)}
-.slbl{font-size:11px;color:var(--text3);margin-top:2px}
+.ct{color:var(--t2)}.ct.done{text-decoration:line-through;color:var(--t4)}
+.sdiv{height:1px;background:rgba(255,255,255,.07);margin:14px 0}
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sbox{padding:12px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);text-align:center}
+.snum{font-size:22px;font-weight:700;line-height:1}
+.slb2{font-size:10px;color:var(--t3);margin-top:4px}
 
-/* MENU */
-.msec{grid-column:1/3;grid-row:2}
+/* Menu section */
+.msec{grid-column:1/3}
 .mgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-.mc{background:var(--card);border-radius:var(--radius-sm);border:1px solid var(--border);padding:16px 14px;cursor:pointer;transition:box-shadow .15s,transform .15s,border-color .15s;display:flex;flex-direction:column;gap:8px}
-.mc:hover{box-shadow:0 4px 16px rgba(0,0,0,.08);transform:translateY(-2px);border-color:#d4cfc9}
-.micon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
-.mname{font-size:14px;font-weight:600;color:var(--text1)}
-.msub{font-size:11px;color:var(--text3)}
-.mbadge{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:99px;width:fit-content}
+.mc{padding:16px 14px;cursor:pointer;display:flex;flex-direction:column;gap:8px}
+.mi{width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.mn{font-size:14px;font-weight:600;color:var(--t1)}
+.ms{font-size:11px;color:var(--t3)}
+.mbg{display:inline-block;font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px;width:fit-content}
+.mwide{grid-column:span 2}
+.mwi{display:flex;align-items:center;gap:14px}
+.bprev{display:flex;gap:3px;align-items:flex-end}
+.bar{width:8px;border-radius:3px}
 
-/* OVERLAY */
-.overlay{position:fixed;inset:0;background:rgba(28,25,23,.8);display:flex;align-items:center;justify-content:center;z-index:9999;backdrop-filter:blur(6px)}
-.lcard{background:#fff;border-radius:20px;padding:36px 32px;width:340px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.25)}
-.ll{font-size:24px;font-weight:800;color:#1c1917;margin-bottom:4px}
+/* ══════════════════════════════════════
+   BA-DETAIL
+══════════════════════════════════════ */
+.ba-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.ba-ch{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 8px}
+.ba-cl{display:flex;align-items:center;gap:6px;font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase}
+.bgal{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;padding:0 16px 16px}
+.gi{aspect-ratio:4/3;border-radius:10px;overflow:hidden;position:relative;cursor:pointer;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);transition:transform .2s,box-shadow .2s}
+.gi:hover{transform:scale(1.04);box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.gi.wide{grid-column:span 2;aspect-ratio:16/7}
+.gph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:5px}
+.gph .gi2{font-size:20px;opacity:.28}
+.gph .gt2{font-size:10px;color:var(--t4);font-weight:500}
+.ctk{position:relative;height:200px;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.12);cursor:col-resize;user-select:none}
+.ctb{position:absolute;inset:0;background:linear-gradient(135deg,#1a1a2e 0%,#0f3460 100%);display:flex;align-items:center;justify-content:center}
+.cta{position:absolute;inset:0;background:linear-gradient(135deg,#0a2a1a 0%,#0f4a2a 100%);display:flex;align-items:center;justify-content:center;clip-path:inset(0 50% 0 0)}
+.cfl{font-size:13px;font-weight:700;color:rgba(255,255,255,.35);letter-spacing:.06em}
+.cln{position:absolute;top:0;bottom:0;left:50%;width:2px;background:#fff;transform:translateX(-50%);z-index:3;pointer-events:none}
+.chn{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.95);display:flex;align-items:center;justify-content:center;z-index:4;box-shadow:0 4px 14px rgba(0,0,0,.5);font-size:16px;color:#1a1a2e;pointer-events:none}
+.spg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.spi{padding:12px 14px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09)}
+.spi.wide{grid-column:span 2}
+.spll{font-size:10px;color:var(--t3);margin-bottom:4px;font-weight:500;letter-spacing:.04em}
+.spvl{font-size:13px;font-weight:600;color:var(--t1);line-height:1.5}
+.ai-ic{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--purple),var(--blue));display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.ai-bt{margin-left:auto;font-size:10px;color:rgba(124,58,237,.8);background:rgba(124,58,237,.14);border:1px solid rgba(124,58,237,.22);padding:3px 9px;border-radius:99px}
+.ai-hi{color:var(--amber);font-weight:600}
+.ai-rc{margin-top:11px;padding:10px 13px;border-radius:10px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.20);font-size:12px;color:rgba(251,191,36,.9);line-height:1.65}
+.pr{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.05)}
+.pr:last-child{border-bottom:none}
+.prn{font-size:13px;color:var(--t2)}
+.prs{font-size:11px;color:var(--t4);margin-top:2px}
+.prq{font-size:12px;color:var(--t3);background:rgba(255,255,255,.07);padding:3px 10px;border-radius:7px;white-space:nowrap}
+.mc2{display:flex;align-items:center;gap:7px;padding:7px 13px;border-radius:99px;font-size:12px;font-weight:500;color:var(--t2)}
+
+/* ══════════════════════════════════════
+   ENTRANCE ANIMATIONS
+══════════════════════════════════════ */
+@keyframes fUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.fu  {animation:fUp .4s ease both}
+.fu1 {animation:fUp .4s ease .05s both}
+.fu2 {animation:fUp .4s ease .12s both}
+.fu3 {animation:fUp .4s ease .20s both}
+.fu4 {animation:fUp .4s ease .28s both}
+.fu5 {animation:fUp .4s ease .36s both}
+
+/* ══════════════════════════════════════
+   LOGIN OVERLAY
+══════════════════════════════════════ */
+#lov{position:fixed;inset:0;background:rgba(5,8,18,.82);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);display:flex;align-items:center;justify-content:center;z-index:9999}
+.lcard{background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.20);backdrop-filter:blur(28px) saturate(200%);-webkit-backdrop-filter:blur(28px) saturate(200%);border-radius:28px;padding:40px 36px;width:360px;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,.45)}
+.ll{font-size:26px;font-weight:800;color:var(--t1);margin-bottom:5px}
 .ll em{color:var(--orange);font-style:normal}
-.ls{font-size:13px;color:#57534e;margin-bottom:28px;line-height:1.6}
-.btng{width:100%;padding:12px;border-radius:10px;border:1.5px solid #e7e3db;background:#fff;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .15s;margin-bottom:10px;font-family:inherit}
-.btng:hover{background:#faf8f4}
-.ldiv{display:flex;align-items:center;gap:8px;margin:14px 0;color:#a8a29e;font-size:12px}
-.ldiv::before,.ldiv::after{content:'';flex:1;height:1px;background:#e7e3db}
-.btngst{width:100%;padding:12px;border-radius:10px;border:none;background:var(--orange);color:#fff;font-size:14px;font-weight:600;cursor:pointer;transition:background .15s;font-family:inherit}
-.btngst:hover{background:#c24e08}
-.gnote{font-size:11px;color:#a8a29e;margin-top:10px;line-height:1.6}
+.ls{font-size:13px;color:var(--t3);margin-bottom:30px;line-height:1.65}
+.bg{width:100%;padding:13px;border-radius:12px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);font-size:14px;font-weight:600;color:var(--t1);cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:9px;margin-bottom:10px;transition:background .2s}
+.bg:hover{background:rgba(255,255,255,.14)}
+.ldv{display:flex;align-items:center;gap:9px;color:var(--t4);font-size:12px;margin:12px 0}
+.ldv::before,.ldv::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.10)}
+.bgs{width:100%;padding:13px;border-radius:12px;border:none;background:var(--orange);color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:opacity .2s;box-shadow:0 4px 16px var(--orange-g)}
+.bgs:hover{opacity:.88}
+.ln{font-size:11px;color:var(--t4);margin-top:11px;line-height:1.6}
 
-/* RESPONSIVE */
+/* ══════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════ */
 @media(max-width:1100px){.bento{grid-template-columns:1fr 1fr 280px}}
 @media(max-width:900px){
   .bento{grid-template-columns:1fr 1fr}
-  .card-a{grid-column:1;grid-row:1}.card-b{grid-column:2;grid-row:1}
-  .msec{grid-column:1/3;grid-row:2}.card-c{grid-column:1/3;grid-row:3}
+  .ccard{grid-column:1/3;grid-row:auto}
+  .msec{grid-column:1/3}
   .mgrid{grid-template-columns:repeat(2,1fr)}
+  .ba-grid{grid-template-columns:1fr}
 }
-@media(max-width:600px){
-  .sidebar{display:none}
-  .bento{grid-template-columns:1fr;gap:10px}
-  .card-a,.card-b,.msec,.card-c{grid-column:1;grid-row:auto}
+@media(max-width:640px){
+  :root{--sidebar:0px}
+  #sidebar{display:none}
+  .bento{grid-template-columns:1fr}
+  .ccard,.msec{grid-column:1}
   .mgrid{grid-template-columns:repeat(2,1fr)}
-  .page{padding:12px}
-  .header{padding:0 12px;gap:8px}
+  .pi{padding:14px 14px 32px}
+  #hdr{padding:0 14px;gap:8px}
   .uname{display:none}
-  .srch{max-width:100%}
+  .spg{grid-template-columns:1fr}
+  .spi.wide{grid-column:1}
 }
+.hidden{display:none!important}
 </style>
 </head>
 <body>
 
+<!-- BACKGROUND -->
+<div class="bg-layer">
+  <div class="orb o1"></div><div class="orb o2"></div>
+  <div class="orb o3"></div><div class="orb o4"></div>
+</div>
+
 <!-- LOGIN OVERLAY -->
-<div class="overlay" id="overlay">
+<div id="lov">
   <div class="lcard">
     <div class="ll">K-<em>Facility</em></div>
     <p class="ls">시설관리 통합 대시보드에<br>오신 걸 환영합니다</p>
-    <button class="btng" onclick="doLogin('google')">
+    <button class="bg" onclick="loginGoogle()">
       <svg width="18" height="18" viewBox="0 0 24 24">
         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
         <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -177,287 +320,475 @@ body.dark .sbox{background:#1c1917}
       </svg>
       Google로 로그인
     </button>
-    <div class="ldiv">또는</div>
-    <button class="btngst" onclick="doLogin('guest')">👤 게스트로 둘러보기</button>
-    <p class="gnote">게스트 모드에서는 데이터 저장이 제한됩니다</p>
+    <div class="ldv">또는</div>
+    <button class="bgs" onclick="loginGuest()">👤 게스트로 둘러보기</button>
+    <p class="ln">게스트 모드에서는 데이터 저장이 제한됩니다</p>
   </div>
 </div>
 
 <!-- APP -->
-<div class="app">
+<div id="app">
 
   <!-- SIDEBAR -->
-  <nav class="sidebar">
-    <div class="logo">K·F</div>
+  <nav id="sidebar">
+    <div class="s-logo">K-<em>F</em></div>
     <div class="s-div"></div>
-    <button class="nav-btn active" data-p="home"><i class="fa-solid fa-house"></i><span class="tip">홈</span></button>
-    <button class="nav-btn" data-p="search"><i class="fa-solid fa-magnifying-glass"></i><span class="tip">검색</span></button>
+    <button class="nb active" data-p="home">    <i class="fa-solid fa-house"></i>           <span class="tip">홈</span></button>
+    <button class="nb" data-p="search">         <i class="fa-solid fa-magnifying-glass"></i> <span class="tip">검색</span></button>
     <div class="s-div"></div>
-    <button class="nav-btn" data-p="electric"><i class="fa-solid fa-bolt"></i><span class="tip">전기</span></button>
-    <button class="nav-btn" data-p="mechanical"><i class="fa-solid fa-gear"></i><span class="tip">기계</span></button>
-    <button class="nav-btn" data-p="construction"><i class="fa-solid fa-hammer"></i><span class="tip">영선</span></button>
-    <button class="nav-btn" data-p="fire"><i class="fa-solid fa-fire-extinguisher"></i><span class="tip">소방</span></button>
-    <button class="nav-btn" data-p="records"><i class="fa-solid fa-clipboard-list"></i><span class="tip">작업기록</span></button>
-    <button class="nav-btn" data-p="memo"><i class="fa-solid fa-book-open"></i><span class="tip">학습메모</span></button>
-    <button class="nav-btn" data-p="roadmap"><i class="fa-solid fa-calendar-days"></i><span class="tip">연간로드맵</span></button>
+    <button class="nb" data-p="electric">       <i class="fa-solid fa-bolt"></i>             <span class="tip">전기</span></button>
+    <button class="nb" data-p="mechanical">     <i class="fa-solid fa-gear"></i>             <span class="tip">기계</span></button>
+    <button class="nb" data-p="construction">   <i class="fa-solid fa-hammer"></i>           <span class="tip">영선</span></button>
+    <button class="nb" data-p="fire">           <i class="fa-solid fa-fire-extinguisher"></i><span class="tip">소방</span></button>
+    <button class="nb" data-p="records">        <i class="fa-solid fa-clipboard-list"></i>   <span class="tip">작업기록</span></button>
+    <button class="nb" data-p="memo">           <i class="fa-solid fa-book-open"></i>        <span class="tip">학습메모</span></button>
+    <button class="nb" data-p="roadmap">        <i class="fa-solid fa-calendar-days"></i>    <span class="tip">연간로드맵</span></button>
     <div class="s-div" style="margin-top:auto"></div>
-    <button class="nav-btn" data-p="contacts"><i class="fa-solid fa-address-book"></i><span class="tip">연락처</span></button>
-    <button class="nav-btn" data-p="stats"><i class="fa-solid fa-chart-bar"></i><span class="tip">통계</span></button>
-    <button class="nav-btn" data-p="settings"><i class="fa-solid fa-sliders"></i><span class="tip">설정</span></button>
+    <button class="nb" data-p="contacts">       <i class="fa-solid fa-address-book"></i>     <span class="tip">연락처</span></button>
+    <button class="nb" data-p="stats">          <i class="fa-solid fa-chart-bar"></i>        <span class="tip">통계</span></button>
+    <button class="nb" data-p="settings">       <i class="fa-solid fa-sliders"></i>          <span class="tip">설정</span></button>
   </nav>
 
   <!-- MAIN -->
-  <div class="main">
-    <header class="header">
+  <div id="main">
+    <header id="hdr">
       <div class="h-logo">K-<em>Facility</em></div>
       <div class="srch">
         <i class="fa-solid fa-magnifying-glass"></i>
-        <input type="text" placeholder="작업기록, 장비, 메모 검색..." id="si"/>
+        <input type="search" placeholder="작업기록, 장비, 메모 검색..." id="si"/>
       </div>
       <div class="h-right">
-        <button class="ibtn has-dot" title="알림"><i class="fa-solid fa-bell"></i></button>
+        <button class="ibtn dot"><i class="fa-solid fa-bell"></i></button>
         <div class="ava" id="ava">KF</div>
         <span class="uname" id="uname">관리자</span>
-        <button class="tsw" onclick="toggleDark()" title="다크모드">
-          <div class="tsw-k" id="tsk"></div>
-        </button>
+        <button class="tsw" id="tsw"><div class="tsk" id="tsk"></div></button>
       </div>
     </header>
-
-    <div class="page">
-      <!-- breadcrumb -->
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:16px">
-        <i class="fa-solid fa-house" style="font-size:10px;color:var(--text3)"></i>
-        <span style="font-size:12px;color:var(--text3)">/</span>
-        <span style="font-size:12px;font-weight:600;color:var(--text2)">홈 대시보드</span>
-        <span id="ds" style="margin-left:auto;font-size:11px;color:var(--text3)"></span>
-      </div>
-
-      <div class="bento">
-
-        <!-- CARD A 작업기록 -->
-        <div class="card card-a">
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;gap:8px">
-            <div>
-              <div class="clabel">최근 작업기록</div>
-              <div class="ctitle">Before / After 요약</div>
-            </div>
-            <button class="btn-o"><i class="fa-solid fa-plus" style="font-size:11px"></i> 새 기록 추가</button>
-          </div>
-          <div class="trow">
-            <div class="thumb">
-              <!-- Firebase Storage 연동: <img src="" id="bi1"> -->
-              <div class="tph"><i class="fa-solid fa-camera" style="color:var(--text3);font-size:18px"></i></div>
-              <div class="tlabel">Before</div>
-            </div>
-            <div style="color:var(--orange);font-size:14px;flex-shrink:0;padding:0 6px">
-              <i class="fa-solid fa-arrow-right"></i>
-            </div>
-            <div class="thumb">
-              <div class="tph" style="background:#eff6ff">
-                <i class="fa-solid fa-check-circle" style="color:#3b82f6;font-size:18px"></i>
-              </div>
-              <div class="tlabel">After</div>
-            </div>
-          </div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
-            <div class="mini-card">
-              <div style="font-size:10px;color:var(--text3);margin-bottom:2px">최근 작업</div>
-              <div style="font-size:12px;font-weight:600;color:var(--text1)">3F 전기패널 점검</div>
-              <div style="font-size:10px;color:var(--text3);margin-top:2px">2025.03.19</div>
-            </div>
-            <div class="mini-card">
-              <div style="font-size:10px;color:var(--text3);margin-bottom:2px">이전 작업</div>
-              <div style="font-size:12px;font-weight:600;color:var(--text1)">냉각탑 필터 교체</div>
-              <div style="font-size:10px;color:var(--text3);margin-top:2px">2025.03.15</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- CARD B 로드맵 -->
-        <div class="card card-b">
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;gap:8px">
-            <div>
-              <div class="clabel">이번 달 로드맵</div>
-              <div class="ctitle">3월 주요 일정</div>
-            </div>
-            <button class="btn-g">전체 보기 <i class="fa-solid fa-arrow-right" style="font-size:10px"></i></button>
-          </div>
-          <div class="ri"><div class="ri-dot done"></div><span class="ri-txt">소방설비 정기 점검</span><span class="ri-dt">03/05</span><span class="badge bdone">완료</span></div>
-          <div class="ri"><div class="ri-dot done"></div><span class="ri-txt">전기 안전 검사</span><span class="ri-dt">03/12</span><span class="badge bdone">완료</span></div>
-          <div class="ri"><div class="ri-dot prog"></div><span class="ri-txt">냉난방기 필터 교체</span><span class="ri-dt">03/20</span><span class="badge bprog">진행중</span></div>
-          <div class="ri"><div class="ri-dot todo"></div><span class="ri-txt">옥상 방수 점검</span><span class="ri-dt">03/25</span><span class="badge btodo">예정</span></div>
-          <div class="ri"><div class="ri-dot todo"></div><span class="ri-txt">엘리베이터 정기검사</span><span class="ri-dt">03/28</span><span class="badge btodo">예정</span></div>
-        </div>
-
-        <!-- CARD C 체크리스트 + 통계 -->
-        <div class="card card-c">
-          <div class="clabel">오늘 체크리스트</div>
-          <div style="display:flex;align-items:center;justify-content:space-between">
-            <span style="font-size:13px;font-weight:600;color:var(--text1)" id="cc">3 / 7 완료</span>
-            <span style="font-size:11px;color:var(--text3)" id="cp">43%</span>
-          </div>
-          <div class="prog-wrap"><div class="prog-fill" id="pf" style="width:43%"></div></div>
-          <div class="ci"><div class="chk on">✓</div><span class="ct done">소화기 위치 확인</span></div>
-          <div class="ci"><div class="chk on">✓</div><span class="ct done">3F 전등 교체</span></div>
-          <div class="ci"><div class="chk on">✓</div><span class="ct done">보일러실 점검</span></div>
-          <div class="ci"><div class="chk"></div><span class="ct">누수 여부 확인</span></div>
-          <div class="ci"><div class="chk"></div><span class="ct">냉각탑 수위 체크</span></div>
-          <div class="ci"><div class="chk"></div><span class="ct">비상구 점등 확인</span></div>
-          <div class="ci"><div class="chk"></div><span class="ct">일지 기록 업로드</span></div>
-          <div style="border-top:1px solid var(--border);margin-top:14px;padding-top:14px">
-            <div class="clabel">이번 달 통계</div>
-            <div class="srow">
-              <div class="sbox"><div class="snum" style="color:var(--orange)">24</div><div class="slbl">완료 작업</div></div>
-              <div class="sbox"><div class="snum" style="color:var(--blue)">6</div><div class="slbl">미완료</div></div>
-              <div class="sbox"><div class="snum" style="color:#16a34a">8</div><div class="slbl">작업기록</div></div>
-              <div class="sbox"><div class="snum" style="color:#7c3aed">3</div><div class="slbl">메모 추가</div></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- MENU SECTION -->
-        <div class="msec">
-          <div class="clabel" style="margin-bottom:12px">메뉴</div>
-          <div class="mgrid">
-            <div class="mc" onclick="goto('electric')">
-              <div class="micon" style="background:#fff3eb">⚡</div>
-              <div class="mname">전기</div><div class="msub">전기설비 관리</div>
-              <span class="mbadge" style="background:#fff3eb;color:var(--orange)">기록 3건</span>
-            </div>
-            <div class="mc" onclick="goto('mechanical')">
-              <div class="micon" style="background:#eff6ff">⚙️</div>
-              <div class="mname">기계</div><div class="msub">기계설비 관리</div>
-              <span class="mbadge" style="background:#eff6ff;color:var(--blue)">점검 예정</span>
-            </div>
-            <div class="mc" onclick="goto('construction')">
-              <div class="micon" style="background:#fef9c3">🔨</div>
-              <div class="mname">영선</div><div class="msub">건축·인테리어</div>
-              <span class="mbadge" style="background:#fef9c3;color:#854d0e">작업 1건</span>
-            </div>
-            <div class="mc" onclick="goto('fire')">
-              <div class="micon" style="background:#fce7f3">🔥</div>
-              <div class="mname">소방</div><div class="msub">소방설비 관리</div>
-              <span class="mbadge" style="background:#dcfce7;color:#16a34a">정상</span>
-            </div>
-            <div class="mc" onclick="goto('records')">
-              <div class="micon" style="background:#f0fdf4">📋</div>
-              <div class="mname">작업기록</div><div class="msub">전체 기록 보기</div>
-              <span class="mbadge" style="background:#f0fdf4;color:#16a34a">8건 이번달</span>
-            </div>
-            <div class="mc" onclick="goto('memo')">
-              <div class="micon" style="background:#f3e8ff">📒</div>
-              <div class="mname">학습 메모</div><div class="msub">노트 & 학습자료</div>
-              <span class="mbadge" style="background:#f3e8ff;color:#7c3aed">메모 3건</span>
-            </div>
-            <div class="mc" style="grid-column:span 2" onclick="goto('roadmap')">
-              <div style="display:flex;align-items:center;gap:14px">
-                <div class="micon" style="background:#eff6ff">📅</div>
-                <div style="flex:1">
-                  <div class="mname">연간 로드맵</div>
-                  <div class="msub" style="margin-top:2px">2025년 전체 계획 · 월별 일정</div>
-                </div>
-                <div style="display:flex;gap:3px;align-items:flex-end">
-                  <div style="width:8px;height:28px;border-radius:3px;background:#22c55e;opacity:.75"></div>
-                  <div style="width:8px;height:18px;border-radius:3px;background:var(--orange);opacity:.75"></div>
-                  <div style="width:8px;height:22px;border-radius:3px;background:var(--blue);opacity:.75"></div>
-                  <div style="width:8px;height:12px;border-radius:3px;background:#d4cfc9;opacity:.75"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div><!-- /bento -->
-    </div><!-- /page -->
-  </div><!-- /main -->
-</div><!-- /app -->
+    <div id="page"></div>
+  </div>
+</div>
 
 <script>
-/* 날짜 */
-document.getElementById('ds').textContent =
-  new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
-
-/* 로그인
-   TODO: Firebase Google Auth 연동 시 교체
-*/
-function doLogin(t) {
-  if (t === 'google') {
-    /* === Firebase Auth 활성화 시 ===
-    const p = new firebase.auth.GoogleAuthProvider();
-    firebase.auth().signInWithPopup(p).then(r => {
-      setUser(r.user.displayName.charAt(0), r.user.displayName);
-    }).catch(console.error);
-    return; */
-    setUser('KF', '관리자', 'linear-gradient(135deg,#e05c0a,#1d4ed8)');
-  } else {
-    setUser('GS', '게스트', 'linear-gradient(135deg,#a8a29e,#78716c)');
-  }
-  document.getElementById('overlay').style.display = 'none';
-}
-function setUser(abbr, name, bg) {
-  const a = document.getElementById('ava');
-  a.textContent = abbr;
-  if (bg) a.style.background = bg;
-  document.getElementById('uname').textContent = name;
-}
-
-/* 다크모드 */
-let dark = false;
-function toggleDark() {
-  dark = !dark;
-  document.body.classList.toggle('dark', dark);
-  const k = document.getElementById('tsk');
-  const s = document.querySelector('.tsw');
-  k.style.left = dark ? '23px' : '3px';
-  s.style.background = dark ? '#4a3728' : '#e7e3db';
-}
-
-/* 체크리스트 */
-document.querySelectorAll('.chk').forEach(c => {
-  c.addEventListener('click', () => {
-    c.classList.toggle('on');
-    const t = c.nextElementSibling;
-    c.textContent = c.classList.contains('on') ? '✓' : '';
-    t.classList.toggle('done', c.classList.contains('on'));
-    const all = document.querySelectorAll('.chk').length;
-    const done = document.querySelectorAll('.chk.on').length;
-    const pct = Math.round(done / all * 100);
-    document.getElementById('pf').style.width = pct + '%';
-    document.getElementById('cc').textContent = done + ' / ' + all + ' 완료';
-    document.getElementById('cp').textContent = pct + '%';
-  });
-});
-
-/* 사이드바 */
-document.querySelectorAll('.nav-btn').forEach(b => {
-  b.addEventListener('click', function() {
-    document.querySelectorAll('.nav-btn').forEach(x => x.classList.remove('active'));
-    this.classList.add('active');
-    if (this.dataset.p) goto(this.dataset.p);
-  });
-});
-
-/* 네비게이션 (추후 라우팅 연결) */
-function goto(p) { console.log('goto:', p); }
-
-/* Firebase 초기화 템플릿
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+/* ════════════════════════════════════════
+   FIREBASE CONFIG  — 값 채우고 위 SDK 주석 해제
+════════════════════════════════════════ */
+const FB_CFG = {
+  apiKey:'YOUR_API_KEY', authDomain:'YOUR_PROJECT.firebaseapp.com',
+  projectId:'YOUR_PROJECT_ID', storageBucket:'YOUR_PROJECT.appspot.com',
+  messagingSenderId:'YOUR_SENDER_ID', appId:'YOUR_APP_ID'
 };
-firebase.initializeApp(firebaseConfig);
-firebase.auth().onAuthStateChanged(user => {
-  if (user) {
-    document.getElementById('overlay').style.display = 'none';
-    setUser(user.displayName.charAt(0), user.displayName);
+
+/* ════════════════════════════════════════
+   STATE
+════════════════════════════════════════ */
+const S = { page:'home', user:null, guest:false, fbReady:false, dark:true };
+
+/* ════════════════════════════════════════
+   HELPERS
+════════════════════════════════════════ */
+const $  = id => document.getElementById(id);
+const dateStr = () => new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
+
+/* ════════════════════════════════════════
+   FIREBASE
+════════════════════════════════════════ */
+function initFB() {
+  if (typeof firebase === 'undefined') return;
+  try {
+    firebase.initializeApp(FB_CFG);
+    S.fbReady = true;
+    firebase.auth().onAuthStateChanged(u => { if (u) onLogin(u, false); });
+  } catch(e) { console.warn('Firebase init failed', e); }
+}
+function loginGoogle() {
+  if (!S.fbReady) { alert('Firebase 설정이 필요합니다.\nFB_CFG 값을 채워주세요.'); return; }
+  const p = new firebase.auth.GoogleAuthProvider();
+  firebase.auth().signInWithPopup(p).then(r => onLogin(r.user, false)).catch(console.error);
+}
+function loginGuest() {
+  onLogin({ displayName:'게스트', uid:'guest' }, true);
+}
+function onLogin(user, guest) {
+  S.user = user; S.guest = guest;
+  const init = (user.displayName||'U').charAt(0).toUpperCase();
+  $('ava').textContent = init;
+  $('uname').textContent = user.displayName || '사용자';
+  if (guest) $('ava').style.background = 'linear-gradient(135deg,#64748b,#475569)';
+  $('lov').classList.add('hidden');
+  goto('home');
+}
+
+/* ════════════════════════════════════════
+   ROUTER
+════════════════════════════════════════ */
+const ROUTES = {
+  home, electric, mechanical, construction, fire, records, memo, roadmap,
+  search, contacts, stats, settings, 'ba-detail': baDetail
+};
+function goto(p) {
+  if (!ROUTES[p]) return;
+  S.page = p;
+  document.querySelectorAll('.nb').forEach(b => b.classList.toggle('active', b.dataset.p === p));
+  ROUTES[p]();
+}
+
+/* ════════════════════════════════════════
+   TEMPLATE HELPERS
+════════════════════════════════════════ */
+function bc(cur) {
+  return `<div class="breadcrumb">
+    <span class="bc-home" onclick="goto('home')">🏠</span>
+    <span class="bc-sep">/</span>
+    <span class="bc-cur">${cur}</span>
+    <span class="bc-date">${dateStr()}</span>
+  </div>`;
+}
+function riItem(cls,txt,dt,badge,bcls) {
+  return `<div class="ri"><div class="rdot ${cls}"></div><span class="rtxt">${txt}</span><span class="rdt">${dt}</span><span class="rb ${bcls}">${badge}</span></div>`;
+}
+function ckItem(on, txt) {
+  return `<div class="ci"><div class="chk${on?' on':''}"> ${on?'✓':''}</div><span class="ct${on?' done':''}">${txt}</span></div>`;
+}
+function stBox(n, lbl, col) {
+  return `<div class="sbox"><div class="snum" style="color:${col}">${n}</div><div class="slb2">${lbl}</div></div>`;
+}
+function mCard(p,icon,bg,name,sub,bbg,bc2,badge) {
+  return `<div class="gc mc" onclick="goto('${p}')">
+    <div class="mi" style="background:${bg}">${icon}</div>
+    <div class="mn">${name}</div><div class="ms">${sub}</div>
+    <span class="mbg" style="background:${bbg};color:${bc2}">${badge}</span>
+  </div>`;
+}
+function spItem(lbl,val,wide) {
+  return `<div class="spi${wide?' wide':''}"><div class="spll">${lbl}</div><div class="spvl">${val}</div></div>`;
+}
+function mcChip(ic,txt) {
+  return `<div class="glass mc2">${ic} ${txt}</div>`;
+}
+function baCardHTML(type,title,cnt,col,lbl) {
+  const bs = type==='before'
+    ? 'background:rgba(244,63,94,.15);border:1px solid rgba(244,63,94,.3);color:#fca5a5'
+    : 'background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.3);color:#6ee7b7';
+  return `<div class="glass-s" style="overflow:hidden">
+    <div class="ba-ch">
+      <div class="ba-cl" style="color:${col}">
+        <div style="width:8px;height:8px;border-radius:50%;background:${col}"></div>${lbl}
+      </div>
+      <span style="font-size:10px;color:var(--t4)">${cnt}</span>
+    </div>
+    <div style="font-size:14px;font-weight:600;color:var(--t1);padding:0 16px 10px">${title}</div>
+    <div class="bgal">
+      <div class="gi wide"><div class="gph"><div class="gi2">📷</div><div class="gt2">메인 사진</div></div>
+        <div style="position:absolute;top:8px;right:8px;border-radius:7px;padding:3px 9px;font-size:10px;font-weight:700;${bs}">${lbl}</div>
+      </div>
+      <div class="gi"><div class="gph"><div class="gi2">📷</div><div class="gt2">상세 1</div></div></div>
+      <div class="gi"><div class="gph"><div class="gi2">📷</div><div class="gt2">상세 2</div></div></div>
+    </div>
+  </div>`;
+}
+
+/* ════════════════════════════════════════
+   PAGE: HOME
+════════════════════════════════════════ */
+function home() {
+  $('page').innerHTML = `<div class="pi">
+    ${bc('홈 대시보드')}
+    <div class="bento">
+
+      <!-- 작업기록 카드 -->
+      <div class="glass wcard fu1">
+        <div class="thead">
+          <div><div class="slbl">최근 작업기록</div><div class="ctitle">Before / After 요약</div></div>
+          <button class="btn-o" onclick="goto('ba-detail')">＋ 새 기록 추가</button>
+        </div>
+        <div class="trow">
+          <div class="thumb"><div class="tph"><div class="pi2">📷</div><div class="pt2">Before</div></div><div class="tlbl">BEFORE</div></div>
+          <div class="arw">→</div>
+          <div class="thumb"><div class="tph" style="background:rgba(29,78,216,.08)"><div class="pi2">✅</div><div class="pt2">After</div></div><div class="tlbl">AFTER</div></div>
+        </div>
+        <div class="mini-row">
+          <div class="mini"><div class="ml">최근 작업</div><div class="mv">3F 전기패널 점검</div><div class="md">2025.03.19</div></div>
+          <div class="mini"><div class="ml">이전 작업</div><div class="mv">냉각탑 필터 교체</div><div class="md">2025.03.15</div></div>
+        </div>
+      </div>
+
+      <!-- 로드맵 카드 -->
+      <div class="glass rcard fu2">
+        <div class="thead">
+          <div><div class="slbl">이번 달 로드맵</div><div class="ctitle">3월 주요 일정</div></div>
+          <button class="btn-b" onclick="goto('roadmap')">전체 보기 →</button>
+        </div>
+        ${riItem('done','소방설비 정기 점검','03/05','완료','rb-done')}
+        ${riItem('done','전기 안전 검사','03/12','완료','rb-done')}
+        ${riItem('prog','냉난방기 필터 교체','03/20','진행중','rb-prog')}
+        ${riItem('todo','옥상 방수 점검','03/25','예정','rb-todo')}
+        ${riItem('todo','엘리베이터 정기검사','03/28','예정','rb-todo')}
+      </div>
+
+      <!-- 체크리스트 + 통계 -->
+      <div class="glass ccard fu3">
+        <div class="slbl">오늘 체크리스트</div>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <span style="font-size:13px;font-weight:600;color:var(--t1)" id="cc">3 / 7 완료</span>
+          <span style="font-size:11px;color:var(--t3)" id="cp">43%</span>
+        </div>
+        <div class="pw"><div class="pf" id="pf" style="width:43%"></div></div>
+        ${ckItem(true,'소화기 위치 확인')}
+        ${ckItem(true,'3F 전등 교체')}
+        ${ckItem(true,'보일러실 점검')}
+        ${ckItem(false,'누수 여부 확인')}
+        ${ckItem(false,'냉각탑 수위 체크')}
+        ${ckItem(false,'비상구 점등 확인')}
+        ${ckItem(false,'일지 기록 업로드')}
+        <div class="sdiv"></div>
+        <div class="slbl">이번 달 통계</div>
+        <div class="sgrid">
+          ${stBox(24,'완료 작업','var(--orange)')}
+          ${stBox(6,'미완료','var(--blue)')}
+          ${stBox(8,'작업기록','var(--green)')}
+          ${stBox(3,'메모 추가','var(--purple)')}
+        </div>
+      </div>
+
+      <!-- 메뉴 7개 -->
+      <div class="msec fu4">
+        <div class="slbl" style="margin-bottom:12px">메뉴</div>
+        <div class="mgrid">
+          ${mCard('electric','⚡','rgba(255,243,235,.12)','전기','전기설비 관리','rgba(255,243,235,.15)','var(--orange)','기록 3건')}
+          ${mCard('mechanical','⚙️','rgba(239,246,255,.10)','기계','기계설비 관리','rgba(239,246,255,.15)','#93c5fd','점검 예정')}
+          ${mCard('construction','🔨','rgba(254,249,195,.10)','영선','건축·인테리어','rgba(254,249,195,.15)','#fde047','작업 1건')}
+          ${mCard('fire','🔥','rgba(252,231,243,.10)','소방','소방설비 관리','rgba(220,252,231,.15)','#6ee7b7','정상')}
+          ${mCard('records','📋','rgba(240,253,244,.10)','작업기록','전체 기록 보기','rgba(240,253,244,.15)','#6ee7b7','8건')}
+          ${mCard('memo','📒','rgba(243,232,255,.10)','학습 메모','노트 & 자료','rgba(243,232,255,.15)','#c4b5fd','메모 3건')}
+          <div class="gc mc mwide" onclick="goto('roadmap')">
+            <div class="mwi">
+              <div class="mi" style="background:rgba(239,246,255,.10)">📅</div>
+              <div style="flex:1"><div class="mn">연간 로드맵</div><div class="ms">2025년 전체 계획 · 월별 일정</div></div>
+              <div class="bprev">
+                <div class="bar" style="height:28px;background:var(--green);opacity:.7"></div>
+                <div class="bar" style="height:18px;background:var(--orange);opacity:.7"></div>
+                <div class="bar" style="height:22px;background:var(--blue);opacity:.7"></div>
+                <div class="bar" style="height:10px;background:rgba(255,255,255,.2)"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>`;
+  initChecklist();
+}
+
+/* ════════════════════════════════════════
+   PAGE: BA-DETAIL
+════════════════════════════════════════ */
+function baDetail() {
+  $('page').innerHTML = `<div class="pi">
+    <!-- 헤더 -->
+    <div class="glass fu" style="display:flex;align-items:center;gap:10px;padding:14px 18px;margin-bottom:16px">
+      <button class="btn-gh" onclick="goto('records')" style="padding:6px 12px">← 목록</button>
+      <div style="flex:1;min-width:0">
+        <div class="slbl">작업기록 #2025-0319</div>
+        <div class="ctitle" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">3F 전기패널 MCB 교체 작업</div>
+      </div>
+      <div class="spill"><div class="sdot"></div><span class="stxt">완료</span></div>
+    </div>
+
+    <!-- 메타 칩 -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px" class="fu1">
+      ${mcChip('👤','홍길동')}${mcChip('⏱','4시간 20분')}
+      ${mcChip('📅','2025.03.19')}${mcChip('⚡','전기')}${mcChip('📍','3층 분전반')}
+    </div>
+
+    <!-- BA 그리드 -->
+    <div class="ba-grid fu2">
+      ${baCardHTML('before','고장 전 상태','사진 4장','var(--red)','BEFORE')}
+      ${baCardHTML('after','수리 완료 상태','사진 3장','var(--green)','AFTER')}
+    </div>
+
+    <!-- 비교 슬라이더 -->
+    <div class="glass fu3" style="margin-bottom:14px">
+      <div style="padding:14px 16px 8px;font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--t3);text-transform:uppercase">⇄ Before / After 비교 슬라이더</div>
+      <div style="padding:0 16px 16px">
+        <div class="ctk" id="ctk">
+          <div class="ctb"><span class="cfl">BEFORE</span></div>
+          <div class="cta" id="cta"><span class="cfl">AFTER</span></div>
+          <div class="cln" id="cln"></div>
+          <div class="chn" id="chn">⇄</div>
+        </div>
+        <div style="font-size:11px;color:var(--t4);text-align:center;margin-top:7px">← 드래그하여 비교 →</div>
+      </div>
+    </div>
+
+    <!-- 작업 상세 -->
+    <div class="glass fu4" style="padding:18px;margin-bottom:14px">
+      <div class="slbl" style="margin-bottom:10px">🔵 작업 상세 정보</div>
+      <div class="spg">
+        ${spItem('현재 상태','<span style="color:var(--green)">✓ 완료</span>')}
+        ${spItem('작업자','홍길동')}
+        ${spItem('소요 시간','4시간 20분')}
+        ${spItem('부품 비용','₩ 128,000')}
+        ${spItem('분류','전기 / 패널')}
+        ${spItem('우선순위','<span style="color:var(--amber)">⚠ 높음</span>')}
+        ${spItem('작업 메모','3F 분전반 MCB 과부하 트립 반복. B형 30A 차단기 교체 완료, 부하 재분배 처리.',true)}
+      </div>
+    </div>
+
+    <!-- AI 요약 -->
+    <div class="glass fu5" style="padding:18px;margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:9px;margin-bottom:12px">
+        <div class="ai-ic">✦</div>
+        <span style="font-size:11px;font-weight:700;letter-spacing:.07em;color:var(--t3);text-transform:uppercase">AI 분석 요약</span>
+        <span class="ai-bt">Beta</span>
+      </div>
+      <div style="font-size:13px;color:var(--t2);line-height:1.7">
+        이 고장 유형(<span class="ai-hi">MCB 과부하 트립</span>)은 최근 <span class="ai-hi">3회 반복 발생</span>했습니다.
+        <div class="ai-rc">💡 예방 조치 추천: 40A급 차단기 규격 상향 및 부하 분산 재검토 → 여름철 전 시행 권장</div>
+      </div>
+    </div>
+
+    <!-- 부품 목록 -->
+    <div class="glass" style="margin-bottom:14px;overflow:hidden">
+      <div style="padding:14px 16px 10px;font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--t3);text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.06)">🔧 사용 부품 / 자재</div>
+      <div class="pr"><div><div class="prn">MCB 차단기 (B형 30A)</div><div class="prs">LS산전 / BKN-b 30A</div></div><div class="prq">×2 — ₩96,000</div></div>
+      <div class="pr"><div><div class="prn">인슐레이션 테이프</div><div class="prs">3M 스카치 / 19mm</div></div><div class="prq">×1 — ₩4,000</div></div>
+      <div class="pr"><div><div class="prn">단자 접속 커버</div><div class="prs">범용 / 분전반용</div></div><div class="prq">×4 — ₩28,000</div></div>
+      <div style="display:flex;justify-content:flex-end;align-items:center;gap:12px;padding:12px 16px;border-top:1px solid rgba(255,255,255,.06)">
+        <span style="font-size:12px;color:var(--t3)">총 비용</span>
+        <span style="font-size:16px;font-weight:700;color:var(--t1)">₩ 128,000</span>
+      </div>
+    </div>
+
+    <!-- 액션 -->
+    <div class="act-row">
+      <button class="act-p glass">✏️ 수정하기</button>
+      <button class="act-g glass">📄 PDF</button>
+      <button class="act-g glass">🔗 공유</button>
+    </div>
+  </div>`;
+  initSlider();
+}
+
+/* ════════════════════════════════════════
+   PAGE: RECORDS
+════════════════════════════════════════ */
+function records() {
+  $('page').innerHTML = `<div class="pi">
+    ${bc('작업기록')}
+    <div class="glass fu" style="padding:18px;margin-bottom:16px;display:flex;align-items:center;gap:14px">
+      <div style="width:50px;height:50px;border-radius:14px;background:rgba(16,185,129,.15);display:flex;align-items:center;justify-content:center;font-size:24px">📋</div>
+      <div><div style="font-size:18px;font-weight:700;color:var(--t1)">작업기록</div><div style="font-size:13px;color:var(--t3)">전체 작업 이력 및 Before/After 사진</div></div>
+      <button class="btn-o" style="margin-left:auto" onclick="goto('ba-detail')">＋ 새 기록</button>
+    </div>
+    <div class="slbl fu1" style="margin-bottom:12px">최근 기록</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      ${recItem('3F 전기패널 MCB 교체','전기','홍길동','2025.03.19')}
+      ${recItem('냉각탑 필터 교체','기계','김철수','2025.03.15')}
+      ${recItem('소방 감지기 점검','소방','이영희','2025.03.10')}
+      ${recItem('옥상 방수 균열 보수','영선','홍길동','2025.03.05')}
+    </div>
+  </div>`;
+}
+function recItem(t,cat,w,d) {
+  return `<div class="gc fu" style="padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:14px" onclick="goto('ba-detail')">
+    <div style="width:42px;height:42px;border-radius:11px;background:rgba(29,78,216,.15);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">📋</div>
+    <div style="flex:1;min-width:0">
+      <div style="font-size:14px;font-weight:600;color:var(--t1);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t}</div>
+      <div style="font-size:11px;color:var(--t3)">${cat} · ${w} · ${d}</div>
+    </div>
+    <span class="rb rb-done">완료</span>
+    <span style="color:var(--t4);font-size:14px">›</span>
+  </div>`;
+}
+
+/* ════════════════════════════════════════
+   PAGE: SIMPLE (미구현 페이지 공통)
+════════════════════════════════════════ */
+function simplePage(icon, title, sub) {
+  $('page').innerHTML = `<div class="pi">
+    ${bc(title)}
+    <div class="glass fu" style="padding:22px;margin-bottom:16px;display:flex;align-items:center;gap:16px">
+      <div style="width:56px;height:56px;border-radius:16px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:28px">${icon}</div>
+      <div><div style="font-size:20px;font-weight:700;color:var(--t1)">${title}</div><div style="font-size:13px;color:var(--t3);margin-top:3px">${sub}</div></div>
+      <button class="btn-o" style="margin-left:auto">＋ 추가</button>
+    </div>
+    <div class="glass fu1" style="text-align:center;padding:60px 20px;color:var(--t4)">
+      <div style="font-size:40px;margin-bottom:12px;opacity:.35">🚧</div>
+      <div style="font-size:14px;line-height:2">이 페이지는 준비 중입니다.<br>메인 페이지 구조 완성 후 기능을 구현할 예정입니다.</div>
+    </div>
+  </div>`;
+}
+function electric()     { simplePage('⚡','전기','전기설비 점검 및 수리 기록'); }
+function mechanical()   { simplePage('⚙️','기계','기계설비 유지보수 기록'); }
+function construction() { simplePage('🔨','영선','건축·인테리어 작업 기록'); }
+function fire()         { simplePage('🔥','소방','소방설비 점검 및 관리'); }
+function memo()         { simplePage('📒','학습 메모','기술 메모 & 학습 자료'); }
+function roadmap()      { simplePage('📅','연간 로드맵','2025년 전체 계획'); }
+function search()       { simplePage('🔍','검색','전체 기록 통합 검색'); }
+function contacts()     { simplePage('📇','연락처','협력업체 및 담당자'); }
+function stats()        { simplePage('📊','통계','작업 완료율 및 현황'); }
+function settings()     { simplePage('⚙','설정','계정 및 앱 설정'); }
+
+/* ════════════════════════════════════════
+   CHECKLIST
+════════════════════════════════════════ */
+function initChecklist() {
+  document.querySelectorAll('.chk').forEach(c => {
+    c.addEventListener('click', () => {
+      c.classList.toggle('on');
+      c.textContent = c.classList.contains('on') ? '✓' : '';
+      c.nextElementSibling.classList.toggle('done', c.classList.contains('on'));
+      const all = document.querySelectorAll('.chk').length;
+      const done = document.querySelectorAll('.chk.on').length;
+      const pct = Math.round(done/all*100);
+      const pf = $('pf'); if (pf) pf.style.width = pct+'%';
+      const cc = $('cc'); if (cc) cc.textContent = done+' / '+all+' 완료';
+      const cp = $('cp'); if (cp) cp.textContent = pct+'%';
+    });
+  });
+}
+
+/* ════════════════════════════════════════
+   COMPARE SLIDER
+════════════════════════════════════════ */
+function initSlider() {
+  const track = $('ctk'), after = $('cta'), line = $('cln'), handle = $('chn');
+  if (!track) return;
+  let drag = false;
+  function set(x) {
+    const r = track.getBoundingClientRect();
+    const p = Math.max(0,Math.min(100,((x-r.left)/r.width)*100));
+    after.style.clipPath = `inset(0 ${(100-p).toFixed(1)}% 0 0)`;
+    line.style.left = handle.style.left = p+'%';
   }
+  track.addEventListener('mousedown',  e=>{drag=true;set(e.clientX)});
+  window.addEventListener('mousemove', e=>{if(drag)set(e.clientX)});
+  window.addEventListener('mouseup',   ()=>{drag=false});
+  track.addEventListener('touchstart', e=>{drag=true;set(e.touches[0].clientX)},{passive:true});
+  window.addEventListener('touchmove', e=>{if(drag)set(e.touches[0].clientX)},{passive:true});
+  window.addEventListener('touchend',  ()=>{drag=false});
+}
+
+/* ════════════════════════════════════════
+   THEME TOGGLE
+════════════════════════════════════════ */
+$('tsw').addEventListener('click', ()=>{
+  S.dark = !S.dark;
+  $('tsk').style.left = S.dark ? '22px' : '3px';
 });
-*/
+
+/* ════════════════════════════════════════
+   SIDEBAR NAVIGATION
+════════════════════════════════════════ */
+document.querySelectorAll('.nb[data-p]').forEach(b=>{
+  b.addEventListener('click', ()=> goto(b.dataset.p));
+});
+
+/* ════════════════════════════════════════
+   BOOT
+════════════════════════════════════════ */
+initFB();
 </script>
 </body>
 </html>
