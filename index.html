@@ -1,2500 +1,463 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>K-Facility 시설관리</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>K-Facility | 시설관리 대시보드</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+<!-- Firebase SDK – 기능 구현 시 주석 해제 -->
+<!-- <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script> -->
+<!-- <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script> -->
+<!-- <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script> -->
+<!-- <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script> -->
 <style>
-@import url('https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/static/pretendard.css');
-
-/* ══ 변수 ══ */
-:root {
-  --font-body:"Pretendard","Noto Sans KR",-apple-system,BlinkMacSystemFont,sans-serif;
-  --font-mono:"JetBrains Mono","Consolas",monospace;
-  --bg:#f5f6fa; --card:#ffffff; --border:#e2e6ef;
-  --primary:#3b5bdb; --primary-light:#eef1ff; --primary-dim:rgba(59,91,219,.1);
-  --text:#1a1d2e; --text-sub:#4a5068; --text-muted:#8890a8;
-  --sidebar-w:248px; --header-h:58px; --nav-h:62px;
-  --radius:14px; --radius-sm:9px; --radius-xs:6px;
-  --shadow:0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.05);
-  --shadow-lg:0 8px 32px rgba(0,0,0,.12);
-  --green:#059669; --green-dim:rgba(5,150,105,.1); --green-bg:#d1fae5;
-  --red:#dc2626;   --red-dim:rgba(220,38,38,.1);   --red-bg:#fee2e2;
-  --blue:#2563eb;  --blue-dim:rgba(37,99,235,.1);  --blue-bg:#dbeafe;
-  --yellow:#d97706;--yellow-dim:rgba(217,119,6,.1);--yellow-bg:#fef3c7;
-  --purple:#7c3aed;--purple-dim:rgba(124,58,237,.1);
-  --teal:#0d9488;  --teal-dim:rgba(13,148,136,.1);
-  --orange:#ea580c;--orange-dim:rgba(234,88,12,.1);
-  --slate:#64748b; --slate-dim:rgba(100,116,139,.1);
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:'Noto Sans KR',sans-serif}
+body{background:var(--bg);color:var(--text1);min-height:100vh;transition:background .2s}
+:root{
+  --bg:#f5f0e8;--card:#ffffff;--sidebar:#1c1917;
+  --orange:#e05c0a;--orange-light:#fff3eb;
+  --blue:#1d4ed8;--blue-light:#eff6ff;
+  --text1:#1c1917;--text2:#57534e;--text3:#a8a29e;--border:#e7e3db;
+  --radius:14px;--radius-sm:10px;
 }
-[data-theme="dark"] {
-  --bg:#0f1117; --card:#181b27; --border:#252a3a;
-  --primary:#7b9dff; --primary-light:#1a1f35; --primary-dim:rgba(123,157,255,.13);
-  --text:#e8ebf8; --text-sub:#8a92b2; --text-muted:#4e566e;
-  --green-bg:rgba(5,150,105,.2); --red-bg:rgba(220,38,38,.2);
-  --blue-bg:rgba(37,99,235,.2); --yellow-bg:rgba(217,119,6,.2);
-  --shadow:0 1px 3px rgba(0,0,0,.3),0 4px 16px rgba(0,0,0,.25);
+body.dark{
+  --bg:#1c1917;--card:#292524;--border:#3c3530;
+  --text1:#fafaf9;--text2:#d6d3d1;--text3:#78716c;
+  --orange-light:#3a1a08;--blue-light:#0d2040;
 }
+.app{display:flex;height:100vh;overflow:hidden}
 
-/* ══ RESET ══ */
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{font-size:100%;-webkit-tap-highlight-color:transparent}
-body{font-family:var(--font-body);background:var(--bg);color:var(--text);
-  font-size:1rem;line-height:1.8;letter-spacing:-.01em;
-  -webkit-text-size-adjust:100%;word-break:keep-all;overflow-wrap:break-word}
-button{cursor:pointer;border:none;background:none;font-family:inherit;font-size:inherit;color:inherit}
-input,textarea,select{font-family:var(--font-body);font-size:.9375rem;color:var(--text);
-  background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-sm);
-  padding:10px 12px;outline:none;transition:border .15s,box-shadow .15s;width:100%}
-input:focus,textarea:focus,select:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-dim)}
-textarea{resize:vertical;min-height:100px}
-a{text-decoration:none;color:inherit}
-img{max-width:100%;display:block}
+/* SIDEBAR */
+.sidebar{width:64px;background:#1c1917;display:flex;flex-direction:column;align-items:center;padding:16px 0;gap:4px;flex-shrink:0}
+.logo{color:#fff;font-size:11px;font-weight:700;letter-spacing:.08em;padding:8px 0 12px;opacity:.9}
+.s-div{width:32px;height:1px;background:#3c3530;margin:4px 0}
+.nav-btn{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#a8a29e;cursor:pointer;border:none;background:transparent;font-size:16px;transition:background .15s,color .15s;position:relative}
+.nav-btn:hover{background:#2d2520;color:#fff}
+.nav-btn.active{background:var(--orange);color:#fff}
+.tip{position:absolute;left:52px;background:#111;color:#fff;font-size:11px;padding:4px 8px;border-radius:6px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s;z-index:99;border:1px solid #333}
+.nav-btn:hover .tip{opacity:1}
 
-/* ══ LAYOUT ══ */
-#app{display:flex;height:100dvh;overflow:hidden}
-#sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--card);
-  border-right:1.5px solid var(--border);display:flex;flex-direction:column;overflow:hidden;z-index:40}
-#main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
-#header{height:var(--header-h);flex-shrink:0;background:var(--card);
-  border-bottom:1.5px solid var(--border);display:flex;align-items:center;
-  padding:0 14px;gap:8px;z-index:100}
-#content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;scroll-behavior:smooth}
-#content-inner{padding:24px 22px 32px;width:100%}
-#bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:50;
-  background:var(--card);border-top:1.5px solid var(--border);
-  padding-bottom:env(safe-area-inset-bottom,0)}
-#bottom-nav-inner{display:flex;height:var(--nav-h)}
-#sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:39;backdrop-filter:blur(2px)}
-@media(max-width:768px){#content-inner{padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom,0px) + 16px)}}
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
 
-/* ══ SIDEBAR ══ */
-.logo-area{padding:14px 12px;border-bottom:1.5px solid var(--border);display:flex;align-items:center;gap:9px;flex-shrink:0}
-.logo-icon{width:34px;height:34px;background:var(--primary-dim);border-radius:9px;
-  display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.logo-icon svg{width:18px;height:18px;stroke:var(--primary);fill:none}
-.logo-text h1{font-size:14px;font-weight:900;color:var(--primary);letter-spacing:-.03em}
-.logo-text p{font-size:10.5px;color:var(--text-muted);margin-top:1px}
-.sidebar-scroll{flex:1;overflow-y:auto;padding:10px 6px}
-.sb-section{margin-bottom:18px}
-.sb-label{font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;
-  letter-spacing:.08em;padding:0 8px;margin-bottom:5px}
-.nav-item{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:9px;
-  font-size:14px;font-weight:500;color:var(--text-sub);transition:all .13s;cursor:pointer;user-select:none}
-.nav-item:hover{background:var(--bg);color:var(--text)}
-.nav-item.active{background:var(--primary-dim);color:var(--primary);font-weight:700}
-.nav-item svg{width:15px;height:15px;flex-shrink:0;stroke:currentColor;fill:none}
-.sb-user{padding:10px 12px;border-top:1.5px solid var(--border);flex-shrink:0}
-.sb-user-inner{display:flex;align-items:center;gap:8px;padding:8px;border-radius:9px;
-  cursor:pointer;transition:background .13s}
-.sb-user-inner:hover{background:var(--bg)}
-.sb-avatar{width:30px;height:30px;border-radius:50%;object-fit:cover;background:var(--primary-dim);
-  display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:700;color:var(--primary)}
-.sb-user-info{flex:1;min-width:0}
-.sb-user-name{font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sb-user-sub{font-size:11px;color:var(--text-muted)}
+/* HEADER */
+.header{background:var(--card);border-bottom:1px solid var(--border);padding:0 20px;height:56px;display:flex;align-items:center;gap:12px;flex-shrink:0;transition:background .2s,border-color .2s}
+.h-logo{font-size:15px;font-weight:700;color:var(--text1);white-space:nowrap}
+.h-logo em{color:var(--orange);font-style:normal}
+.srch{flex:1;max-width:480px;position:relative}
+.srch input{width:100%;height:36px;border:1.5px solid var(--border);border-radius:99px;padding:0 14px 0 36px;font-size:13px;color:var(--text1);background:#faf8f4;outline:none;transition:border .15s;font-family:inherit}
+.srch input:focus{border-color:var(--orange)}
+body.dark .srch input{background:#1c1917;color:#fafaf9}
+.srch i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:13px}
+.h-right{display:flex;align-items:center;gap:8px;margin-left:auto}
+.ibtn{width:36px;height:36px;border-radius:99px;display:flex;align-items:center;justify-content:center;background:#faf8f4;border:1px solid var(--border);cursor:pointer;color:var(--text2);font-size:14px;transition:background .15s}
+.ibtn:hover{background:#f0ece2}
+body.dark .ibtn{background:#2d2520;border-color:#3c3530;color:#d6d3d1}
+.ibtn.has-dot{position:relative}
+.ibtn.has-dot::after{content:'';position:absolute;top:7px;right:7px;width:7px;height:7px;background:var(--orange);border-radius:50%;border:2px solid var(--card)}
+.ava{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#e05c0a,#1d4ed8);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:600;cursor:pointer;border:2px solid var(--border)}
+.uname{font-size:13px;font-weight:500;color:var(--text1)}
+.tsw{width:44px;height:24px;background:#e7e3db;border-radius:99px;position:relative;cursor:pointer;border:none;transition:background .2s}
+.tsw-k{width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:3px;left:3px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
 
-/* ══ HEADER ══ */
-.h-left{display:flex;align-items:center;gap:7px;flex:1;min-width:0}
-.menu-btn{display:none;padding:6px;border-radius:8px;color:var(--text-sub)}
-.menu-btn:hover{background:var(--bg)}
-.h-title{font-weight:900;font-size:18px;color:var(--primary);cursor:pointer;letter-spacing:-.03em;white-space:nowrap}
-.h-title:hover{opacity:.82}
-.h-actions{display:flex;align-items:center;gap:2px;flex-shrink:0}
-.hbtn{padding:7px;border-radius:8px;color:var(--text-sub);transition:all .13s;
-  display:flex;align-items:center;justify-content:center;position:relative}
-.hbtn:hover{background:var(--bg);color:var(--text)}
-.hbtn svg{width:18px;height:18px;stroke:currentColor;fill:none}
-#fb-dot{width:7px;height:7px;border-radius:50%;background:var(--text-muted);
-  position:absolute;top:5px;right:5px;transition:background .3s}
-#fb-dot.connected{background:var(--green)}
+/* PAGE */
+.page{flex:1;overflow-y:auto;padding:20px}
 
-/* ══ BOTTOM NAV ══ */
-.bn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:3px;font-size:11px;font-weight:600;color:var(--text-muted);cursor:pointer;
-  padding:7px 4px;transition:color .13s;user-select:none}
-.bn-item.active{color:var(--primary)}
-.bn-item svg{width:21px;height:21px;stroke:currentColor;fill:none}
+/* BENTO */
+.bento{display:grid;grid-template-columns:1fr 1fr 300px;gap:14px}
 
-/* ══ PAGES ══ */
-.page{display:none;animation:fadeIn .18s ease}
-.page.active{display:block}
-.fp-overlay{display:none;background:var(--bg)}
-.fp-overlay.active{display:flex;flex-direction:column;position:fixed!important;
-  inset:0!important;z-index:9999!important;overflow:hidden!important;
-  background:var(--bg)!important;animation:slideUp .18s ease}
-.fp-overlay:not(.active){display:none!important;position:fixed!important;visibility:hidden!important}
-body.fp-mode #header{display:none!important}
-body.fp-mode #bottom-nav{display:none!important}
-.fp-header{flex-shrink:0;position:sticky;top:0;z-index:10;background:var(--card);
-  border-bottom:1.5px solid var(--border);display:flex;align-items:center;
-  gap:10px;padding:0 16px;height:var(--header-h);box-shadow:0 2px 8px rgba(0,0,0,.05)}
-.fp-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:20px 16px 32px}
-.fp-back{display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:8px;
-  font-size:13px;font-weight:700;color:var(--text-sub);border:1.5px solid var(--border);
-  background:var(--card);transition:all .13s;flex-shrink:0}
-.fp-back:hover{background:var(--bg);color:var(--text)}
-.fp-back svg{width:14px;height:14px;stroke:currentColor;fill:none}
-.fp-save{display:flex;align-items:center;gap:5px;padding:7px 14px;border-radius:8px;
-  font-size:13px;font-weight:700;background:var(--primary);color:#fff;transition:all .13s;flex-shrink:0}
-.fp-save:hover{filter:brightness(1.08)}
-.fp-save svg{width:14px;height:14px;stroke:currentColor;fill:none}
-.fp-title{font-size:17px;font-weight:800;color:var(--primary);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* CARD */
+.card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);padding:18px;transition:box-shadow .15s,background .2s,border-color .2s}
+.card:hover{box-shadow:0 4px 20px rgba(0,0,0,.07)}
+.clabel{font-size:11px;font-weight:600;letter-spacing:.07em;color:var(--text3);text-transform:uppercase;margin-bottom:10px}
+.ctitle{font-size:15px;font-weight:600;color:var(--text1);margin-bottom:4px}
 
-@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
-@keyframes slideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+/* CARD A */
+.card-a{grid-column:1;grid-row:1}
+.trow{display:flex;gap:8px;margin:10px 0;align-items:center}
+.thumb{flex:1;aspect-ratio:16/9;border-radius:8px;overflow:hidden;position:relative;background:var(--border)}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.tlabel{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.45);color:#fff;font-size:10px;padding:3px 6px;font-weight:500}
+.tph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#f0ece2}
+body.dark .tph{background:#3c3530}
+.btn-o{background:var(--orange);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;transition:background .15s;font-family:inherit;display:flex;align-items:center;gap:5px}
+.btn-o:hover{background:#c24e08}
+.btn-g{background:transparent;color:var(--blue);border:1.5px solid #bfdbfe;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;transition:background .15s;font-family:inherit;display:flex;align-items:center;gap:5px}
+.btn-g:hover{background:var(--blue-light)}
+.mini-card{flex:1;min-width:110px;background:#faf8f4;border-radius:8px;padding:8px 10px;border:1px solid var(--border)}
+body.dark .mini-card{background:#1c1917}
 
-/* ══ COMMON COMPONENTS ══ */
-.ph{margin-bottom:18px}
-.ph h2{font-size:1.65rem;font-weight:900;letter-spacing:-.03em;line-height:1.3}
-.ph p{color:var(--text-sub);margin-top:6px;font-size:.9375rem;line-height:1.7}
-.ph-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:18px}
-.ph-row h2{font-size:1.65rem;font-weight:900;letter-spacing:-.03em}
-.ph-row p{color:var(--text-sub);font-size:.9375rem}
-.card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);
-  padding:18px 20px;box-shadow:var(--shadow)}
-.btn{display:inline-flex;align-items:center;gap:5px;padding:9px 16px;border-radius:9px;
-  font-size:.9375rem;font-weight:700;min-height:40px;transition:all .13s;cursor:pointer;
-  border:none;white-space:nowrap;font-family:inherit}
-.btn-primary{background:var(--primary);color:#fff}
-.btn-primary:hover{filter:brightness(1.08)}
-.btn-outline{background:transparent;color:var(--text-sub);border:1.5px solid var(--border)}
-.btn-outline:hover{background:var(--bg);color:var(--text)}
-.btn-edit{background:var(--blue-bg);color:var(--blue)}
-.btn-edit:hover{filter:brightness(.94)}
-.btn-danger{background:var(--red-bg);color:var(--red)}
-.btn-danger:hover{filter:brightness(.94)}
-.btn-green{background:var(--green-bg);color:var(--green)}
-.btn-green:hover{filter:brightness(.94)}
-.btn svg{width:13px;height:13px;stroke:currentColor;fill:none}
-.btn-sm{padding:6px 11px;font-size:.8125rem;min-height:32px}
-.badge{display:inline-flex;align-items:center;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:700}
-.tag{display:inline-block;padding:2px 7px;border-radius:5px;font-size:11.5px;font-weight:600}
-.divider{height:1px;background:var(--border);margin:12px 0}
-.empty-state{text-align:center;padding:36px 20px;color:var(--text-muted)}
-.empty-state svg{width:40px;height:40px;stroke:currentColor;fill:none;opacity:.3;margin:0 auto 10px;display:block}
-.empty-state p{font-size:.875rem}
-.sec-title{font-size:1.1rem;font-weight:800;margin:24px 0 12px;display:flex;align-items:center;gap:7px;letter-spacing:-.02em}
-.sec-title svg{width:16px;height:16px;stroke:currentColor;fill:none}
-.ibox{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.ibox svg{width:15px;height:15px;stroke:currentColor;fill:none}
-.ibtn{padding:5px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;
-  transition:all .13s;cursor:pointer;border:none;flex-shrink:0}
-.ibtn svg{width:13px;height:13px;stroke:currentColor;fill:none}
-.ibtn-edit{background:var(--blue-bg);color:var(--blue)}
-.ibtn-edit:hover{filter:brightness(.92)}
-.ibtn-del{background:var(--red-bg);color:var(--red)}
-.ibtn-del:hover{filter:brightness(.92)}
-.fg{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
-.fg label{font-size:.875rem;font-weight:700;color:var(--text-sub);letter-spacing:-.01em}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.filter-bar{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px}
-.fc{padding:6px 13px;border-radius:999px;font-size:13px;font-weight:600;
-  border:1.5px solid var(--border);background:var(--card);color:var(--text-sub);cursor:pointer;transition:all .13s}
-.fc.active{background:var(--primary);color:#fff;border-color:var(--primary)}
-.fc:hover:not(.active){background:var(--bg)}
+/* CARD B */
+.card-b{grid-column:2;grid-row:1}
+.ri{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)}
+.ri:last-child{border-bottom:none}
+.ri-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.ri-dot.done{background:#22c55e}.ri-dot.prog{background:var(--orange)}.ri-dot.todo{background:#d4cfc9}
+.ri-txt{font-size:13px;color:var(--text1);flex:1}
+.ri-dt{font-size:11px;color:var(--text3);white-space:nowrap}
+.badge{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:99px}
+.bdone{background:#dcfce7;color:#16a34a}.bprog{background:#fff3eb;color:var(--orange)}.btodo{background:#f5f0e8;color:var(--text3)}
 
-/* ══ TOAST ══ */
-#toast{position:fixed;bottom:calc(var(--nav-h) + env(safe-area-inset-bottom,0px) + 14px);
-  left:50%;transform:translateX(-50%) translateY(10px);background:#1a1d2e;color:#fff;
-  padding:9px 18px;border-radius:999px;font-size:13.5px;font-weight:600;
-  opacity:0;transition:all .22s;z-index:99999;white-space:nowrap;pointer-events:none;
-  box-shadow:0 4px 16px rgba(0,0,0,.3)}
-#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-@media(min-width:769px){#toast{bottom:24px}}
+/* CHECKLIST CARD */
+.card-c{grid-column:3;grid-row:1/3}
+.prog-wrap{background:#f0ece2;border-radius:99px;height:6px;margin:8px 0 14px}
+body.dark .prog-wrap{background:#3c3530}
+.prog-fill{height:100%;border-radius:99px;background:var(--orange);transition:width .3s}
+.ci{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px}
+.ci:last-child{border-bottom:none}
+.chk{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--border);background:var(--card);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:9px;color:transparent;transition:background .15s,color .15s}
+.chk.on{background:var(--orange);border-color:var(--orange);color:#fff}
+.ct{color:var(--text1)}.ct.done{text-decoration:line-through;color:var(--text3)}
+.srow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.sbox{background:#faf8f4;border-radius:10px;padding:12px;text-align:center;border:1px solid var(--border)}
+body.dark .sbox{background:#1c1917}
+.snum{font-size:22px;font-weight:700;color:var(--text1)}
+.slbl{font-size:11px;color:var(--text3);margin-top:2px}
 
-/* ══ MODAL ══ */
-.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);
-  z-index:10000;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(3px)}
-.modal-bg.open{display:flex}
-.modal-box{background:var(--card);border-radius:var(--radius);padding:20px;
-  width:100%;max-width:440px;max-height:90dvh;overflow-y:auto;box-shadow:var(--shadow-lg);
-  animation:fadeIn .18s ease}
-.modal-title{font-size:1.1rem;font-weight:800;margin-bottom:14px;letter-spacing:-.02em}
-.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
+/* MENU */
+.msec{grid-column:1/3;grid-row:2}
+.mgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.mc{background:var(--card);border-radius:var(--radius-sm);border:1px solid var(--border);padding:16px 14px;cursor:pointer;transition:box-shadow .15s,transform .15s,border-color .15s;display:flex;flex-direction:column;gap:8px}
+.mc:hover{box-shadow:0 4px 16px rgba(0,0,0,.08);transform:translateY(-2px);border-color:#d4cfc9}
+.micon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.mname{font-size:14px;font-weight:600;color:var(--text1)}
+.msub{font-size:11px;color:var(--text3)}
+.mbadge{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:99px;width:fit-content}
 
-/* ══ HOME ══ */
-.home-cats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:18px}
-.cat-card{background:var(--card);border:2px solid var(--border);border-radius:var(--radius);
-  padding:20px 14px;cursor:pointer;transition:all .18s;display:flex;flex-direction:column;
-  align-items:center;text-align:center;gap:7px;user-select:none;overflow:hidden;position:relative}
-.cat-card::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity .18s;border-radius:inherit}
-.cat-card:hover::before{opacity:1}
-.cat-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
-.cat-card:active{transform:scale(.97)}
-.ci{width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center}
-.ci svg{width:26px;height:26px;stroke:currentColor;fill:none}
-.cat-card h3{font-size:15px;font-weight:800;margin-top:2px}
-.cat-card p{font-size:12px;color:var(--text-muted);line-height:1.5;margin-top:1px}
-.home-quick{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:18px}
-.qbtn{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-sm);
-  padding:12px 6px;display:flex;flex-direction:column;align-items:center;gap:4px;
-  font-size:12px;font-weight:700;color:var(--text-sub);cursor:pointer;transition:all .13s;user-select:none}
-.qbtn:hover{background:var(--primary-dim);color:var(--primary);border-color:var(--primary)}
-.qbtn svg{width:18px;height:18px;stroke:currentColor;fill:none}
-.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px}
-.stat-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);
-  padding:14px;text-align:center}
-.stat-card .num{font-size:1.75rem;font-weight:900;letter-spacing:-.03em;line-height:1}
-.stat-card .lbl{font-size:11px;color:var(--text-muted);margin-top:4px;font-weight:600}
+/* OVERLAY */
+.overlay{position:fixed;inset:0;background:rgba(28,25,23,.8);display:flex;align-items:center;justify-content:center;z-index:9999;backdrop-filter:blur(6px)}
+.lcard{background:#fff;border-radius:20px;padding:36px 32px;width:340px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.ll{font-size:24px;font-weight:800;color:#1c1917;margin-bottom:4px}
+.ll em{color:var(--orange);font-style:normal}
+.ls{font-size:13px;color:#57534e;margin-bottom:28px;line-height:1.6}
+.btng{width:100%;padding:12px;border-radius:10px;border:1.5px solid #e7e3db;background:#fff;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .15s;margin-bottom:10px;font-family:inherit}
+.btng:hover{background:#faf8f4}
+.ldiv{display:flex;align-items:center;gap:8px;margin:14px 0;color:#a8a29e;font-size:12px}
+.ldiv::before,.ldiv::after{content:'';flex:1;height:1px;background:#e7e3db}
+.btngst{width:100%;padding:12px;border-radius:10px;border:none;background:var(--orange);color:#fff;font-size:14px;font-weight:600;cursor:pointer;transition:background .15s;font-family:inherit}
+.btngst:hover{background:#c24e08}
+.gnote{font-size:11px;color:#a8a29e;margin-top:10px;line-height:1.6}
 
-/* ══ MANUAL ══ */
-.ml{display:flex;flex-direction:column;gap:7px}
-.mi{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);
-  padding:12px 13px;cursor:pointer;transition:all .13s;display:flex;align-items:center;gap:9px}
-.mi:hover{border-color:var(--primary);background:var(--primary-light)}
-.mi-body{flex:1;min-width:0}
-.mi-title{font-weight:700;font-size:.9375rem}
-.mi-meta{font-size:13px;color:var(--text-muted);margin-top:2px;display:flex;gap:6px;flex-wrap:wrap}
-.detail-back{display:flex;align-items:center;gap:5px;color:var(--text-sub);font-size:13px;
-  font-weight:600;margin-bottom:14px;cursor:pointer;width:fit-content}
-.detail-back:hover{color:var(--primary)}
-.detail-back svg{width:15px;height:15px;stroke:currentColor;fill:none}
-.steps-timeline{display:flex;flex-direction:column;gap:0}
-.step-row{display:flex;gap:12px;position:relative;padding-bottom:14px}
-.step-row:last-child{padding-bottom:0}
-.step-left{display:flex;flex-direction:column;align-items:center;flex-shrink:0;width:40px}
-.step-num{width:40px;height:40px;border-radius:50%;background:var(--primary);color:#fff;
-  font-size:16px;font-weight:900;display:flex;align-items:center;justify-content:center;
-  flex-shrink:0;box-shadow:0 2px 8px var(--primary-dim)}
-.step-line{width:2px;flex:1;background:var(--border);margin-top:5px;min-height:14px}
-.step-row:last-child .step-line{display:none}
-.step-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;flex:1}
-.step-card-header{padding:15px 17px;border-bottom:1px solid var(--border)}
-.step-title{font-weight:800;font-size:.975rem;color:var(--text)}
-.step-desc{font-size:.9375rem;color:var(--text-sub);margin-top:4px;line-height:1.8}
-.step-photo-area{padding:10px 14px}
-.step-photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-bottom:8px}
-.step-photo-thumb{width:100%;max-height:200px;border-radius:8px;object-fit:contain;cursor:pointer;
-  border:2px solid var(--border);transition:border-color .13s;background:var(--bg)}
-.step-photo-thumb:hover{border-color:var(--primary)}
-.step-photo-thumb-wrap{position:relative;display:inline-block;width:100%}
-.step-photo-del{position:absolute;top:-5px;right:-5px;width:18px;height:18px;border-radius:50%;
-  background:var(--red);color:#fff;font-size:11px;font-weight:900;display:flex;align-items:center;
-  justify-content:center;cursor:pointer;border:2px solid var(--card)}
-.step-photo-empty{border:2px dashed var(--border);border-radius:10px;padding:22px 14px;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
-  cursor:pointer;transition:all .13s;background:var(--bg)}
-.step-photo-empty:hover{border-color:var(--primary);background:var(--primary-dim)}
-.step-photo-empty svg{width:28px;height:28px;stroke:var(--text-muted);fill:none}
-.step-photo-empty span{font-size:13px;color:var(--text-muted)}
-.step-add-photo-btn{display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:7px;
-  border:1.5px dashed var(--border);font-size:12px;color:var(--text-muted);cursor:pointer;
-  transition:all .13s;width:fit-content;margin-top:5px}
-.step-add-photo-btn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-dim)}
-.step-add-photo-btn svg{width:13px;height:13px;stroke:currentColor;fill:none}
-.caution-box{background:var(--red-bg);border:1.5px solid var(--red);border-radius:10px;
-  padding:11px 13px;display:flex;gap:9px;margin-top:10px}
-.caution-box svg{width:17px;height:17px;stroke:var(--red);fill:none;flex-shrink:0;margin-top:2px}
-.caution-box p{font-size:.875rem;color:var(--red);line-height:1.7}
-.tip-box{background:var(--blue-bg);border:1.5px solid var(--blue);border-radius:10px;
-  padding:11px 13px;display:flex;gap:9px;margin-top:10px}
-.tip-box svg{width:17px;height:17px;stroke:var(--blue);fill:none;flex-shrink:0;margin-top:2px}
-.tip-box p{font-size:.875rem;color:var(--blue);line-height:1.7}
-.checklist-table{display:flex;flex-direction:column}
-.ck-row{display:grid;grid-template-columns:48px 1fr 56px;border-top:1px solid var(--border);
-  transition:background .13s;cursor:pointer}
-.ck-row:hover{background:var(--primary-light)}
-.ck-row.ck-done{background:var(--green-bg)}
-.ck-num{padding:11px 8px;font-size:13px;font-weight:700;color:var(--text-muted);
-  text-align:center;border-right:1px solid var(--border)}
-.ck-text{padding:11px 13px;font-size:.9rem;font-weight:500;border-right:1px solid var(--border);display:flex;align-items:center}
-.ck-done .ck-text{text-decoration:line-through;color:var(--text-muted)}
-.ck-check{padding:11px;display:flex;align-items:center;justify-content:center}
-
-/* ══ LOGS ══ */
-.log-list{display:flex;flex-direction:column;gap:7px}
-.log-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);
-  padding:12px 13px;display:flex;gap:9px;align-items:flex-start;cursor:pointer;transition:border-color .13s}
-.log-card:hover{border-color:var(--primary)}
-.log-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:6px}
-.log-body{flex:1;min-width:0}
-.log-title{font-weight:700;font-size:.9375rem}
-.log-meta{font-size:13px;color:var(--text-muted);margin-top:2px;display:flex;gap:5px;flex-wrap:wrap;align-items:center}
-.log-desc{font-size:.875rem;color:var(--text-sub);margin-top:4px;line-height:1.55;
-  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.log-acts{display:flex;gap:4px;flex-shrink:0}
-
-/* ══ BEFORE/AFTER ══ */
-.ba-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);
-  overflow:hidden;margin-bottom:9px;cursor:pointer;transition:border-color .13s}
-.ba-card:hover{border-color:var(--primary)}
-.ba-ch{padding:11px 13px;display:flex;align-items:center;justify-content:space-between;
-  border-bottom:1px solid var(--border)}
-.ba-ct{font-weight:800;font-size:.9375rem}
-.ba-cm{font-size:12.5px;color:var(--text-muted);margin-top:2px}
-.ba-body{padding:11px 13px}
-.ba-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.ba-panel{border-radius:var(--radius-sm);overflow:hidden;border:1.5px solid var(--border)}
-.ba-ph{padding:8px 11px;font-size:12px;font-weight:800;display:flex;align-items:center;gap:5px}
-.ba-ph svg{width:13px;height:13px;stroke:currentColor;fill:none}
-.ba-before .ba-ph{background:var(--red-bg);color:var(--red)}
-.ba-after  .ba-ph{background:var(--green-bg);color:var(--green)}
-.ba-pb{padding:9px 11px;background:var(--bg)}
-.ba-photo-btn{display:flex;align-items:center;justify-content:center;gap:5px;padding:9px;
-  border:2px dashed var(--border);border-radius:7px;font-size:12px;color:var(--text-muted);
-  cursor:pointer;transition:all .13s;margin-top:7px}
-.ba-photo-btn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-dim)}
-.ba-photo-btn svg{width:14px;height:14px;stroke:currentColor;fill:none}
-.ba-thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-top:10px}
-.ba-thumb{width:100%;aspect-ratio:4/3;border-radius:8px;object-fit:cover;cursor:zoom-in;
-  border:2px solid var(--border);transition:transform .2s,border-color .13s,box-shadow .2s}
-.ba-thumb:hover{transform:scale(1.04);border-color:var(--primary);box-shadow:0 6px 18px rgba(0,0,0,.18)}
-.ba-thumb-wrap{position:relative;display:inline-block;width:100%}
-.ba-thumb-del{position:absolute;top:-5px;right:-5px;width:18px;height:18px;border-radius:50%;
-  background:var(--red);color:#fff;font-size:11px;font-weight:900;display:flex;align-items:center;
-  justify-content:center;cursor:pointer;border:2px solid var(--card)}
-
-/* ══ ROADMAP ══ */
-.month-tabs{display:flex;gap:5px;overflow-x:auto;padding-bottom:3px;margin-bottom:12px;
-  -webkit-overflow-scrolling:touch;scrollbar-width:none}
-.month-tabs::-webkit-scrollbar{display:none}
-.mtab{padding:5px 12px;border-radius:999px;font-size:12px;font-weight:700;
-  border:1.5px solid var(--border);background:var(--card);color:var(--text-sub);
-  cursor:pointer;white-space:nowrap;transition:all .13s;flex-shrink:0}
-.mtab.active{background:var(--primary);color:#fff;border-color:var(--primary)}
-.mtab.has{border-color:var(--primary);color:var(--primary)}
-.sch-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);
-  padding:12px 13px;display:flex;gap:9px;align-items:flex-start;margin-bottom:7px}
-.sch-type{padding:2px 8px;border-radius:5px;font-size:11px;font-weight:700;white-space:nowrap;flex-shrink:0;margin-top:2px}
-.sch-body{flex:1;min-width:0}
-.sch-title{font-weight:700;font-size:.9375rem}
-.sch-desc{font-size:13px;color:var(--text-muted);margin-top:3px;line-height:1.55}
-.sch-acts{display:flex;gap:4px;flex-shrink:0}
-
-/* ══ CONTACTS ══ */
-.cc{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);
-  padding:12px 13px;display:flex;align-items:center;gap:9px;margin-bottom:7px}
-.ca{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-  font-size:14px;font-weight:800;flex-shrink:0;background:var(--primary-dim);color:var(--primary)}
-.cb2{flex:1;min-width:0}
-.cn{font-weight:700;font-size:.9375rem}
-.cr{font-size:12.5px;color:var(--text-muted)}
-.cp{font-size:.875rem;color:var(--text-sub);font-family:var(--font-mono);margin-top:2px}
-.cacts{display:flex;gap:4px}
-.cbtn{padding:6px;border-radius:7px;background:var(--bg);color:var(--text-sub);
-  display:flex;align-items:center;justify-content:center;transition:all .13s}
-.cbtn:hover{background:var(--primary-dim);color:var(--primary)}
-.cbtn svg{width:14px;height:14px;stroke:currentColor;fill:none}
-
-/* ══ SEARCH ══ */
-.search-box-wrap{padding:10px 0 12px;position:sticky;top:0;background:var(--bg);z-index:5}
-.search-box{display:flex;align-items:center;gap:8px;background:var(--card);
-  border:1.5px solid var(--border);border-radius:var(--radius);padding:10px 14px;
-  transition:border-color .15s,box-shadow .15s}
-.search-box:focus-within{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-dim)}
-.search-box svg{width:16px;height:16px;stroke:var(--text-muted);fill:none;flex-shrink:0}
-.search-box input{border:none;background:transparent;font-size:.9375rem;color:var(--text);
-  padding:0;outline:none;flex:1;min-width:0}
-.search-box input::placeholder{color:var(--text-muted)}
-.sr-card{display:flex;align-items:flex-start;gap:10px;padding:12px 13px;
-  background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);
-  cursor:pointer;transition:border-color .13s;margin-bottom:6px}
-.sr-card:hover{border-color:var(--primary)}
-.sr-type-badge{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;
-  justify-content:center;font-size:14px;flex-shrink:0;margin-top:1px}
-.sr-body{flex:1;min-width:0}
-.sr-title{font-weight:700;font-size:.9375rem}
-.sr-sub{font-size:12.5px;color:var(--text-muted);margin-top:2px;display:flex;gap:5px;flex-wrap:wrap;align-items:center}
-.sr-tag{display:inline-block;padding:1px 6px;border-radius:4px;font-size:11px;font-weight:600;
-  background:var(--primary-dim);color:var(--primary)}
-mark{background:transparent;color:var(--primary);font-weight:800}
-
-/* ══ ADMIN ══ */
-.admin-cat-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;
-  border-bottom:1px solid var(--border)}
-.admin-manual-item{display:flex;align-items:center;gap:8px;padding:9px 11px;
-  background:var(--bg);border-radius:8px;margin-bottom:5px}
-.admin-del-btn{display:flex;align-items:center;gap:4px}
-.settings-section{margin-bottom:20px}
-.settings-row{display:flex;align-items:center;justify-content:space-between;
-  padding:13px 0;border-bottom:1px solid var(--border);gap:10px}
-.settings-row-label{font-weight:700;font-size:.9375rem}
-.settings-row-desc{font-size:12.5px;color:var(--text-muted);margin-top:2px}
-.dark-toggle{width:44px;height:26px;border-radius:999px;background:var(--border);
-  position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
-.dark-toggle.on{background:var(--primary)}
-.dark-toggle::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;
-  border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.2)}
-.dark-toggle.on::after{transform:translateX(18px)}
-.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
-
-/* ══ MANUAL EDITOR ══ */
-.paper-editor{min-height:120px;padding:14px 16px;background:var(--card);
-  border:1.5px solid var(--border);border-radius:var(--radius-sm);
-  font-family:var(--font-body);font-size:.9375rem;line-height:1.9;color:var(--text);
-  outline:none;cursor:text;white-space:pre-wrap;word-break:break-word;
-  transition:border .15s,box-shadow .15s}
-.paper-editor:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-dim)}
-.paper-editor:empty::before{content:attr(data-placeholder);color:var(--text-muted);pointer-events:none}
-.ef-step-card{background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius);
-  padding:13px;margin-bottom:8px}
-.ef-step-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
-
-/* ══ IMG PREVIEW OVERLAY ══ */
-.img-ov{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:99999;
-  display:flex;align-items:center;justify-content:center;cursor:zoom-out;padding:20px}
-.img-ov img{max-width:100%;max-height:100%;border-radius:8px;object-fit:contain}
-
-/* ══ LOGIN PAGE ══ */
-#login-screen{position:fixed;inset:0;background:var(--bg);z-index:99998;
-  display:flex;align-items:center;justify-content:center;padding:20px}
-.login-card{background:var(--card);border:1.5px solid var(--border);border-radius:20px;
-  padding:36px 32px;max-width:380px;width:100%;box-shadow:var(--shadow-lg);text-align:center}
-.login-logo{width:56px;height:56px;background:var(--primary-dim);border-radius:16px;
-  display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
-.login-logo svg{width:28px;height:28px;stroke:var(--primary);fill:none}
-.login-card h2{font-size:1.5rem;font-weight:900;letter-spacing:-.03em;margin-bottom:6px}
-.login-card p{font-size:.875rem;color:var(--text-muted);margin-bottom:24px;line-height:1.7}
-.google-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;
-  padding:12px;border-radius:10px;border:2px solid var(--border);background:var(--card);
-  font-size:.9375rem;font-weight:700;cursor:pointer;transition:all .15s;color:var(--text);
-  box-shadow:var(--shadow)}
-.google-btn:hover{border-color:var(--primary);background:var(--primary-dim);color:var(--primary)}
-.google-btn svg{width:20px;height:20px;flex-shrink:0}
-.local-btn{margin-top:10px;display:flex;align-items:center;justify-content:center;
-  padding:10px;border-radius:9px;font-size:.875rem;font-weight:700;
-  color:var(--text-muted);cursor:pointer;transition:all .13s}
-.local-btn:hover{color:var(--text);background:var(--bg)}
-
-/* ══ RESPONSIVE ══ */
-@media(min-width:900px){
-  #content-inner{padding:30px 40px 40px}
-  #page-home,#page-search,#page-roadmap,#page-contacts,#page-admin
-  {max-width:860px;margin:0 auto}
-  [id^="page-cat_"]{max-width:860px;margin:0 auto}
-  #page-ba,#page-logs,.fp-overlay{max-width:none;margin:0}
+/* RESPONSIVE */
+@media(max-width:1100px){.bento{grid-template-columns:1fr 1fr 280px}}
+@media(max-width:900px){
+  .bento{grid-template-columns:1fr 1fr}
+  .card-a{grid-column:1;grid-row:1}.card-b{grid-column:2;grid-row:1}
+  .msec{grid-column:1/3;grid-row:2}.card-c{grid-column:1/3;grid-row:3}
+  .mgrid{grid-template-columns:repeat(2,1fr)}
 }
-@media(max-width:900px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:768px){
-  #sidebar{display:none;position:fixed;top:0;bottom:0;left:0;box-shadow:var(--shadow-lg)}
-  #sidebar.open{display:flex}
-  #bottom-nav{display:block}
-  .menu-btn{display:flex}
-  .home-cats{grid-template-columns:repeat(2,1fr)}
-  .ba-grid{grid-template-columns:1fr}
-  .form-row{grid-template-columns:1fr}
-  .modal-box{padding:16px}
-  .stats-grid{grid-template-columns:repeat(2,1fr)}
-  .home-quick{grid-template-columns:repeat(4,1fr)}
-  .fp-body{padding:14px 12px 28px}
-  body{font-size:.9375rem}
-}
-@media(max-width:480px){
-  .stats-grid{grid-template-columns:repeat(2,1fr)}
-  .home-quick{grid-template-columns:repeat(2,2fr)}
-  .admin-del-btn span{display:none}
+@media(max-width:600px){
+  .sidebar{display:none}
+  .bento{grid-template-columns:1fr;gap:10px}
+  .card-a,.card-b,.msec,.card-c{grid-column:1;grid-row:auto}
+  .mgrid{grid-template-columns:repeat(2,1fr)}
+  .page{padding:12px}
+  .header{padding:0 12px;gap:8px}
+  .uname{display:none}
+  .srch{max-width:100%}
 }
 </style>
 </head>
 <body>
 
-<!-- ══ 초기 로딩 스피너 ══
-     JS 실행 전부터 표시. SDK 로드 완료 후 showAuthLoading()이 이 엘리먼트를 재사용.
-     인증 결과에 따라 showAppScreen() 또는 showLoginScreen()이 제거함. -->
-<div id="auth-spinner" style="
-  position:fixed;inset:0;
-  background:#f5f6fa;
-  z-index:99999;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  gap:14px">
-  <div style="
-    width:40px;height:40px;
-    border:3px solid #e2e6ef;
-    border-top-color:#3b5bdb;
-    border-radius:50%;
-    animation:_kspin .8s linear infinite">
-  </div>
-  <p style="font-size:14px;color:#8890a8;font-weight:600;font-family:sans-serif">
-    로그인 확인 중...
-  </p>
-  <style>@keyframes _kspin{to{transform:rotate(360deg)}}</style>
-</div>
-
-<!-- ══ LOGIN SCREEN ══ -->
-<div id="login-screen" style="display:none">
-  <div class="login-card">
-    <div class="login-logo">
-      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-    </div>
-    <h2>K-Facility</h2>
-    <p>시설 관리 통합 플랫폼입니다.<br>Google 계정으로 로그인하세요.</p>
-    <button class="google-btn" id="google-btn" onclick="signInWithGoogle()">
-      <svg viewBox="0 0 24 24" fill="none"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-      <span id="google-btn-text">Google로 로그인</span>
+<!-- LOGIN OVERLAY -->
+<div class="overlay" id="overlay">
+  <div class="lcard">
+    <div class="ll">K-<em>Facility</em></div>
+    <p class="ls">시설관리 통합 대시보드에<br>오신 걸 환영합니다</p>
+    <button class="btng" onclick="doLogin('google')">
+      <svg width="18" height="18" viewBox="0 0 24 24">
+        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+      </svg>
+      Google로 로그인
     </button>
-    <div id="auth-domain-hint" style="margin-top:10px;font-size:11px;color:var(--text-muted);background:var(--bg);border-radius:8px;padding:8px 10px;display:none;text-align:left;line-height:1.6">
-      📌 Firebase Console → Authentication → Settings → Authorized domains 에<br>
-      현재 도메인을 추가해야 Google 로그인이 작동합니다.
-    </div>
-    <div class="local-btn" onclick="signInLocal()">
-      로그인 없이 로컬에서 사용
-    </div>
+    <div class="ldiv">또는</div>
+    <button class="btngst" onclick="doLogin('guest')">👤 게스트로 둘러보기</button>
+    <p class="gnote">게스트 모드에서는 데이터 저장이 제한됩니다</p>
   </div>
 </div>
 
-<!-- ══ MAIN APP ══ -->
-<div id="app" style="display:none">
+<!-- APP -->
+<div class="app">
 
-<!-- SIDEBAR -->
-<nav id="sidebar">
-  <div class="logo-area">
-    <div class="logo-icon"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-    <div class="logo-text"><h1>K-Facility</h1><p>시설관리 플랫폼</p></div>
-  </div>
-  <div class="sidebar-scroll">
-    <div class="sb-section">
-      <div class="sb-label">메인</div>
-      <div class="nav-item active" data-page="home" onclick="nav('home')">
-        <svg viewBox="0 0 24 24" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>홈
-      </div>
-      <div class="nav-item" data-page="search" onclick="nav('search')">
-        <svg viewBox="0 0 24 24" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>전체 검색
-      </div>
-    </div>
-    <div class="sb-section">
-      <div class="sb-label">매뉴얼</div>
-      <div class="nav-item" data-page="cat_전기" onclick="nav('cat_전기')">
-        <svg viewBox="0 0 24 24" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>전기 설비
-      </div>
-      <div class="nav-item" data-page="cat_기계" onclick="nav('cat_기계')">
-        <svg viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>기계 설비
-      </div>
-      <div class="nav-item" data-page="cat_영선" onclick="nav('cat_영선')">
-        <svg viewBox="0 0 24 24" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>영선 / 보수
-      </div>
-      <div class="nav-item" data-page="cat_소방" onclick="nav('cat_소방')">
-        <svg viewBox="0 0 24 24" stroke-width="2"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>소방 설비
-      </div>
-    </div>
-    <div class="sb-section">
-      <div class="sb-label">기록</div>
-      <div class="nav-item" data-page="logs" onclick="nav('logs')">
-        <svg viewBox="0 0 24 24" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>작업 기록
-      </div>
-      <div class="nav-item" data-page="ba" onclick="nav('ba')">
-        <svg viewBox="0 0 24 24" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/></svg>비포/애프터
-      </div>
-    </div>
-    <div class="sb-section">
-      <div class="sb-label">관리</div>
-      <div class="nav-item" data-page="roadmap" onclick="nav('roadmap')">
-        <svg viewBox="0 0 24 24" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>연간 로드맵
-      </div>
-      <div class="nav-item" data-page="contacts" onclick="nav('contacts')">
-        <svg viewBox="0 0 24 24" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>연락처
-      </div>
-      <div class="nav-item" data-page="admin" onclick="nav('admin')">
-        <svg viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 19.07a10 10 0 0 1 0-14.14M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>관리자
-      </div>
-    </div>
-  </div>
-  <div class="sb-user">
-    <div class="sb-user-inner" onclick="showUserMenu()">
-      <div class="sb-avatar" id="sb-avatar">K</div>
-      <div class="sb-user-info">
-        <div class="sb-user-name" id="sb-user-name">로컬 사용자</div>
-        <div class="sb-user-sub" id="sb-user-sub">로컬 모드</div>
-      </div>
-      <svg width="13" height="13" viewBox="0 0 24 24" stroke="var(--text-muted)" fill="none" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
-    </div>
-  </div>
-</nav>
-
-<!-- MAIN -->
-<div id="main">
-  <!-- HEADER -->
-  <header id="header">
-    <div class="h-left">
-      <button class="menu-btn hbtn" onclick="toggleSb()">
-        <svg viewBox="0 0 24 24" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-      </button>
-      <span class="h-title" onclick="nav('home')">🛡️ K-Facility</span>
-    </div>
-    <div class="h-actions">
-      <button class="hbtn" onclick="nav('search')" title="검색">
-        <svg viewBox="0 0 24 24" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      </button>
-      <button class="hbtn" onclick="openFpLog()" title="작업 기록 추가">
-        <svg viewBox="0 0 24 24" stroke-width="2"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
-      </button>
-      <button class="hbtn" title="Firebase 연결 상태">
-        <div id="fb-dot"></div>
-        <svg viewBox="0 0 24 24" stroke-width="2" style="opacity:.6"><path d="M5.3 15.3C3.26 13.26 3.26 9.94 5.3 7.9L12 1.2l6.7 6.7c2.04 2.04 2.04 5.36 0 7.4L12 21.9l-6.7-6.6z"/></svg>
-      </button>
-      <button class="hbtn" onclick="toggleTheme()" title="테마 전환">
-        <svg id="theme-icon" viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-      </button>
-    </div>
-  </header>
-
-  <!-- CONTENT -->
-  <div id="content">
-    <div id="content-inner">
-
-      <!-- ── HOME ── -->
-      <div id="page-home" class="page active">
-        <div class="ph-row">
-          <div><h2>안녕하세요 👋</h2><p id="home-greeting">시설관리 현황을 확인하세요</p></div>
-          <button class="btn btn-primary" onclick="openFpLog()">
-            <svg viewBox="0 0 24 24" stroke-width="2"><path d="M12 5v14"/><path d="M5 12h14"/></svg>기록 추가
-          </button>
-        </div>
-        <div class="stats-grid" id="home-stats"></div>
-        <div class="home-quick">
-          <div class="qbtn" onclick="openFpLog()"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M12 18v-6"/><path d="M9 15h6"/></svg>작업기록</div>
-          <div class="qbtn" onclick="openFpBA()"><svg viewBox="0 0 24 24" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 3v18"/></svg>B/A기록</div>
-          <div class="qbtn" onclick="nav('search')"><svg viewBox="0 0 24 24" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>검색</div>
-          <div class="qbtn" onclick="nav('roadmap')"><svg viewBox="0 0 24 24" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>로드맵</div>
-        </div>
-        <div class="home-cats">
-          <div class="cat-card" onclick="nav('cat_전기')" style="border-color:#fde68a">
-            <div class="ci" style="background:#fef3c7"><svg viewBox="0 0 24 24" stroke-width="2" stroke="#d97706"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
-            <h3>전기 설비</h3><p>차단기·배전반·전등</p>
-          </div>
-          <div class="cat-card" onclick="nav('cat_기계')" style="border-color:#bbf7d0">
-            <div class="ci" style="background:#d1fae5"><svg viewBox="0 0 24 24" stroke-width="2" stroke="#059669"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg></div>
-            <h3>기계 설비</h3><p>냉난방·보일러·펌프</p>
-          </div>
-          <div class="cat-card" onclick="nav('cat_영선')" style="border-color:#bfdbfe">
-            <div class="ci" style="background:#dbeafe"><svg viewBox="0 0 24 24" stroke-width="2" stroke="#2563eb"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
-            <h3>영선 / 보수</h3><p>균열·도장·타일</p>
-          </div>
-          <div class="cat-card" onclick="nav('cat_소방')" style="border-color:#fecaca">
-            <div class="ci" style="background:#fee2e2"><svg viewBox="0 0 24 24" stroke-width="2" stroke="#dc2626"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></div>
-            <h3>소방 설비</h3><p>소화기·감지기·스프링클러</p>
-          </div>
-        </div>
-        <div class="sec-title">
-          <svg viewBox="0 0 24 24" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>최근 작업 기록
-        </div>
-        <div id="home-recent"></div>
-      </div>
-
-      <!-- ── MANUAL CATEGORIES (동적 생성) ── -->
-      <div id="page-cat_전기" class="page"></div>
-      <div id="page-cat_기계" class="page"></div>
-      <div id="page-cat_영선" class="page"></div>
-      <div id="page-cat_소방" class="page"></div>
-
-      <!-- ── MANUAL DETAIL ── -->
-      <div id="page-manual-detail" class="page"></div>
-
-      <!-- ── LOGS ── -->
-      <div id="page-logs" class="page">
-        <div class="ph-row">
-          <div><h2>작업 기록</h2><p>시설 작업 이력을 관리합니다</p></div>
-          <button class="btn btn-primary" onclick="openFpLog()">
-            <svg viewBox="0 0 24 24" stroke-width="2"><path d="M12 5v14"/><path d="M5 12h14"/></svg>새 기록
-          </button>
-        </div>
-        <div class="filter-bar" id="log-filter-bar"></div>
-        <div id="log-list"></div>
-      </div>
-
-      <!-- ── BEFORE/AFTER ── -->
-      <div id="page-ba" class="page">
-        <div class="ph-row">
-          <div><h2>비포 / 애프터</h2><p>수리 전후 사진 기록을 관리합니다</p></div>
-          <button class="btn btn-primary" onclick="openFpBA()">
-            <svg viewBox="0 0 24 24" stroke-width="2"><path d="M12 5v14"/><path d="M5 12h14"/></svg>새 기록
-          </button>
-        </div>
-        <div id="ba-list"></div>
-      </div>
-
-      <!-- ── ROADMAP ── -->
-      <div id="page-roadmap" class="page">
-        <div class="ph-row">
-          <div><h2>연간 로드맵</h2><p>월별 법정·정기·계절 점검 일정</p></div>
-          <button class="btn btn-primary" onclick="openSchModal()">
-            <svg viewBox="0 0 24 24" stroke-width="2"><path d="M12 5v14"/><path d="M5 12h14"/></svg>일정 추가
-          </button>
-        </div>
-        <div class="month-tabs" id="month-tabs"></div>
-        <div id="roadmap-list"></div>
-      </div>
-
-      <!-- ── CONTACTS ── -->
-      <div id="page-contacts" class="page">
-        <div class="ph-row">
-          <div><h2>연락처</h2><p>업체·담당자 연락처를 관리합니다</p></div>
-          <button class="btn btn-primary" onclick="openContactModal()">
-            <svg viewBox="0 0 24 24" stroke-width="2"><path d="M12 5v14"/><path d="M5 12h14"/></svg>추가
-          </button>
-        </div>
-        <div id="contacts-list"></div>
-      </div>
-
-      <!-- ── SEARCH ── -->
-      <div id="page-search" class="page">
-        <div class="search-box-wrap">
-          <div class="search-box">
-            <svg viewBox="0 0 24 24" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-            <input id="search-input" type="search" placeholder="매뉴얼, 기록, 연락처 검색..." oninput="doSearch(this.value)" autocomplete="off">
-          </div>
-        </div>
-        <div id="search-results"><div class="empty-state"><svg viewBox="0 0 24 24" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><p>검색어를 입력하세요</p></div></div>
-      </div>
-
-      <!-- ── ADMIN ── -->
-      <div id="page-admin" class="page">
-        <div class="ph"><h2>관리자</h2><p>매뉴얼 편집 및 데이터 관리</p></div>
-        <div id="admin-manual-section"></div>
-        <div class="sec-title" style="margin-top:28px">
-          <svg viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 19.07a10 10 0 0 1 0-14.14"/></svg>설정
-        </div>
-        <div class="card settings-section">
-          <div class="settings-row"><div><div class="settings-row-label">다크 모드</div><div class="settings-row-desc">화면 테마를 어둡게 설정</div></div><div class="dark-toggle" id="dark-toggle" onclick="toggleTheme()"></div></div>
-          <div class="settings-row"><div><div class="settings-row-label">데이터 내보내기</div><div class="settings-row-desc">모든 데이터를 JSON 파일로 저장</div></div><button class="btn btn-outline btn-sm" onclick="exportData()">내보내기</button></div>
-          <div class="settings-row"><div><div class="settings-row-label">데이터 가져오기</div><div class="settings-row-desc">JSON 파일에서 데이터 복원</div></div><button class="btn btn-outline btn-sm" onclick="importData()">가져오기</button></div>
-          <div class="settings-row" style="border:none"><div><div class="settings-row-label">전체 데이터 초기화</div><div class="settings-row-desc">모든 기록·연락처 삭제 (복구 불가)</div></div><button class="btn btn-danger btn-sm" onclick="clearAll()">초기화</button></div>
-        </div>
-        <div style="text-align:center;color:var(--text-muted);font-size:11px;margin-top:16px">K-Facility App v7.0</div>
-      </div>
-
-      <!-- ── MANUAL EDIT ── -->
-      <div id="page-manual-edit" class="page">
-        <div class="detail-back" onclick="nav('admin',false)">
-          <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>관리자로
-        </div>
-        <div id="manual-edit-form"></div>
-      </div>
-
-    </div><!-- /content-inner -->
-  </div><!-- /content -->
-
-  <!-- BOTTOM NAV -->
-  <nav id="bottom-nav">
-    <div id="bottom-nav-inner">
-      <div class="bn-item active" data-page="home" onclick="nav('home')">
-        <svg viewBox="0 0 24 24" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>홈
-      </div>
-      <div class="bn-item" data-page="logs" onclick="nav('logs')">
-        <svg viewBox="0 0 24 24" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>기록
-      </div>
-      <div class="bn-item" data-page="ba" onclick="nav('ba')">
-        <svg viewBox="0 0 24 24" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 3v18"/></svg>B/A
-      </div>
-      <div class="bn-item" data-page="contacts" onclick="nav('contacts')">
-        <svg viewBox="0 0 24 24" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>연락처
-      </div>
-      <div class="bn-item" data-page="admin" onclick="nav('admin')">
-        <svg viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 19.07a10 10 0 0 1 0-14.14"/></svg>관리자
-      </div>
-    </div>
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="logo">K·F</div>
+    <div class="s-div"></div>
+    <button class="nav-btn active" data-p="home"><i class="fa-solid fa-house"></i><span class="tip">홈</span></button>
+    <button class="nav-btn" data-p="search"><i class="fa-solid fa-magnifying-glass"></i><span class="tip">검색</span></button>
+    <div class="s-div"></div>
+    <button class="nav-btn" data-p="electric"><i class="fa-solid fa-bolt"></i><span class="tip">전기</span></button>
+    <button class="nav-btn" data-p="mechanical"><i class="fa-solid fa-gear"></i><span class="tip">기계</span></button>
+    <button class="nav-btn" data-p="construction"><i class="fa-solid fa-hammer"></i><span class="tip">영선</span></button>
+    <button class="nav-btn" data-p="fire"><i class="fa-solid fa-fire-extinguisher"></i><span class="tip">소방</span></button>
+    <button class="nav-btn" data-p="records"><i class="fa-solid fa-clipboard-list"></i><span class="tip">작업기록</span></button>
+    <button class="nav-btn" data-p="memo"><i class="fa-solid fa-book-open"></i><span class="tip">학습메모</span></button>
+    <button class="nav-btn" data-p="roadmap"><i class="fa-solid fa-calendar-days"></i><span class="tip">연간로드맵</span></button>
+    <div class="s-div" style="margin-top:auto"></div>
+    <button class="nav-btn" data-p="contacts"><i class="fa-solid fa-address-book"></i><span class="tip">연락처</span></button>
+    <button class="nav-btn" data-p="stats"><i class="fa-solid fa-chart-bar"></i><span class="tip">통계</span></button>
+    <button class="nav-btn" data-p="settings"><i class="fa-solid fa-sliders"></i><span class="tip">설정</span></button>
   </nav>
-</div><!-- /main -->
-</div><!-- /app -->
 
-<!-- ══ FULLPAGE OVERLAYS ══ -->
-
-<!-- 작업기록 작성/수정 -->
-<div id="fp-log" class="fp-overlay">
-  <div class="fp-header">
-    <button class="fp-back" onclick="closeFpLog()"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>목록으로</button>
-    <span class="fp-title" id="fp-log-title-txt">새 작업 기록</span>
-    <button class="fp-save" onclick="saveLog()"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>저장</button>
-  </div>
-  <div class="fp-body">
-    <div class="form-row">
-      <div class="fg" style="margin:0"><label>작업 유형</label>
-        <select id="fp-lcat"><option value="전기">전기 설비</option><option value="기계">기계 설비</option><option value="영선">영선 / 보수</option><option value="소방">소방 설비</option><option value="기타">기타</option></select>
+  <!-- MAIN -->
+  <div class="main">
+    <header class="header">
+      <div class="h-logo">K-<em>Facility</em></div>
+      <div class="srch">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" placeholder="작업기록, 장비, 메모 검색..." id="si"/>
       </div>
-      <div class="fg" style="margin:0"><label>상태</label>
-        <select id="fp-lstat"><option value="완료">완료</option><option value="진행중">진행중</option><option value="대기">대기</option></select>
+      <div class="h-right">
+        <button class="ibtn has-dot" title="알림"><i class="fa-solid fa-bell"></i></button>
+        <div class="ava" id="ava">KF</div>
+        <span class="uname" id="uname">관리자</span>
+        <button class="tsw" onclick="toggleDark()" title="다크모드">
+          <div class="tsw-k" id="tsk"></div>
+        </button>
       </div>
-    </div>
-    <div class="fg" style="margin-top:10px"><label>작업 제목</label><input type="text" id="fp-ltitle" placeholder="작업 내용을 간략히 입력하세요"></div>
-    <div class="form-row">
-      <div class="fg" style="margin:0"><label>작업자</label><input type="text" id="fp-lworker" placeholder="이름"></div>
-      <div class="fg" style="margin:0"><label>작업일</label><input type="date" id="fp-ldate"></div>
-    </div>
-    <div class="fg" style="margin-top:10px"><label>상세 내용</label>
-      <div id="fp-ldesc" class="paper-editor" contenteditable="true" data-placeholder="작업 상세 내용, 특이사항 등..." role="textbox" aria-multiline="true" style="min-height:160px"></div>
-    </div>
-  </div>
-</div>
+    </header>
 
-<!-- 작업기록 상세 -->
-<div id="fp-log-detail" class="fp-overlay">
-  <div class="fp-header">
-    <button class="fp-back" onclick="closeFpDetail('fp-log-detail')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>목록으로</button>
-    <span class="fp-title"></span>
-    <div style="display:flex;gap:6px">
-      <button class="fp-back" id="log-det-edit-btn" style="color:var(--blue);background:var(--blue-bg);border-color:var(--blue-bg)">✏️ 수정</button>
-      <button class="fp-back" id="log-det-del-btn" style="color:var(--red);background:var(--red-bg);border-color:var(--red-bg)">🗑 삭제</button>
-    </div>
-  </div>
-  <div class="fp-body" id="fp-log-detail-body"></div>
-</div>
-
-<!-- B/A 작성/수정 -->
-<div id="fp-ba" class="fp-overlay">
-  <div class="fp-header">
-    <button class="fp-back" onclick="closeFpBA()"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>목록으로</button>
-    <span class="fp-title" id="fp-ba-title-txt">새 비포/애프터</span>
-    <button class="fp-save" onclick="saveBA()"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>저장</button>
-  </div>
-  <div class="fp-body">
-    <div class="fg"><label>작업명 (제목)</label><input type="text" id="fp-ba-title-inp" placeholder="예: 화장실 수도꼭지 누수 수리"></div>
-    <div class="form-row">
-      <div class="fg" style="margin:0"><label>분류</label>
-        <select id="fp-ba-cat"><option value="전기">전기</option><option value="기계">기계</option><option value="영선">영선</option><option value="소방">소방</option><option value="기타">기타</option></select>
+    <div class="page">
+      <!-- breadcrumb -->
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:16px">
+        <i class="fa-solid fa-house" style="font-size:10px;color:var(--text3)"></i>
+        <span style="font-size:12px;color:var(--text3)">/</span>
+        <span style="font-size:12px;font-weight:600;color:var(--text2)">홈 대시보드</span>
+        <span id="ds" style="margin-left:auto;font-size:11px;color:var(--text3)"></span>
       </div>
-      <div class="fg" style="margin:0"><label>작업일</label><input type="date" id="fp-ba-date"></div>
-    </div>
-    <div style="height:12px"></div>
-    <div class="ba-grid">
-      <div class="ba-panel ba-before">
-        <div class="ba-ph"><svg viewBox="0 0 24 24" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>Before (고장 증상)</div>
-        <div class="ba-pb">
-          <div id="fp-ba-before-div" class="paper-editor" contenteditable="true" data-placeholder="고장 증상, 원인 메모..." role="textbox" aria-multiline="true" style="min-height:120px"></div>
-          <div class="ba-photo-btn" onclick="triggerBAPhoto('before')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>사진 추가</div>
-          <div id="fp-ba-before-thumbs" class="ba-thumbs"></div>
-        </div>
-      </div>
-      <div class="ba-panel ba-after">
-        <div class="ba-ph"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m22 4-10 10.01-3-3"/></svg>After (수리 완료)</div>
-        <div class="ba-pb">
-          <div id="fp-ba-after-div" class="paper-editor" contenteditable="true" data-placeholder="수리 완료 후 정상 작동, 교체 부품..." role="textbox" aria-multiline="true" style="min-height:120px"></div>
-          <div class="ba-photo-btn" onclick="triggerBAPhoto('after')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>사진 추가</div>
-          <div id="fp-ba-after-thumbs" class="ba-thumbs"></div>
-        </div>
-      </div>
-    </div>
-    <input type="file" id="ba-photo-input" accept="image/*" multiple style="position:fixed;top:-9999px;opacity:0;width:1px;height:1px" onchange="handleBAPhoto(event)">
-  </div>
-</div>
 
-<!-- B/A 상세 -->
-<div id="fp-ba-detail" class="fp-overlay">
-  <div class="fp-header">
-    <button class="fp-back" onclick="closeFpDetail('fp-ba-detail')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>목록으로</button>
-    <span class="fp-title"></span>
-    <div style="display:flex;gap:6px">
-      <button class="fp-back" id="ba-det-edit-btn" style="color:var(--blue);background:var(--blue-bg);border-color:var(--blue-bg)">✏️ 수정</button>
-      <button class="fp-back" id="ba-det-del-btn" style="color:var(--red);background:var(--red-bg);border-color:var(--red-bg)">🗑 삭제</button>
-    </div>
-  </div>
-  <div class="fp-body" id="fp-ba-detail-body"></div>
-</div>
+      <div class="bento">
 
-<!-- ══ MODALS ══ -->
-<div class="modal-bg" id="modal-bg" onclick="if(event.target===this)closeModal()">
-  <div class="modal-box" id="modal-box"></div>
-</div>
-
-<!-- ══ OVERLAYS ══ -->
-<div id="sb-overlay" onclick="closeSidebar()"></div>
-<div id="toast"></div>
-
-<input type="file" id="step-photo-inp" accept="image/*" multiple style="position:fixed;top:-9999px;opacity:0;width:1px;height:1px" onchange="handleStepPhoto(event)">
-<input type="file" id="ef-step-photo-inp" accept="image/*" multiple style="position:fixed;top:-9999px;opacity:0;width:1px;height:1px" onchange="handleEfStepPhoto(event)">
-<input type="file" id="import-inp" accept=".json" style="position:fixed;top:-9999px;opacity:0;width:1px;height:1px" onchange="handleImport(event)">
-
-<script>
-// ════════════════════════════════════════════════════════
-// K-Facility v7  —  Firebase + Google Auth
-// ════════════════════════════════════════════════════════
-
-// ── Firebase 설정 (기존 프로젝트 그대로 사용)
-const FIREBASE_CONFIG = {
-  apiKey:            "AIzaSyCBCG_qBYywBUXBlF47Fg_xXX_nDZTz51Y",
-  authDomain:        "k-facility.firebaseapp.com",
-  projectId:         "k-facility",
-  storageBucket:     "k-facility.firebasestorage.app",
-  messagingSenderId: "709908883593",
-  appId:             "1:709908883593:web:a56d2220c227cd72783e58"
-};
-const FB_DOC = "kfacility/main";
-
-let db = null, storage = null, auth = null;
-let _currentUser = null;  // Firebase Auth user or {uid:'local',displayName:'로컬 사용자'}
-
-// ── 카테고리 정보
-const CATS = ['전기','기계','영선','소방'];
-const CAT_NAMES = {전기:'전기 설비',기계:'기계 설비',영선:'영선 / 보수',소방:'소방 설비'};
-const CAT_COLORS = {전기:'#d97706',기계:'#059669',영선:'#2563eb',소방:'#dc2626'};
-const CAT_BG    = {전기:'#fef3c7',기계:'#d1fae5',영선:'#dbeafe',소방:'#fee2e2'};
-const SC = {완료:'#059669',진행중:'#2563eb',대기:'#d97706'};
-
-// ── 상태 (State)
-let S = {
-  page:'home',
-  logs:[], ba:[], contacts:[], schedules:[], manuals:{}, checklistState:{},
-  logFilter:'전체',
-  editLogId:null, editContactId:null, editBAId:null, editSchId:null,
-  adminMode:false, activeMonth:new Date().getMonth()+1,
-  baSide:'before', baBeforePhotos:[], baAfterPhotos:[],
-  editCat:null, editManualId:null,
-  efSteps:[], efSupplies:[], efCautions:[], efChecklist:[], efStepPhotos:{}
-};
-
-// ── 편의 함수
-const el = id => document.getElementById(id);
-const V  = id => (el(id) ? el(id).value.trim() : '');
-const today = () => new Date().toISOString().slice(0,10);
-const uid = () => Math.random().toString(36).slice(2,9) + Date.now().toString(36);
-
-// ════════════════════════════════════════════════════════
-// DEFAULT DATA
-// ════════════════════════════════════════════════════════
-const DEFAULT_MANUALS = {
-  전기:[
-    {id:'e1',title:'차단기 트립 복구 절차',tags:['차단기','전기'],overview:'차단기가 트립되었을 때 안전하게 복구하는 절차입니다.',
-     supplies:['절연장갑','테스터기','懐중전등'],cautions:['반드시 절연장갑 착용','단락 원인 미제거 시 재투입 금지'],
-     steps:[{title:'트립 원인 파악',desc:'과부하, 단락, 누전 중 어떤 원인인지 파악합니다.',photos:[],youtube:''},{title:'부하 차단',desc:'해당 회로의 모든 부하(기기)를 차단합니다.',photos:[],youtube:''},{title:'차단기 리셋',desc:'차단기를 OFF → ON 순서로 투입합니다.',photos:[],youtube:''},{title:'부하 순차 투입',desc:'부하를 하나씩 연결하며 원인 기기를 특정합니다.',photos:[],youtube:''}],
-     checklist:['절연장갑 착용','부하 전체 차단 확인','차단기 정상 투입','원인 기기 특정'],
-     caution:'고압 차단기 작업은 반드시 자격자가 수행해야 합니다.',tip:'야간 트립 대비 懐중전등을 분전반 근처에 항상 비치하세요.'},
-    {id:'e2',title:'형광등·LED 교체',tags:['조명','전기'],overview:'형광등 또는 LED 조명을 교체하는 절차입니다.',
-     supplies:['교체용 전구','사다리','절연장갑'],cautions:['전원 차단 후 작업'],
-     steps:[{title:'전원 차단',desc:'해당 조명 회로의 차단기를 내립니다.',photos:[],youtube:''},{title:'기존 램프 제거',desc:'냉각 후 기존 램프를 비틀어 제거합니다.',photos:[],youtube:''},{title:'신규 램프 설치',desc:'규격에 맞는 램프를 소켓에 밀어 넣고 고정합니다.',photos:[],youtube:''},{title:'점등 확인',desc:'차단기를 올리고 정상 점등을 확인합니다.',photos:[],youtube:''}],
-     checklist:['전원 차단 확인','규격 동일 확인','점등 정상'],
-     caution:'수은등·고압나트륨등은 전문 업체에 의뢰하세요.',tip:'LED로 교체 시 안정기 제거 여부를 확인하세요.'},
-    {id:'e3',title:'콘센트·스위치 점검',tags:['콘센트','전기'],overview:'콘센트와 스위치의 상태를 점검하는 절차입니다.',
-     supplies:['테스터기','드라이버','절연테이프'],cautions:['전원 차단 필수'],
-     steps:[{title:'전원 차단',desc:'해당 회로 차단기를 내립니다.',photos:[],youtube:''},{title:'외관 점검',desc:'탄화, 균열, 변형 여부를 확인합니다.',photos:[],youtube:''},{title:'접속 확인',desc:'단자 나사 조임 상태와 전선 피복 상태를 확인합니다.',photos:[],youtube:''},{title:'테스터 측정',desc:'전압·통전 여부를 측정합니다.',photos:[],youtube:''}],
-     checklist:['전원 차단 확인','외관 이상 없음','단자 조임 확인','측정값 정상'],
-     caution:'전선이 탄화되어 있다면 반드시 전선도 교체하세요.',tip:'15A 초과 부하가 걸리면 20A 콘센트로 교체를 검토하세요.'}
-  ],
-  기계:[
-    {id:'m1',title:'냉방기(에어컨) 필터 청소',tags:['냉방','에어컨'],overview:'에어컨 필터를 정기적으로 청소하는 절차입니다.',
-     supplies:['진공청소기','솔','물통'],cautions:['전원 차단 후 작업','필터 완전 건조 후 재장착'],
-     steps:[{title:'전원 차단',desc:'에어컨 전원을 끄고 플러그를 뽑습니다.',photos:[],youtube:''},{title:'필터 분리',desc:'전면 패널을 열고 필터를 꺼냅니다.',photos:[],youtube:''},{title:'진공 청소',desc:'진공청소기로 먼지를 제거합니다.',photos:[],youtube:''},{title:'물세척·건조',desc:'오염이 심하면 물로 씻어 완전히 건조합니다.',photos:[],youtube:''},{title:'필터 재장착',desc:'건조된 필터를 재장착하고 전원을 켭니다.',photos:[],youtube:''}],
-     checklist:['전원 차단','필터 분리','먼지 제거','완전 건조','재장착 확인'],
-     caution:'필터가 젖은 상태로 장착하면 곰팡이가 발생합니다.',tip:'월 1회 이상 청소를 권장합니다.'},
-    {id:'m2',title:'보일러 점화·운전 점검',tags:['보일러','난방'],overview:'보일러 점화 상태와 운전 중 이상 여부를 점검합니다.',
-     supplies:['점검표'],cautions:['가스 누출 의심 시 즉시 가스 차단 후 대피'],
-     steps:[{title:'가스·연료 공급 확인',desc:'연료 밸브 개방 여부와 압력계를 확인합니다.',photos:[],youtube:''},{title:'버너 점화 확인',desc:'보일러를 가동하여 버너 점화 상태를 확인합니다.',photos:[],youtube:''},{title:'연소 상태 점검',desc:'배기가스 색상(무색 정상)과 냄새를 확인합니다.',photos:[],youtube:''},{title:'온도·압력 확인',desc:'온도계와 압력계가 정상 범위인지 확인합니다.',photos:[],youtube:''}],
-     checklist:['연료 공급 정상','점화 정상','연소 상태 정상','온도·압력 정상'],
-     caution:'가스 냄새가 나면 즉시 가스 밸브를 잠그고 119에 신고하세요.',tip:'보일러실은 항상 환기가 잘 되어야 합니다.'},
-    {id:'m3',title:'배관 누수 응급 처치',tags:['누수','배관'],overview:'배관 누수 발생 시 응급으로 대처하는 절차입니다.',
-     supplies:['지수 테이프','밸브 열쇠','수건'],cautions:['온수·스팀 배관 화상 주의'],
-     steps:[{title:'메인 밸브 차단',desc:'해당 구역 급수 밸브를 잠급니다.',photos:[],youtube:''},{title:'전기 설비 침수 확인',desc:'주변 콘센트·분전반 침수 여부를 확인합니다.',photos:[],youtube:''},{title:'임시 응급 처치',desc:'지수 테이프나 고무 패킹으로 임시 차단합니다.',photos:[],youtube:''},{title:'수리 업체 연락',desc:'배관 전문 업체에 연락하여 정식 수리를 의뢰합니다.',photos:[],youtube:''}],
-     checklist:['밸브 차단 완료','전기 설비 침수 확인','임시 처치 완료','수리 업체 연락'],
-     caution:'온수·스팀 배관 누수 시 화상 위험이 있습니다.',tip:'각 구역별 밸브 위치를 미리 파악해 두면 대응 시간을 단축할 수 있습니다.'}
-  ],
-  영선:[
-    {id:'y1',title:'외벽 균열 보수 절차',tags:['보수','영선'],overview:'외벽 균열(크랙)을 발견했을 때 보수하는 절차입니다.',
-     supplies:['실란트','방수 도료','마스크'],cautions:['구조 균열 여부 확인'],
-     steps:[{title:'균열 상태 조사',desc:'균열의 길이, 폭, 깊이를 기록합니다. 0.3mm 이상이면 구조 검토 필요.',photos:[],youtube:''},{title:'균열 부위 청소',desc:'균열 주변 이물질을 제거합니다.',photos:[],youtube:''},{title:'실란트 충전',desc:'균열에 탄성 코킹재를 충전하고 평탄하게 마감합니다.',photos:[],youtube:''},{title:'방수 처리',desc:'균열 부위에 방수 도료를 도포합니다.',photos:[],youtube:''},{title:'도장 마감',desc:'기존 색상으로 마감 도장합니다.',photos:[],youtube:''}],
-     checklist:['균열 폭 측정 기록','이물질 제거','실란트 완전 충전','방수 도료 도포'],
-     caution:'폭 0.5mm 이상 구조 균열은 반드시 구조 전문가 진단을 받으세요.',tip:'균열 보수 후 6개월~1년간 진행 여부를 모니터링하세요.'},
-    {id:'y2',title:'타일 탈락 및 교체 작업',tags:['보수','타일'],overview:'바닥 또는 벽면 타일 탈락 시 교체하는 절차입니다.',
-     supplies:['타일 접착제','줄눈재','안전장갑'],cautions:['파편 부상 주의'],
-     steps:[{title:'탈락 범위 확인',desc:'탭 테스트로 들뜸 범위를 파악합니다.',photos:[],youtube:''},{title:'기존 타일 제거',desc:'끌과 해머로 기존 타일을 제거합니다.',photos:[],youtube:''},{title:'접착제 도포',desc:'전용 타일 접착제를 고르게 바릅니다.',photos:[],youtube:''},{title:'타일 부착',desc:'타일을 부착하고 줄눈 간격을 맞춥니다.',photos:[],youtube:''},{title:'줄눈 채우기',desc:'24시간 양생 후 줄눈재를 채워 마감합니다.',photos:[],youtube:''}],
-     checklist:['탈락 범위 확인','타일 규격 동일','접착제 도포','양생 시간 준수'],
-     caution:'날카로운 파편에 의한 부상 방지를 위해 안전장갑을 착용하세요.',tip:'동일 로트 번호의 타일을 사용해야 색상 차이가 없습니다.'},
-    {id:'y3',title:'도장(페인트) 작업 절차',tags:['도장','영선'],overview:'내·외부 벽면 도장 작업의 표준 절차입니다.',
-     supplies:['롤러','마스킹 테이프','프라이머','도료'],cautions:['환기 철저','방독 마스크 착용'],
-     steps:[{title:'바탕 면 처리',desc:'들뜬 도막 제거, 퍼티 메꾸기, 샌딩.',photos:[],youtube:''},{title:'마스킹',desc:'경계선·콘센트·창틀 마스킹.',photos:[],youtube:''},{title:'프라이머',desc:'1회 도포 후 완전 건조.',photos:[],youtube:''},{title:'본 도장 1차',desc:'롤러로 1차 도장.',photos:[],youtube:''},{title:'본 도장 2차',desc:'1차 건조 후 2차 도장.',photos:[],youtube:''},{title:'마스킹 제거',desc:'도막이 굳기 전 마스킹 제거.',photos:[],youtube:''}],
-     checklist:['바탕 면 처리 완료','마스킹 완료','프라이머 건조 확인','2차 도장 완료'],
-     caution:'밀폐 공간 도장 시 환기를 철저히 하세요.',tip:'롤러 털이 짧을수록 표면이 매끈하게 마감됩니다.'}
-  ],
-  소방:[
-    {id:'s1',title:'소화기 월간 점검',tags:['정기점검','소방'],overview:'비치된 소화기의 상태와 유효성을 매월 점검합니다.',
-     supplies:['점검표','펜'],cautions:['압력 부족 시 즉시 교체'],
-     steps:[{title:'위치 확인',desc:'지정 위치에 소화기가 비치되어 있는지 확인합니다.',photos:[],youtube:''},{title:'외관 점검',desc:'본체 손상·녹·변형 여부를 확인합니다.',photos:[],youtube:''},{title:'압력 게이지',desc:'게이지가 녹색 정상 범위에 있는지 확인합니다.',photos:[],youtube:''},{title:'안전핀·봉인',desc:'안전핀과 봉인 스티커가 온전한지 확인합니다.',photos:[],youtube:''},{title:'점검표 기록',desc:'점검 결과를 기록하고 서명합니다.',photos:[],youtube:''}],
-     checklist:['지정 위치 비치','외관 이상 없음','압력 정상(녹색)','안전핀 정상','점검표 작성'],
-     caution:'압력 부족·사용 기한 초과 소화기는 즉시 교체하세요.',tip:'소화기는 바닥으로부터 1.5m 이하에 설치해야 합니다.'},
-    {id:'s2',title:'화재 감지기 점검',tags:['정기점검','소방'],overview:'스포트형 열·연기 감지기의 정상 동작 여부를 점검합니다.',
-     supplies:['감지기 시험기','사다리'],cautions:['사전 관계자 통보 필수'],
-     steps:[{title:'수신기 확인',desc:'화재 수신기 표시등 정상 상태 확인.',photos:[],youtube:''},{title:'외관 점검',desc:'파손·오염·변색 여부 확인.',photos:[],youtube:''},{title:'동작 시험',desc:'시험기로 각 감지기 동작 시험.',photos:[],youtube:''},{title:'수신 확인',desc:'수신기에 해당 회선이 표시되는지 확인.',photos:[],youtube:''},{title:'복구',desc:'시험 후 수신기 복구.',photos:[],youtube:''}],
-     checklist:['수신기 정상','감지기 외관 이상 없음','동작 시험 통과','복구 완료'],
-     caution:'감지기 점검은 관계자에게 사전 통보 후 진행하세요.',tip:'감지기 내부 먼지는 연간 1회 청소를 권장합니다.'},
-    {id:'s3',title:'스프링클러 헤드 점검',tags:['정기점검','소방'],overview:'스프링클러 헤드의 상태 점검 절차입니다.',
-     supplies:['점검표'],cautions:['임의 교체·도색 금지'],
-     steps:[{title:'헤드 외관',desc:'파손·도색·이물질 막힘 여부 육안 점검.',photos:[],youtube:''},{title:'배관 상태',desc:'누수·부식·변형 여부 확인.',photos:[],youtube:''},{title:'제어 밸브',desc:'각 구역 제어 밸브 개방 상태 확인.',photos:[],youtube:''}],
-     checklist:['헤드 파손 없음','도색 없음','배관 누수 없음','제어 밸브 개방'],
-     caution:'스프링클러 헤드를 임의로 교체하거나 도색하지 마세요.',tip:'교체 시 동일 규격(감도·방수 반경·온도 등급)의 헤드를 사용하세요.'}
-  ]
-};
-
-const DEFAULT_SCHEDULES = [
-  {id:'ds1',month:1,type:'법정',title:'소방 시설 정기 점검 (전년도 하반기 완료 확인)',desc:'소방 완공검사 증명서, 작동기능점검표 보관 확인'},
-  {id:'ds2',month:1,type:'계절',title:'동파 방지 순찰 강화',desc:'노출 배관 단열재 점검, 수도 계량기함 보온 상태 확인'},
-  {id:'ds3',month:2,type:'정기',title:'비상 발전기 월간 점검 및 시운전',desc:'냉각수·오일·배터리 상태 확인, 30분 이상 무부하 시운전'},
-  {id:'ds4',month:3,type:'계절',title:'해빙기 건물 점검',desc:'외벽 균열·누수·기초 침하 확인, 옥상 방수 상태 점검'},
-  {id:'ds5',month:3,type:'법정',title:'승강기 정기 검사 준비',desc:'관할 기관에 검사 신청, 검사 전 자체 점검 실시'},
-  {id:'ds6',month:4,type:'계절',title:'냉방 설비 가동 전 점검',desc:'냉각탑 청소, 냉동기 오일·냉매 충전량 확인'},
-  {id:'ds7',month:5,type:'법정',title:'전기 안전 점검 (전기안전관리법)',desc:'수전설비, 변압기, 배전반 정밀 점검, 절연저항 측정'},
-  {id:'ds8',month:6,type:'계절',title:'우기 대비 방수·배수 점검',desc:'옥상·지하 방수 상태, 빗물 배수로·집수정 청소'},
-  {id:'ds9',month:7,type:'정기',title:'냉각탑 레지오넬라균 검사 및 청소',desc:'냉각수 수질 검사, 냉각탑 청소·소독 실시'},
-  {id:'ds10',month:8,type:'계절',title:'하절기 전력 피크 대비 점검',desc:'수변전 설비 과부하 모니터링, 냉방 부하 분산 계획'},
-  {id:'ds11',month:9,type:'계절',title:'난방 설비 가동 전 점검',desc:'보일러 청소·연소 상태 확인, 온수 배관 밸브 점검'},
-  {id:'ds12',month:10,type:'법정',title:'소방 시설 종합 정밀 점검',desc:'소방 펌프, 수신기, 유도등, 비상 방송 전체 점검'},
-  {id:'ds13',month:10,type:'법정',title:'승강기 자체 안전 점검',desc:'승강기 안전 부품 점검표 작성 및 자체 점검 실시'},
-  {id:'ds14',month:11,type:'계절',title:'동파 방지 조치',desc:'노출 배관 보온재 설치, 동파 우려 배관 배수 처리'},
-  {id:'ds15',month:12,type:'정기',title:'연간 시설 점검 결과 보고서 작성',desc:'연간 점검 이력 정리, 다음 연도 예방 보수 계획 및 예산 요청'}
-];
-
-// ════════════════════════════════════════════════════════
-// AUTH
-// ════════════════════════════════════════════════════════
-function signInWithGoogle(){
-  if(!auth){
-    showToast('⚠️ Firebase 로드 중... 잠시 후 다시 시도하세요.');
-    // SDK 로드 재시도 표시
-    el('google-btn-text').textContent = 'Firebase 로드 중...';
-    return;
-  }
-  const provider = new firebase.auth.GoogleAuthProvider();
-  provider.addScope('email');
-  provider.addScope('profile');
-  provider.setCustomParameters({ prompt: 'select_account' });
-
-  // GitHub Pages·모바일 환경에서 Popup이 차단되는 경우를 대비해
-  // Redirect 방식을 기본으로 사용합니다.
-  el('google-btn-text').textContent = '로그인 중...';
-  el('google-btn').disabled = true;
-
-  auth.signInWithRedirect(provider).catch(e=>{
-    console.warn('Google 로그인 실패:', e);
-    el('google-btn-text').textContent = 'Google로 로그인';
-    el('google-btn').disabled = false;
-    showGoogleError(e);
-  });
-}
-
-function showGoogleError(e){
-  const MAP = {
-    'auth/popup-blocked':        '팝업이 차단되었습니다. 브라우저 팝업 허용 후 재시도하세요.',
-    'auth/popup-closed-by-user': '로그인 창이 닫혔습니다. 다시 시도하세요.',
-    'auth/cancelled-popup-request': '중복 요청이 취소되었습니다.',
-    'auth/unauthorized-domain':  '이 도메인이 Firebase Console에 등록되지 않았습니다.\n\n등록 방법:\nFirebase Console → Authentication → Settings → Authorized domains → 현재 도메인 추가',
-    'auth/operation-not-allowed':'Google 로그인이 Firebase Console에서 활성화되지 않았습니다.',
-    'auth/network-request-failed':'네트워크 오류입니다. 인터넷 연결을 확인하세요.',
-    'auth/too-many-requests':    '요청이 너무 많습니다. 잠시 후 다시 시도하세요.',
-    'auth/user-disabled':        '이 계정은 비활성화되었습니다.',
-    'auth/invalid-api-key':      'Firebase API 키가 올바르지 않습니다.',
-    'auth/app-not-authorized':   'Firebase 앱이 Google 로그인을 허용하지 않습니다.\nConsole에서 Google 제공업체를 활성화하세요.',
-  };
-  const msg = MAP[e.code] || `로그인 실패 (${e.code||e.message})\n\n도움말: Firebase Console → Authentication → Settings → Authorized domains 에 현재 도메인을 추가했는지 확인하세요.`;
-  console.error('[Auth 오류]', e.code, e.message);
-
-  // 진단 정보 팝업 표시
-  showModal(`
-    <div class="modal-title">⚠️ Google 로그인 실패</div>
-    <pre style="background:var(--bg);border-radius:8px;padding:12px;font-size:12px;line-height:1.7;white-space:pre-wrap;color:var(--text-sub);margin-bottom:12px">${msg}</pre>
-    <div style="font-size:13px;color:var(--text-muted);margin-bottom:14px">
-      현재 도메인: <code style="background:var(--bg);padding:2px 6px;border-radius:4px;font-family:var(--font-mono)">${location.hostname}</code>
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-outline" onclick="closeModal();signInLocal()">로컬 모드로 계속</button>
-      <button class="btn btn-primary" onclick="closeModal();signInWithGoogle()">다시 시도</button>
-    </div>`);
-}
-function signInLocal(){
-  _currentUser = {uid:'local',displayName:'로컬 사용자',email:'local@local',photoURL:null};
-  showAppScreen();   // login-screen 숨기기 + app 표시 (통합 함수)
-  updateUserUI();
-  loadState();
-  nav('home', false);
-}
-function signOut(){
-  if(auth && _currentUser && _currentUser.uid !== 'local'){
-    auth.signOut().then(()=>{ location.reload(); });
-  } else {
-    localStorage.removeItem('kf_localuser');
-    location.reload();
-  }
-}
-function showUserMenu(){
-  const u = _currentUser;
-  if(!u) return;
-  showModal(`
-    <div class="modal-title">👤 사용자 정보</div>
-    <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">
-      ${u.photoURL ? `<img src="${u.photoURL}" style="width:44px;height:44px;border-radius:50%;object-fit:cover">` : `<div class="sb-avatar" style="width:44px;height:44px;font-size:18px">${(u.displayName||'?')[0].toUpperCase()}</div>`}
-      <div><div style="font-weight:700">${u.displayName||'사용자'}</div><div style="font-size:13px;color:var(--text-muted)">${u.email||u.uid}</div></div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-outline" onclick="closeModal()">닫기</button>
-      <button class="btn btn-danger" onclick="closeModal();signOut()">로그아웃</button>
-    </div>`);
-}
-function hideLoginScreen(){
-  showAppScreen(); // showAppScreen으로 통합됨
-}
-function updateUserUI(){
-  const u = _currentUser;
-  if(!u) return;
-  const name = u.displayName || '사용자';
-  const sub  = u.uid === 'local' ? '로컬 모드' : (u.email || '');
-  el('sb-user-name').textContent = name;
-  el('sb-user-sub').textContent  = sub;
-  const av = el('sb-avatar');
-  if(u.photoURL){
-    av.innerHTML = `<img src="${u.photoURL}" style="width:30px;height:30px;border-radius:50%;object-fit:cover">`;
-  } else {
-    av.textContent = name[0].toUpperCase();
-  }
-  el('home-greeting').textContent = `${name}님, 시설관리 현황을 확인하세요`;
-}
-
-// ════════════════════════════════════════════════════════
-// FIREBASE INIT  &  AUTH FLOW
-// ════════════════════════════════════════════════════════
-
-// ── 로그인 화면을 무조건 표시 (Firebase 상태와 무관)
-function showLoginScreen(){
-  // 로그인 화면 표시. 스피너·앱 화면 모두 숨김
-  const ls = el('login-screen');
-  if(ls){ ls.style.display='flex'; ls.style.visibility='visible'; ls.style.opacity='1'; }
-  const app = el('app');
-  if(app) app.style.display='none';
-  const sp = el('auth-spinner');
-  if(sp) sp.style.display='none';
-  const btn = el('google-btn');      if(btn) btn.disabled=false;
-  const txt = el('google-btn-text'); if(txt) txt.textContent='Google로 로그인';
-}
-
-function showAppScreen(){
-  // 앱 화면 표시. 로그인 화면·스피너 모두 숨김
-  const ls = el('login-screen');
-  if(ls) ls.style.display='none';
-  const app = el('app');
-  if(app) app.style.display='flex';
-  const sp = el('auth-spinner');
-  if(sp) sp.style.display='none';
-}
-
-function showAuthLoading(){
-  // "로그인 확인 중..." 스피너. 로그인 화면을 투명하게 덮음
-  let sp = el('auth-spinner');
-  if(!sp){
-    sp = document.createElement('div');
-    sp.id = 'auth-spinner';
-    sp.style.cssText='position:fixed;inset:0;background:var(--bg);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px';
-    sp.innerHTML=
-      '<div style="width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:_kspin .8s linear infinite"></div>'+
-      '<p style="font-size:14px;color:var(--text-muted);font-weight:600">로그인 확인 중...</p>'+
-      '<style>@keyframes _kspin{to{transform:rotate(360deg)}}</style>';
-    document.body.appendChild(sp);
-  }
-  sp.style.display='flex';
-}
-
-function tryInitFirebase(){
-  // ─── 설계 원칙 ───────────────────────────────────────────
-  // 이 함수는 Firebase SDK 4개가 모두 로드된 직후 호출된다.
-  // Google Redirect 복귀 상황일 수도 있으므로
-  // 로그인 화면을 미리 표시하면 안 된다.
-  // 대신 스피너를 켜고, onAuthStateChanged 결과에 따라
-  // 로그인 화면 또는 앱 화면을 보여준다.
-  // ─────────────────────────────────────────────────────────
-
-  if(location.protocol==='file:') return;
-
-  // ① SDK 존재 확인
-  if(typeof firebase==='undefined'){
-    console.error('[Init] Firebase SDK 미로드');
-    showLoginScreen();
-    showToast('⚠️ Firebase 연결 실패 — 로컬 모드를 사용하세요');
-    return;
-  }
-
-  // ② Firebase 앱 초기화
-  try{
-    if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
-    console.log('[Init] Firebase 초기화 ✅');
-  }catch(e){
-    console.error('[Init] initializeApp 실패:', e.message);
-    showLoginScreen();
-    return;
-  }
-
-  // ③ 서비스 인스턴스
-  try{
-    db      = firebase.firestore();
-    storage = firebase.storage();
-    auth    = firebase.auth();
-    console.log('[Init] db / storage / auth 생성 ✅');
-  }catch(e){
-    console.error('[Init] 서비스 생성 실패:', e.message);
-    showLoginScreen();
-    return;
-  }
-
-  // ④ Firestore 오프라인 캐시 (실패 무시)
-  db.enablePersistence({synchronizeTabs:true}).catch(e=>{
-    if(e.code!=='failed-precondition'&&e.code!=='unimplemented')
-      console.warn('[Firestore] enablePersistence:', e.code);
-  });
-
-  // ⑤ 커스텀 도메인 안내
-  const host=location.hostname;
-  if(host&&host!=='localhost'&&!host.endsWith('.firebaseapp.com')&&!host.endsWith('.web.app')){
-    console.info('[Auth] 커스텀 도메인:', host,
-      '— Firebase Console > Authentication > Authorized domains 에 등록 필요');
-  }
-
-  // ⑥ 인증 흐름 시작
-  _startAuthFlow();
-}
-
-// ── 인증 흐름 ────────────────────────────────────────────
-// 호출되는 순간 스피너를 켜고,
-// getRedirectResult + onAuthStateChanged 조합으로 최종 상태를 판단한다.
-//
-// [핵심 문제 & 해결]
-// Google Redirect 복귀 후 Firebase 내부 처리 순서:
-//   ① getRedirectResult() 실행  → 토큰 교환, user 확정
-//   ② onAuthStateChanged 발화   → user(또는 null) 전달
-// 문제: ①이 완료되기 전에 ②가 null을 내보낸다.
-//       이 null을 "비로그인"으로 처리하면 로그인 화면이 다시 뜬다.
-// 해결: _grrDone 플래그 — getRedirectResult가 끝나기 전까지
-//       onAuthStateChanged의 null 분기를 완전히 차단한다.
-function _startAuthFlow(){
-
-  showAuthLoading(); // 스피너 ON — 결과가 나올 때까지 로그인/앱 화면 모두 가림
-
-  let _grrDone = false; // getRedirectResult 완료 여부
-  let _booted  = false; // 앱 초기화 1회 보장
-
-  // ─ ① getRedirectResult ──────────────────────────────
-  auth.getRedirectResult()
-    .then(result=>{
-      _grrDone = true;
-      if(result&&result.user){
-        console.log('[Auth] Redirect 로그인 성공 ✅', result.user.email);
-        // onAuthStateChanged가 곧 user를 전달해 앱 진입 처리
-      } else {
-        console.log('[Auth] 일반 로드 — onAuthStateChanged 대기');
-        // 이미 로그인 상태 → onAuthStateChanged가 user 전달
-        // 비로그인 → onAuthStateChanged가 null 전달 → 로그인 화면
-      }
-    })
-    .catch(e=>{
-      _grrDone = true;
-      console.error('[Auth] getRedirectResult 오류 | code:',e.code,'| msg:',e.message,'| url:',location.href);
-      showLoginScreen();
-      showGoogleError(e);
-    });
-
-  // ─ ② onAuthStateChanged ────────────────────────────
-  auth.onAuthStateChanged(
-    user=>{
-      if(user){
-        // ── 로그인 성공 ─────────────────────────────
-        console.log('[Auth] 로그인 확인 ✅', user.email||user.uid);
-        _currentUser = user;
-        showAppScreen();  // 스피너·로그인화면 OFF, 앱 ON
-        updateUserUI();
-
-        if(!_booted){
-          _booted = true;
-          loadState();
-          nav('home', false);
-
-          db.doc(FB_DOC).onSnapshot(
-            snap=>{
-              if(!snap.exists) return;
-              const d=snap.data();
-              if(d.logs!==undefined)         S.logs=d.logs;
-              if(d.ba!==undefined)           S.ba=d.ba;
-              if(d.contacts!==undefined)     S.contacts=d.contacts;
-              if(d.schedules!==undefined)    S.schedules=d.schedules;
-              if(d.checklistState!==undefined) S.checklistState=d.checklistState;
-              if(d.manuals!==undefined)      S.manuals=d.manuals;
-              reRenderCurrent();
-              console.log('[Firestore] 동기화 ✅');
-            },
-            e=>console.error('[Firestore] 구독 오류:',e.code,e.message)
-          );
-          el('fb-dot')?.classList.add('connected');
-        }
-
-      } else {
-        // ── 비로그인 ────────────────────────────────
-        // getRedirectResult가 아직 실행 중이면 기다린다.
-        // (Redirect 복귀 직후 null이 먼저 오는 race condition 방지)
-        if(!_grrDone){
-          console.log('[Auth] getRedirectResult 대기 중 — null 무시');
-          // 안전망: 8초 후에도 응답 없으면 로그인 화면 강제 표시
-          setTimeout(()=>{
-            if(!_grrDone&&!_booted){
-              console.warn('[Auth] getRedirectResult 무응답 8초 초과');
-              _grrDone=true;
-              showLoginScreen();
-            }
-          }, 8000);
-          return; // ← 이 return이 핵심. null을 여기서 무시한다.
-        }
-
-        console.log('[Auth] 비로그인 — 로그인 화면 표시');
-        _currentUser = null;
-        _booted      = false;
-        showLoginScreen();
-      }
-    },
-    e=>{
-      console.error('[Auth] onAuthStateChanged 오류:',e.code,e.message);
-      showLoginScreen();
-    }
-  );
-}
-
-async function uploadPhotoToStorage(base64, path){
-  if(!storage) return base64;
-  try {
-    const ref = storage.ref(path);
-    await ref.putString(base64, 'data_url');
-    return await ref.getDownloadURL();
-  } catch(e){
-    console.warn('Storage 업로드 실패:', e.code);
-    return base64;
-  }
-}
-
-// ════════════════════════════════════════════════════════
-// STATE PERSISTENCE
-// ════════════════════════════════════════════════════════
-function loadState(){
-  try {
-    const raw = localStorage.getItem('kf_v7');
-    if(raw){
-      const d = JSON.parse(raw);
-      S.logs = d.logs||[];
-      S.ba   = d.ba||[];
-      S.contacts  = d.contacts||[];
-      S.schedules = d.schedules||JSON.parse(JSON.stringify(DEFAULT_SCHEDULES));
-      S.checklistState = d.checklistState||{};
-      S.manuals = d.manuals||JSON.parse(JSON.stringify(DEFAULT_MANUALS));
-    } else {
-      S.schedules = JSON.parse(JSON.stringify(DEFAULT_SCHEDULES));
-      S.manuals   = JSON.parse(JSON.stringify(DEFAULT_MANUALS));
-    }
-    // 테마
-    const t = localStorage.getItem('kf_theme');
-    if(t === 'dark') document.documentElement.setAttribute('data-theme','dark');
-    else if(!t && window.matchMedia('(prefers-color-scheme:dark)').matches)
-      document.documentElement.setAttribute('data-theme','dark');
-    syncDarkToggle();
-  } catch(e){
-    S.schedules = JSON.parse(JSON.stringify(DEFAULT_SCHEDULES));
-    S.manuals   = JSON.parse(JSON.stringify(DEFAULT_MANUALS));
-  }
-}
-
-function save(){
-  const data = {logs:S.logs,ba:S.ba,contacts:S.contacts,
-    schedules:S.schedules,checklistState:S.checklistState,manuals:S.manuals};
-  // localStorage (base64 제외)
-  try {
-    const local = JSON.parse(JSON.stringify(data));
-    local.ba = local.ba.map(b=>({...b,
-      beforePhotos:(b.beforePhotos||[]).filter(u=>u&&!u.startsWith('data:')),
-      afterPhotos: (b.afterPhotos ||[]).filter(u=>u&&!u.startsWith('data:'))
-    }));
-    localStorage.setItem('kf_v7', JSON.stringify(local));
-  } catch(e){ console.warn('localStorage 저장 실패', e); }
-  // Firestore
-  if(db){
-    const fb = JSON.parse(JSON.stringify(data));
-    fb.ba = fb.ba.map(b=>({...b,
-      beforePhotos:(b.beforePhotos||[]).filter(u=>u&&!u.startsWith('data:')),
-      afterPhotos: (b.afterPhotos ||[]).filter(u=>u&&!u.startsWith('data:'))
-    }));
-    // 매뉴얼 step 사진도 base64 제외
-    for(const cat of CATS){
-      if(fb.manuals[cat]) fb.manuals[cat] = fb.manuals[cat].map(m=>({...m,
-        steps:(m.steps||[]).map(s=>({...s,
-          photos:(s.photos||[]).filter(p=>p&&!p.startsWith('data:'))
-        }))
-      }));
-    }
-    db.doc(FB_DOC).set(fb).catch(e=>console.warn('Firestore 저장 실패:', e));
-  }
-}
-
-// ════════════════════════════════════════════════════════
-// NAVIGATION
-// ════════════════════════════════════════════════════════
-function nav(page, closeSb=true){
-  if(closeSb && window.innerWidth<=768) closeSidebar();
-  document.body.classList.remove('fp-mode');
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.fp-overlay').forEach(p=>p.classList.remove('active'));
-  const t = el('page-'+page); if(!t) return;
-  t.classList.add('active');
-  S.page = page;
-  // 사이드바·바텀 nav 활성화
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.page===page));
-  document.querySelectorAll('.bn-item').forEach(n=>{
-    const pg=n.dataset.page;
-    n.classList.toggle('active',pg===page||(pg&&page.startsWith(pg)));
-  });
-  // 페이지별 렌더
-  requestAnimationFrame(()=>{
-    if(page==='home')           renderHome();
-    else if(page==='logs')      renderLogs();
-    else if(page==='ba')        renderBA();
-    else if(page==='roadmap')   renderRoadmap();
-    else if(page==='contacts')  renderContacts();
-    else if(page==='admin')     renderAdmin();
-    else if(page.startsWith('cat_')) renderCatPage(page.replace('cat_',''));
-  });
-  el('content').scrollTo(0,0);
-}
-
-function openFP(id){
-  document.body.classList.add('fp-mode');
-  document.querySelectorAll('.fp-overlay').forEach(p=>p.classList.remove('active'));
-  const fp = el(id); if(fp) fp.classList.add('active');
-}
-function closeFP(id){
-  const fp = el(id); if(fp) fp.classList.remove('active');
-  document.body.classList.remove('fp-mode');
-}
-function closeFpDetail(id){ closeFP(id); }
-
-function reRenderCurrent(){
-  const p = S.page;
-  if(p==='home')           renderHome();
-  else if(p==='logs')      renderLogs();
-  else if(p==='ba')        renderBA();
-  else if(p==='roadmap')   renderRoadmap();
-  else if(p==='contacts')  renderContacts();
-  else if(p==='admin')     renderAdmin();
-  else if(p.startsWith('cat_')) renderCatPage(p.replace('cat_',''));
-}
-
-// ════════════════════════════════════════════════════════
-// HOME
-// ════════════════════════════════════════════════════════
-function renderHome(){
-  renderHomeStats();
-  renderHomeRecent();
-}
-function renderHomeStats(){
-  const now = new Date();
-  const mo = now.getMonth()+1, yr = now.getFullYear();
-  const prefix = `${yr}-${String(mo).padStart(2,'0')}`;
-  const monthLogs = S.logs.filter(l=>l.date&&l.date.startsWith(prefix));
-  const done = monthLogs.filter(l=>l.status==='완료').length;
-  const ing  = S.logs.filter(l=>l.status==='진행중').length;
-  const ba   = S.ba.length;
-  el('home-stats').innerHTML = `
-    <div class="stat-card"><div class="num" style="color:var(--green)">${done}</div><div class="lbl">이번달 완료</div></div>
-    <div class="stat-card"><div class="num" style="color:var(--blue)">${ing}</div><div class="lbl">진행중</div></div>
-    <div class="stat-card"><div class="num" style="color:var(--purple)">${ba}</div><div class="lbl">B/A 기록</div></div>`;
-}
-function renderHomeRecent(){
-  const recent = [...S.logs].sort((a,b)=>(b.id||'').localeCompare(a.id||'')).slice(0,5);
-  const r = el('home-recent');
-  if(!recent.length){
-    r.innerHTML='<div class="empty-state"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><p>아직 기록이 없습니다</p></div>'; return;
-  }
-  r.innerHTML = recent.map(l=>`
-    <div class="log-card" onclick="openLogDetail(${l.id})">
-      <div class="log-dot" style="background:${SC[l.status]||'#64748b'}"></div>
-      <div class="log-body">
-        <div class="log-title">${esc(l.title)}</div>
-        <div class="log-meta">
-          <span class="badge" style="background:${SC[l.status]+'22'};color:${SC[l.status]||'#64748b'}">${l.status}</span>
-          <span>${l.cat||''}</span>${l.date?`<span>${l.date}</span>`:''}${l.worker?`<span>👤 ${esc(l.worker)}</span>`:''}
-        </div>
-      </div>
-    </div>`).join('');
-}
-
-// ════════════════════════════════════════════════════════
-// MANUAL — CATEGORY LIST
-// ════════════════════════════════════════════════════════
-function renderCatPage(cat){
-  const pg = el('page-cat_'+cat); if(!pg) return;
-  const items = S.manuals[cat]||[];
-  pg.innerHTML = `
-    <div class="ph-row">
-      <div><h2>${CAT_NAMES[cat]||cat}</h2><p>매뉴얼 ${items.length}개</p></div>
-      <button class="btn btn-primary btn-sm" onclick="openManualEdit('${cat}')">
-        <svg viewBox="0 0 24 24" stroke-width="2"><path d="M12 5v14"/><path d="M5 12h14"/></svg>추가
-      </button>
-    </div>
-    <div class="ml">
-      ${items.length ? items.map(m=>`
-        <div class="mi" onclick="showManual('${cat}','${m.id}')">
-          <div class="ibox" style="background:${CAT_BG[cat]||'var(--bg)'}">
-            <svg viewBox="0 0 24 24" stroke-width="2" stroke="${CAT_COLORS[cat]||'var(--primary)'}"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <!-- CARD A 작업기록 -->
+        <div class="card card-a">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;gap:8px">
+            <div>
+              <div class="clabel">최근 작업기록</div>
+              <div class="ctitle">Before / After 요약</div>
+            </div>
+            <button class="btn-o"><i class="fa-solid fa-plus" style="font-size:11px"></i> 새 기록 추가</button>
           </div>
-          <div class="mi-body">
-            <div class="mi-title">${esc(m.title)}</div>
-            <div class="mi-meta">
-              <span>단계 ${(m.steps||[]).length}</span><span>준비물 ${(m.supplies||[]).length}</span>
-              ${(m.tags||[]).map(t=>`<span class="tag" style="background:var(--primary-dim);color:var(--primary)">${t}</span>`).join('')}
+          <div class="trow">
+            <div class="thumb">
+              <!-- Firebase Storage 연동: <img src="" id="bi1"> -->
+              <div class="tph"><i class="fa-solid fa-camera" style="color:var(--text3);font-size:18px"></i></div>
+              <div class="tlabel">Before</div>
+            </div>
+            <div style="color:var(--orange);font-size:14px;flex-shrink:0;padding:0 6px">
+              <i class="fa-solid fa-arrow-right"></i>
+            </div>
+            <div class="thumb">
+              <div class="tph" style="background:#eff6ff">
+                <i class="fa-solid fa-check-circle" style="color:#3b82f6;font-size:18px"></i>
+              </div>
+              <div class="tlabel">After</div>
             </div>
           </div>
-          <svg width="14" height="14" viewBox="0 0 24 24" stroke="var(--text-muted)" fill="none" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
-        </div>`).join('') : '<div class="empty-state"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><p>매뉴얼이 없습니다</p></div>'}
-    </div>`;
-}
-
-// ════════════════════════════════════════════════════════
-// MANUAL — DETAIL
-// ════════════════════════════════════════════════════════
-function showManual(cat, id){
-  const m = (S.manuals[cat]||[]).find(x=>x.id===id); if(!m) return;
-  const ckKey = `${cat}_${id}`;
-  if(!S.checklistState[ckKey]) S.checklistState[ckKey]=[];
-
-  const suppliesHtml = m.supplies?.length ? `
-    <div style="margin-bottom:18px">
-      <div class="sec-title" style="margin-top:0"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>준비물</div>
-      <div class="card" style="padding:14px">
-        ${m.supplies.map((s,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;${i?'border-top:1px solid var(--border)':''}"><span style="width:22px;height:22px;border-radius:50%;background:var(--primary-dim);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">${i+1}</span>${esc(s)}</div>`).join('')}
-      </div>
-    </div>` : '';
-
-  const cautionsHtml = m.cautions?.length ? `
-    <div style="background:#f59e0b;border-radius:12px 12px 0 0;padding:10px 14px;display:flex;align-items:center;gap:7px;margin-bottom:0">
-      <svg width="17" height="17" viewBox="0 0 24 24" stroke="#7c2d00" fill="none" stroke-width="2.5"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
-      <span style="font-size:14px;font-weight:800;color:#7c2d00">안전주의사항 — 작업 전 숙지</span>
-    </div>
-    <div style="background:#fef3c7;border:2px solid #f59e0b;border-top:none;border-radius:0 0 12px 12px;padding:6px 12px;margin-bottom:18px">
-      ${m.cautions.map((c,i)=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 4px;${i?'border-top:1px solid rgba(245,158,11,.3)':''}"><div style="width:24px;height:24px;border-radius:50%;background:#f59e0b;color:#7c2d00;font-size:12px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</div><span style="font-size:.875rem;color:#78350f;font-weight:600">${esc(c)}</span></div>`).join('')}
-    </div>` : '';
-
-  const stepsHtml = (m.steps||[]).map((s,i)=>{
-    const pKey = `${ckKey}_step${i}`;
-    const photos = s.photos||[];
-    const photoAreaHtml = photos.length
-      ? `<div class="step-photos" id="step-photos-${pKey}">${photos.map((src,pi)=>`<div class="step-photo-thumb-wrap"><img class="step-photo-thumb" src="${src}" onclick="previewImg('${src}')"><div class="step-photo-del" onclick="delStepPhoto('${cat}','${id}',${i},${pi})">×</div></div>`).join('')}</div>
-         <div class="step-add-photo-btn" onclick="addStepPhoto('${cat}','${id}',${i})"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>사진 추가</div>`
-      : `<div id="step-photos-${pKey}"></div><div class="step-photo-empty" onclick="addStepPhoto('${cat}','${id}',${i})"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg><span>사진 추가</span></div>`;
-    return `<div class="step-row">
-      <div class="step-left"><div class="step-num">${i+1}</div><div class="step-line"></div></div>
-      <div class="step-card">
-        <div class="step-card-header">
-          <div class="step-title">${esc(s.title)}</div>
-          <div class="step-desc">${esc(s.desc)}</div>
-          ${s.youtube?`<a href="${s.youtube}" target="_blank" style="display:inline-flex;align-items:center;gap:5px;margin-top:6px;font-size:12px;color:#dc2626;font-weight:700"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.37 6.37 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.76a4.85 4.85 0 0 1-1.01-.07z"/></svg>YouTube 영상 보기</a>`:''}
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
+            <div class="mini-card">
+              <div style="font-size:10px;color:var(--text3);margin-bottom:2px">최근 작업</div>
+              <div style="font-size:12px;font-weight:600;color:var(--text1)">3F 전기패널 점검</div>
+              <div style="font-size:10px;color:var(--text3);margin-top:2px">2025.03.19</div>
+            </div>
+            <div class="mini-card">
+              <div style="font-size:10px;color:var(--text3);margin-bottom:2px">이전 작업</div>
+              <div style="font-size:12px;font-weight:600;color:var(--text1)">냉각탑 필터 교체</div>
+              <div style="font-size:10px;color:var(--text3);margin-top:2px">2025.03.15</div>
+            </div>
+          </div>
         </div>
-        <div class="step-photo-area">${photoAreaHtml}</div>
-      </div>
-    </div>`;
-  }).join('');
 
-  const checkProg = S.checklistState[ckKey]?.length||0;
-  const checkTotal = m.checklist?.length||0;
-  const checklistHtml = checkTotal ? `
-    <div style="margin-top:18px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <div class="sec-title" style="margin:0"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>점검 체크리스트</div>
-        <span style="background:var(--bg);border:1.5px solid var(--border);border-radius:999px;padding:3px 12px;font-size:13px;font-weight:700;color:var(--text-sub)" id="ck-counter-${ckKey}">${checkProg}/${checkTotal}</span>
-      </div>
-      <div style="background:var(--border);border-radius:6px;height:5px;margin-bottom:12px;overflow:hidden">
-        <div id="ck-bar-${ckKey}" style="background:var(--primary);height:100%;width:${checkTotal?Math.round(checkProg/checkTotal*100):0}%;transition:width .3s;border-radius:6px"></div>
-      </div>
-      <div style="background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden">
-        <div style="display:grid;grid-template-columns:44px 1fr 50px;background:var(--primary);color:#fff">
-          <div style="padding:10px 6px;font-size:12px;font-weight:700;text-align:center;border-right:1px solid rgba(255,255,255,.2)">No.</div>
-          <div style="padding:10px 12px;font-size:13px;font-weight:700;border-right:1px solid rgba(255,255,255,.2)">점검 항목</div>
-          <div style="padding:10px 6px;font-size:13px;font-weight:700;text-align:center">확인</div>
+        <!-- CARD B 로드맵 -->
+        <div class="card card-b">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;gap:8px">
+            <div>
+              <div class="clabel">이번 달 로드맵</div>
+              <div class="ctitle">3월 주요 일정</div>
+            </div>
+            <button class="btn-g">전체 보기 <i class="fa-solid fa-arrow-right" style="font-size:10px"></i></button>
+          </div>
+          <div class="ri"><div class="ri-dot done"></div><span class="ri-txt">소방설비 정기 점검</span><span class="ri-dt">03/05</span><span class="badge bdone">완료</span></div>
+          <div class="ri"><div class="ri-dot done"></div><span class="ri-txt">전기 안전 검사</span><span class="ri-dt">03/12</span><span class="badge bdone">완료</span></div>
+          <div class="ri"><div class="ri-dot prog"></div><span class="ri-txt">냉난방기 필터 교체</span><span class="ri-dt">03/20</span><span class="badge bprog">진행중</span></div>
+          <div class="ri"><div class="ri-dot todo"></div><span class="ri-txt">옥상 방수 점검</span><span class="ri-dt">03/25</span><span class="badge btodo">예정</span></div>
+          <div class="ri"><div class="ri-dot todo"></div><span class="ri-txt">엘리베이터 정기검사</span><span class="ri-dt">03/28</span><span class="badge btodo">예정</span></div>
         </div>
-        <div class="checklist-table" id="checklist-${ckKey}">
-          ${m.checklist.map((c,i)=>{
-            const done = S.checklistState[ckKey].includes(i);
-            return `<div class="ck-row${done?' ck-done':''}" onclick="toggleCheck('${ckKey}',${i},this,'${cat}','${id}')">
-              <div class="ck-num">${i+1}</div>
-              <div class="ck-text">${esc(c)}</div>
-              <div class="ck-check">${done?`<svg width="20" height="20" viewBox="0 0 24 24" stroke="var(--green)" fill="none" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>`:`<div style="width:20px;height:20px;border-radius:50%;border:2px solid var(--border)"></div>`}</div>
-            </div>`;
-          }).join('')}
+
+        <!-- CARD C 체크리스트 + 통계 -->
+        <div class="card card-c">
+          <div class="clabel">오늘 체크리스트</div>
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <span style="font-size:13px;font-weight:600;color:var(--text1)" id="cc">3 / 7 완료</span>
+            <span style="font-size:11px;color:var(--text3)" id="cp">43%</span>
+          </div>
+          <div class="prog-wrap"><div class="prog-fill" id="pf" style="width:43%"></div></div>
+          <div class="ci"><div class="chk on">✓</div><span class="ct done">소화기 위치 확인</span></div>
+          <div class="ci"><div class="chk on">✓</div><span class="ct done">3F 전등 교체</span></div>
+          <div class="ci"><div class="chk on">✓</div><span class="ct done">보일러실 점검</span></div>
+          <div class="ci"><div class="chk"></div><span class="ct">누수 여부 확인</span></div>
+          <div class="ci"><div class="chk"></div><span class="ct">냉각탑 수위 체크</span></div>
+          <div class="ci"><div class="chk"></div><span class="ct">비상구 점등 확인</span></div>
+          <div class="ci"><div class="chk"></div><span class="ct">일지 기록 업로드</span></div>
+          <div style="border-top:1px solid var(--border);margin-top:14px;padding-top:14px">
+            <div class="clabel">이번 달 통계</div>
+            <div class="srow">
+              <div class="sbox"><div class="snum" style="color:var(--orange)">24</div><div class="slbl">완료 작업</div></div>
+              <div class="sbox"><div class="snum" style="color:var(--blue)">6</div><div class="slbl">미완료</div></div>
+              <div class="sbox"><div class="snum" style="color:#16a34a">8</div><div class="slbl">작업기록</div></div>
+              <div class="sbox"><div class="snum" style="color:#7c3aed">3</div><div class="slbl">메모 추가</div></div>
+            </div>
+          </div>
         </div>
-      </div>
-      <div style="margin-top:8px;text-align:right">
-        <button class="btn btn-outline btn-sm" onclick="resetCL('${ckKey}','${cat}','${id}')">초기화</button>
-      </div>
-    </div>` : '';
 
-  el('page-manual-detail').innerHTML = `
-    <div class="detail-back" onclick="nav('cat_${cat}',false)">
-      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>목록으로
-    </div>
-    <span class="badge" style="background:${CAT_BG[cat]};color:${CAT_COLORS[cat]};border:1.5px solid ${CAT_COLORS[cat]}22;margin-bottom:8px">${CAT_NAMES[cat]||cat}</span>
-    <h2 style="font-size:1.5rem;font-weight:900;letter-spacing:-.03em;margin-bottom:4px;line-height:1.2">${esc(m.title)}</h2>
-    <p style="font-size:13px;color:var(--text-muted);margin-bottom:6px">단계 ${(m.steps||[]).length} · 준비물 ${(m.supplies||[]).length} · 점검항목 ${checkTotal}</p>
-    <div class="divider"></div>
-    ${m.overview?`<p style="font-size:.9rem;line-height:1.7;color:var(--text-sub);margin-bottom:16px">${esc(m.overview)}</p>`:''}
-    ${suppliesHtml}${cautionsHtml}
-    <div class="sec-title"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg>상세 작업 절차</div>
-    <div class="steps-timeline">${stepsHtml}</div>
-    ${checklistHtml}
-    ${m.caution?`<div class="caution-box" style="margin-top:16px"><svg viewBox="0 0 24 24" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg><p><strong>주의:</strong> ${esc(m.caution)}</p></div>`:''}
-    ${m.tip?`<div class="tip-box" style="margin-top:10px"><svg viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><p><strong>Tip:</strong> ${esc(m.tip)}</p></div>`:''}
-    <div style="margin-top:18px">
-      <button class="btn btn-primary" onclick="quickLog('${cat}','${esc(m.title)}')">
-        <svg viewBox="0 0 24 24" stroke-width="2"><path d="M12 5v14"/><path d="M5 12h14"/></svg>이 작업 기록하기
-      </button>
-    </div>`;
-  nav('manual-detail', false);
-}
-
-let _stepPhotoTarget = null;
-function addStepPhoto(cat, id, idx){
-  _stepPhotoTarget = {cat,id,idx};
-  el('step-photo-inp').click();
-}
-function handleStepPhoto(e){
-  if(!_stepPhotoTarget) return;
-  const {cat,id,idx} = _stepPhotoTarget;
-  const m = (S.manuals[cat]||[]).find(x=>x.id===id); if(!m) return;
-  const files = [...e.target.files]; if(!files.length) return;
-  showToast('사진 업로드 중...');
-  let done = 0;
-  files.forEach((f,fi)=>{
-    const r = new FileReader();
-    r.onload = async ev=>{
-      const b64 = ev.target.result;
-      const url = await uploadPhotoToStorage(b64, `manuals/${cat}/${id}/step${idx}_${Date.now()}_${fi}.jpg`);
-      m.steps[idx].photos = m.steps[idx].photos||[];
-      m.steps[idx].photos.push(url);
-      if(++done === files.length){ save(); refreshStepPhotos(cat,id,idx); showToast('✅ 사진 저장됨'); }
-    };
-    r.readAsDataURL(f);
-  });
-  e.target.value = '';
-}
-function delStepPhoto(cat, id, stepIdx, photoIdx){
-  if(!confirm('사진을 삭제하시겠습니까?')) return;
-  const m=(S.manuals[cat]||[]).find(x=>x.id===id); if(!m) return;
-  m.steps[stepIdx].photos.splice(photoIdx,1);
-  save(); refreshStepPhotos(cat,id,stepIdx); showToast('삭제됨');
-}
-function refreshStepPhotos(cat, id, stepIdx){
-  const m=(S.manuals[cat]||[]).find(x=>x.id===id); if(!m) return;
-  const ckKey=`${cat}_${id}`, pKey=`${ckKey}_step${stepIdx}`;
-  const container=el('step-photos-'+pKey); if(!container) return;
-  const photos=m.steps[stepIdx].photos||[];
-  container.innerHTML=photos.map((src,pi)=>`<div class="step-photo-thumb-wrap"><img class="step-photo-thumb" src="${src}" onclick="previewImg('${src}')"><div class="step-photo-del" onclick="delStepPhoto('${cat}','${id}',${stepIdx},${pi})">×</div></div>`).join('');
-}
-function toggleCheck(ckKey, idx, row, cat, id){
-  if(!S.checklistState[ckKey]) S.checklistState[ckKey]=[];
-  const arr = S.checklistState[ckKey];
-  const pos = arr.indexOf(idx);
-  if(pos===-1) arr.push(idx); else arr.splice(pos,1);
-  save();
-  const done = arr.includes(idx);
-  row.classList.toggle('ck-done', done);
-  row.querySelector('.ck-check').innerHTML = done
-    ? `<svg width="20" height="20" viewBox="0 0 24 24" stroke="var(--green)" fill="none" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>`
-    : `<div style="width:20px;height:20px;border-radius:50%;border:2px solid var(--border)"></div>`;
-  const total = (S.manuals[cat]||[]).find(x=>x.id===id)?.checklist?.length||0;
-  const c = el('ck-counter-'+ckKey); if(c) c.textContent=`${arr.length}/${total}`;
-  const b = el('ck-bar-'+ckKey); if(b) b.style.width=`${total?Math.round(arr.length/total*100):0}%`;
-}
-function resetCL(ckKey, cat, id){
-  S.checklistState[ckKey]=[];
-  save();
-  showManual(cat, id);
-  showToast('초기화됨');
-}
-function quickLog(cat, title){
-  openFpLog();
-  setTimeout(()=>{
-    const c=el('fp-lcat'); if(c) c.value=cat;
-    const t=el('fp-ltitle'); if(t) t.value=title;
-    el('fp-ldate').value=today();
-  },50);
-}
-
-// ════════════════════════════════════════════════════════
-// LOGS
-// ════════════════════════════════════════════════════════
-const LOG_FILTERS = ['전체','전기','기계','영선','소방','기타','완료','진행중','대기'];
-
-function renderLogs(){
-  // 필터 바
-  el('log-filter-bar').innerHTML = LOG_FILTERS.map(f=>
-    `<div class="fc${S.logFilter===f?' active':''}" onclick="setLogFilter('${f}')">${f}</div>`).join('');
-  // 목록
-  let list = [...S.logs].sort((a,b)=>(b.id||'').localeCompare(a.id||''));
-  if(S.logFilter!=='전체'){
-    list = list.filter(l=>l.cat===S.logFilter||l.status===S.logFilter);
-  }
-  if(!list.length){
-    el('log-list').innerHTML='<div class="empty-state"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><p>기록이 없습니다</p></div>';
-    return;
-  }
-  el('log-list').innerHTML = list.map(l=>`
-    <div class="log-card" onclick="openLogDetail(${l.id})">
-      <div class="log-dot" style="background:${SC[l.status]||'#64748b'}"></div>
-      <div class="log-body">
-        <div class="log-title">${esc(l.title)}</div>
-        <div class="log-meta">
-          <span class="badge" style="background:${SC[l.status]+'22'};color:${SC[l.status]||'#64748b'}">${l.status}</span>
-          <span>${l.cat||''}</span>${l.date?`<span>${l.date}</span>`:''}${l.worker?`<span>👤 ${esc(l.worker)}</span>`:''}
+        <!-- MENU SECTION -->
+        <div class="msec">
+          <div class="clabel" style="margin-bottom:12px">메뉴</div>
+          <div class="mgrid">
+            <div class="mc" onclick="goto('electric')">
+              <div class="micon" style="background:#fff3eb">⚡</div>
+              <div class="mname">전기</div><div class="msub">전기설비 관리</div>
+              <span class="mbadge" style="background:#fff3eb;color:var(--orange)">기록 3건</span>
+            </div>
+            <div class="mc" onclick="goto('mechanical')">
+              <div class="micon" style="background:#eff6ff">⚙️</div>
+              <div class="mname">기계</div><div class="msub">기계설비 관리</div>
+              <span class="mbadge" style="background:#eff6ff;color:var(--blue)">점검 예정</span>
+            </div>
+            <div class="mc" onclick="goto('construction')">
+              <div class="micon" style="background:#fef9c3">🔨</div>
+              <div class="mname">영선</div><div class="msub">건축·인테리어</div>
+              <span class="mbadge" style="background:#fef9c3;color:#854d0e">작업 1건</span>
+            </div>
+            <div class="mc" onclick="goto('fire')">
+              <div class="micon" style="background:#fce7f3">🔥</div>
+              <div class="mname">소방</div><div class="msub">소방설비 관리</div>
+              <span class="mbadge" style="background:#dcfce7;color:#16a34a">정상</span>
+            </div>
+            <div class="mc" onclick="goto('records')">
+              <div class="micon" style="background:#f0fdf4">📋</div>
+              <div class="mname">작업기록</div><div class="msub">전체 기록 보기</div>
+              <span class="mbadge" style="background:#f0fdf4;color:#16a34a">8건 이번달</span>
+            </div>
+            <div class="mc" onclick="goto('memo')">
+              <div class="micon" style="background:#f3e8ff">📒</div>
+              <div class="mname">학습 메모</div><div class="msub">노트 & 학습자료</div>
+              <span class="mbadge" style="background:#f3e8ff;color:#7c3aed">메모 3건</span>
+            </div>
+            <div class="mc" style="grid-column:span 2" onclick="goto('roadmap')">
+              <div style="display:flex;align-items:center;gap:14px">
+                <div class="micon" style="background:#eff6ff">📅</div>
+                <div style="flex:1">
+                  <div class="mname">연간 로드맵</div>
+                  <div class="msub" style="margin-top:2px">2025년 전체 계획 · 월별 일정</div>
+                </div>
+                <div style="display:flex;gap:3px;align-items:flex-end">
+                  <div style="width:8px;height:28px;border-radius:3px;background:#22c55e;opacity:.75"></div>
+                  <div style="width:8px;height:18px;border-radius:3px;background:var(--orange);opacity:.75"></div>
+                  <div style="width:8px;height:22px;border-radius:3px;background:var(--blue);opacity:.75"></div>
+                  <div style="width:8px;height:12px;border-radius:3px;background:#d4cfc9;opacity:.75"></div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        ${l.desc?`<div class="log-desc">${esc(l.desc)}</div>`:''}
-      </div>
-      <div class="log-acts">
-        <button class="ibtn ibtn-edit" onclick="event.stopPropagation();openFpLog(${l.id})"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-        <button class="ibtn ibtn-del"  onclick="event.stopPropagation();deleteLog(${l.id})"><svg viewBox="0 0 24 24" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
-      </div>
-    </div>`).join('');
-}
-function setLogFilter(f){ S.logFilter=f; renderLogs(); }
 
-function openFpLog(id){
-  S.editLogId = id||null;
-  el('fp-log-title-txt').textContent = id ? '작업 기록 수정' : '새 작업 기록';
-  if(id){
-    const l = S.logs.find(x=>x.id===id); if(!l) return;
-    el('fp-lcat').value  = l.cat||'전기';
-    el('fp-lstat').value = l.status||'완료';
-    el('fp-ltitle').value= l.title||'';
-    el('fp-lworker').value=l.worker||'';
-    el('fp-ldate').value = l.date||'';
-    el('fp-ldesc').textContent = l.desc||'';
+      </div><!-- /bento -->
+    </div><!-- /page -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+/* 날짜 */
+document.getElementById('ds').textContent =
+  new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
+
+/* 로그인
+   TODO: Firebase Google Auth 연동 시 교체
+*/
+function doLogin(t) {
+  if (t === 'google') {
+    /* === Firebase Auth 활성화 시 ===
+    const p = new firebase.auth.GoogleAuthProvider();
+    firebase.auth().signInWithPopup(p).then(r => {
+      setUser(r.user.displayName.charAt(0), r.user.displayName);
+    }).catch(console.error);
+    return; */
+    setUser('KF', '관리자', 'linear-gradient(135deg,#e05c0a,#1d4ed8)');
   } else {
-    el('fp-lcat').value  = '전기';
-    el('fp-lstat').value = '완료';
-    el('fp-ltitle').value= '';
-    el('fp-lworker').value='';
-    el('fp-ldate').value = today();
-    el('fp-ldesc').textContent = '';
+    setUser('GS', '게스트', 'linear-gradient(135deg,#a8a29e,#78716c)');
   }
-  openFP('fp-log');
-  setTimeout(()=>el('fp-ltitle').focus(),100);
+  document.getElementById('overlay').style.display = 'none';
 }
-function closeFpLog(){ closeFP('fp-log'); }
-
-function saveLog(){
-  const title = el('fp-ltitle').value.trim();
-  if(!title){ showToast('⚠️ 제목을 입력하세요'); el('fp-ltitle').focus(); return; }
-  const data = {
-    id: S.editLogId || Date.now(),
-    title, cat:el('fp-lcat').value, status:el('fp-lstat').value,
-    worker:el('fp-lworker').value.trim(), date:el('fp-ldate').value,
-    desc:el('fp-ldesc').textContent.trim()
-  };
-  if(S.editLogId){
-    const idx = S.logs.findIndex(x=>x.id===S.editLogId);
-    if(idx!==-1) S.logs[idx]=data;
-  } else {
-    S.logs.unshift(data);
-  }
-  save(); closeFpLog(); renderLogs(); renderHome();
-  showToast(S.editLogId?'✅ 수정됨':'✅ 저장됨');
-  S.editLogId = null;
+function setUser(abbr, name, bg) {
+  const a = document.getElementById('ava');
+  a.textContent = abbr;
+  if (bg) a.style.background = bg;
+  document.getElementById('uname').textContent = name;
 }
 
-function deleteLog(id){
-  if(!confirm('이 기록을 삭제하시겠습니까?')) return;
-  S.logs = S.logs.filter(l=>l.id!==id);
-  save(); renderLogs(); renderHome();
-  showToast('삭제됨');
+/* 다크모드 */
+let dark = false;
+function toggleDark() {
+  dark = !dark;
+  document.body.classList.toggle('dark', dark);
+  const k = document.getElementById('tsk');
+  const s = document.querySelector('.tsw');
+  k.style.left = dark ? '23px' : '3px';
+  s.style.background = dark ? '#4a3728' : '#e7e3db';
 }
 
-function openLogDetail(id){
-  const l = S.logs.find(x=>x.id===id); if(!l) return;
-  el('fp-log-detail-body').innerHTML = `
-    <span class="badge" style="background:${SC[l.status]+'22'};color:${SC[l.status]||'#64748b'};margin-bottom:10px">${l.status}</span>
-    <h2 style="font-size:1.3rem;font-weight:900;margin-bottom:8px">${esc(l.title)}</h2>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;font-size:13px;color:var(--text-muted);margin-bottom:16px">
-      ${l.cat?`<span>📂 ${l.cat}</span>`:''}${l.date?`<span>📅 ${l.date}</span>`:''}${l.worker?`<span>👤 ${esc(l.worker)}</span>`:''}
-    </div>
-    ${l.desc?`<div class="card" style="white-space:pre-wrap;font-size:.9rem;line-height:1.8">${esc(l.desc)}</div>`:'<p style="color:var(--text-muted)">상세 내용 없음</p>'}`;
-  el('log-det-edit-btn').onclick = ()=>{ closeFP('fp-log-detail'); openFpLog(id); };
-  el('log-det-del-btn').onclick  = ()=>{ closeFP('fp-log-detail'); deleteLog(id); };
-  openFP('fp-log-detail');
-}
-function closeLogDetail(){ closeFP('fp-log-detail'); }
-
-// ════════════════════════════════════════════════════════
-// BEFORE / AFTER
-// ════════════════════════════════════════════════════════
-function renderBA(){
-  if(!S.ba.length){
-    el('ba-list').innerHTML='<div class="empty-state"><svg viewBox="0 0 24 24" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 3v18"/></svg><p>B/A 기록이 없습니다</p></div>';
-    return;
-  }
-  el('ba-list').innerHTML = [...S.ba].sort((a,b)=>(b.id||'').toString().localeCompare((a.id||'').toString())).map(b=>`
-    <div class="ba-card" onclick="openBADetail(${b.id})">
-      <div class="ba-ch">
-        <div><div class="ba-ct">${esc(b.title)}</div><div class="ba-cm">${b.cat||''}${b.date?' · '+b.date:''}</div></div>
-        <div style="display:flex;gap:4px" onclick="event.stopPropagation()">
-          <button class="ibtn ibtn-edit" onclick="openFpBA(${b.id})"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-          <button class="ibtn ibtn-del"  onclick="deleteBA(${b.id})"><svg viewBox="0 0 24 24" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
-        </div>
-      </div>
-      <div class="ba-body" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <div>
-          <div style="font-size:11px;font-weight:700;color:var(--red);margin-bottom:4px">● BEFORE</div>
-          ${b.beforeText?`<p style="font-size:.8rem;color:var(--text-sub);line-height:1.5;margin-bottom:4px">${esc(b.beforeText.slice(0,80))}${b.beforeText.length>80?'…':''}</p>`:''}
-          ${(b.beforePhotos||[]).length?`<img src="${b.beforePhotos[0]}" style="width:100%;max-height:80px;object-fit:cover;border-radius:6px;border:1px solid var(--border)">`:''}
-        </div>
-        <div>
-          <div style="font-size:11px;font-weight:700;color:var(--green);margin-bottom:4px">● AFTER</div>
-          ${b.afterText?`<p style="font-size:.8rem;color:var(--text-sub);line-height:1.5;margin-bottom:4px">${esc(b.afterText.slice(0,80))}${b.afterText.length>80?'…':''}</p>`:''}
-          ${(b.afterPhotos||[]).length?`<img src="${b.afterPhotos[0]}" style="width:100%;max-height:80px;object-fit:cover;border-radius:6px;border:1px solid var(--border)">`:''}
-        </div>
-      </div>
-    </div>`).join('');
-}
-
-function openFpBA(id){
-  S.editBAId = id||null;
-  S.baBeforePhotos=[]; S.baAfterPhotos=[];
-  el('fp-ba-title-txt').textContent = id ? 'B/A 수정' : '새 비포/애프터';
-  el('fp-ba-before-thumbs').innerHTML='';
-  el('fp-ba-after-thumbs').innerHTML='';
-  el('fp-ba-before-div').textContent='';
-  el('fp-ba-after-div').textContent='';
-  if(id){
-    const b = S.ba.find(x=>x.id===id); if(!b) return;
-    el('fp-ba-title-inp').value = b.title||'';
-    el('fp-ba-cat').value  = b.cat||'기타';
-    el('fp-ba-date').value = b.date||'';
-    el('fp-ba-before-div').textContent = b.beforeText||'';
-    el('fp-ba-after-div').textContent  = b.afterText||'';
-    S.baBeforePhotos = [...(b.beforePhotos||[])];
-    S.baAfterPhotos  = [...(b.afterPhotos||[])];
-    renderBAPhotoThumbs();
-  } else {
-    el('fp-ba-title-inp').value='';
-    el('fp-ba-cat').value='기타';
-    el('fp-ba-date').value=today();
-  }
-  openFP('fp-ba');
-}
-function closeFpBA(){ closeFP('fp-ba'); }
-
-function renderBAPhotoThumbs(){
-  ['before','after'].forEach(side=>{
-    const arr = side==='before'?S.baBeforePhotos:S.baAfterPhotos;
-    el(`fp-ba-${side}-thumbs`).innerHTML = arr.map((src,i)=>`
-      <div class="ba-thumb-wrap">
-        <img class="ba-thumb" src="${src}" onclick="previewImg('${src}')">
-        <div class="ba-thumb-del" onclick="delBAPhotoTemp('${side}',${i})">×</div>
-      </div>`).join('');
+/* 체크리스트 */
+document.querySelectorAll('.chk').forEach(c => {
+  c.addEventListener('click', () => {
+    c.classList.toggle('on');
+    const t = c.nextElementSibling;
+    c.textContent = c.classList.contains('on') ? '✓' : '';
+    t.classList.toggle('done', c.classList.contains('on'));
+    const all = document.querySelectorAll('.chk').length;
+    const done = document.querySelectorAll('.chk.on').length;
+    const pct = Math.round(done / all * 100);
+    document.getElementById('pf').style.width = pct + '%';
+    document.getElementById('cc').textContent = done + ' / ' + all + ' 완료';
+    document.getElementById('cp').textContent = pct + '%';
   });
-}
-function delBAPhotoTemp(side, idx){
-  if(side==='before') S.baBeforePhotos.splice(idx,1);
-  else S.baAfterPhotos.splice(idx,1);
-  renderBAPhotoThumbs();
-}
-
-function triggerBAPhoto(side){
-  S.baSide = side;
-  el('ba-photo-input').click();
-}
-function handleBAPhoto(e){
-  const files=[...e.target.files]; if(!files.length) return;
-  showToast('사진 처리 중...');
-  let done=0;
-  files.forEach((f,fi)=>{
-    const r=new FileReader();
-    r.onload=async ev=>{
-      const b64=ev.target.result;
-      const tmpId=S.editBAId||'new';
-      const url=await uploadPhotoToStorage(b64,`ba/${tmpId}/${S.baSide}_${Date.now()}_${fi}.jpg`);
-      if(S.baSide==='before') S.baBeforePhotos.push(url);
-      else S.baAfterPhotos.push(url);
-      if(++done===files.length){ renderBAPhotoThumbs(); showToast('✅ 사진 추가됨'); }
-    };
-    r.readAsDataURL(f);
-  });
-  e.target.value='';
-}
-
-function saveBA(){
-  const title=el('fp-ba-title-inp').value.trim();
-  if(!title){ showToast('⚠️ 제목을 입력하세요'); return; }
-  const data={
-    id:S.editBAId||Date.now(),
-    title, cat:el('fp-ba-cat').value, date:el('fp-ba-date').value,
-    beforeText:el('fp-ba-before-div').textContent.trim(),
-    afterText :el('fp-ba-after-div').textContent.trim(),
-    beforePhotos:[...S.baBeforePhotos],
-    afterPhotos :[...S.baAfterPhotos]
-  };
-  if(S.editBAId){
-    const idx=S.ba.findIndex(x=>x.id===S.editBAId);
-    if(idx!==-1) S.ba[idx]=data;
-  } else { S.ba.unshift(data); }
-  save(); closeFpBA(); renderBA();
-  showToast(S.editBAId?'✅ 수정됨':'✅ 저장됨');
-  S.editBAId=null;
-}
-
-function deleteBA(id){
-  if(!confirm('삭제하시겠습니까?')) return;
-  S.ba=S.ba.filter(b=>b.id!==id);
-  save(); renderBA(); showToast('삭제됨');
-}
-
-function openBADetail(id){
-  const b=S.ba.find(x=>x.id===id); if(!b) return;
-  el('fp-ba-detail-body').innerHTML=`
-    <h2 style="font-size:1.2rem;font-weight:900;margin-bottom:4px">${esc(b.title)}</h2>
-    <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px">${b.cat||''}${b.date?' · '+b.date:''}</p>
-    <div class="ba-grid">
-      <div class="ba-panel ba-before">
-        <div class="ba-ph"><svg viewBox="0 0 24 24" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>Before</div>
-        <div class="ba-pb">
-          ${b.beforeText?`<p style="font-size:.875rem;line-height:1.7;margin-bottom:8px;white-space:pre-wrap">${esc(b.beforeText)}</p>`:''}
-          <div class="ba-thumbs">${(b.beforePhotos||[]).map(src=>`<img class="ba-thumb" src="${src}" onclick="previewImg('${src}')">`).join('')}</div>
-        </div>
-      </div>
-      <div class="ba-panel ba-after">
-        <div class="ba-ph"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m22 4-10 10.01-3-3"/></svg>After</div>
-        <div class="ba-pb">
-          ${b.afterText?`<p style="font-size:.875rem;line-height:1.7;margin-bottom:8px;white-space:pre-wrap">${esc(b.afterText)}</p>`:''}
-          <div class="ba-thumbs">${(b.afterPhotos||[]).map(src=>`<img class="ba-thumb" src="${src}" onclick="previewImg('${src}')">`).join('')}</div>
-        </div>
-      </div>
-    </div>`;
-  el('ba-det-edit-btn').onclick=()=>{ closeFP('fp-ba-detail'); openFpBA(id); };
-  el('ba-det-del-btn').onclick =()=>{ closeFP('fp-ba-detail'); deleteBA(id); };
-  openFP('fp-ba-detail');
-}
-
-// ════════════════════════════════════════════════════════
-// ROADMAP
-// ════════════════════════════════════════════════════════
-const MONTH_NAMES=['','1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
-const SCH_TYPE_COLOR={법정:{bg:'#fee2e2',c:'#dc2626'},정기:{bg:'#dbeafe',c:'#2563eb'},계절:{bg:'#d1fae5',c:'#059669'}};
-
-function renderRoadmap(){
-  // 월 탭
-  el('month-tabs').innerHTML = Array.from({length:12},(_,i)=>i+1).map(m=>{
-    const has = S.schedules.some(s=>s.month===m);
-    return `<div class="mtab${S.activeMonth===m?' active':has?' has':''}" onclick="setMonth(${m})">${MONTH_NAMES[m]}</div>`;
-  }).join('');
-  // 목록
-  const list = S.schedules.filter(s=>s.month===S.activeMonth);
-  if(!list.length){
-    el('roadmap-list').innerHTML='<div class="empty-state"><svg viewBox="0 0 24 24" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><p>이번 달 일정이 없습니다</p></div>';
-    return;
-  }
-  el('roadmap-list').innerHTML = list.map(s=>{
-    const tc = SCH_TYPE_COLOR[s.type]||{bg:'var(--bg)',c:'var(--text-muted)'};
-    return `<div class="sch-card">
-      <span class="sch-type" style="background:${tc.bg};color:${tc.c}">${s.type||''}</span>
-      <div class="sch-body">
-        <div class="sch-title">${esc(s.title)}</div>
-        ${s.desc?`<div class="sch-desc">${esc(s.desc)}</div>`:''}
-      </div>
-      <div class="sch-acts">
-        <button class="ibtn ibtn-edit" onclick="openSchModal(${s.id})"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-        <button class="ibtn ibtn-del"  onclick="deleteSchedule('${s.id}')"><svg viewBox="0 0 24 24" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
-      </div>
-    </div>`;
-  }).join('');
-}
-function setMonth(m){ S.activeMonth=m; renderRoadmap(); }
-function openSchModal(id){
-  const s = id ? S.schedules.find(x=>String(x.id)===String(id)) : null;
-  S.editSchId = id||null;
-  showModal(`
-    <div class="modal-title">${s?'일정 수정':'일정 추가'}</div>
-    <div class="fg"><label>월</label>
-      <select id="m-sch-month">${Array.from({length:12},(_,i)=>i+1).map(m=>`<option value="${m}"${(s?s.month:S.activeMonth)===m?' selected':''}>${MONTH_NAMES[m]}</option>`).join('')}</select>
-    </div>
-    <div class="fg"><label>유형</label>
-      <select id="m-sch-type"><option value="법정"${(!s||s.type==='법정')?' selected':''}>법정</option><option value="정기"${s?.type==='정기'?' selected':''}>정기</option><option value="계절"${s?.type==='계절'?' selected':''}>계절</option></select>
-    </div>
-    <div class="fg"><label>제목</label><input type="text" id="m-sch-title" value="${s?esc(s.title):''}"></div>
-    <div class="fg"><label>설명</label><textarea id="m-sch-desc" style="min-height:80px">${s?esc(s.desc||''):''}</textarea></div>
-    <div class="modal-actions">
-      <button class="btn btn-outline" onclick="closeModal()">취소</button>
-      <button class="btn btn-primary" onclick="saveSchedule()">저장</button>
-    </div>`);
-}
-function closeSchModal(){ closeModal(); }
-function saveSchedule(){
-  const title=el('m-sch-title').value.trim();
-  if(!title){ showToast('⚠️ 제목 입력 필요'); return; }
-  const data={id:S.editSchId||uid(),month:parseInt(el('m-sch-month').value),
-    type:el('m-sch-type').value, title, desc:el('m-sch-desc').value.trim()};
-  if(S.editSchId){
-    const idx=S.schedules.findIndex(x=>String(x.id)===String(S.editSchId));
-    if(idx!==-1) S.schedules[idx]=data;
-  } else { S.schedules.push(data); }
-  save(); closeModal(); renderRoadmap(); showToast('✅ 저장됨');
-}
-function deleteSchedule(id){
-  if(!confirm('삭제하시겠습니까?')) return;
-  S.schedules=S.schedules.filter(s=>String(s.id)!==String(id));
-  save(); renderRoadmap(); showToast('삭제됨');
-}
-
-// ════════════════════════════════════════════════════════
-// CONTACTS
-// ════════════════════════════════════════════════════════
-function renderContacts(){
-  if(!S.contacts.length){
-    el('contacts-list').innerHTML='<div class="empty-state"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><p>연락처가 없습니다</p></div>';
-    return;
-  }
-  const colors=['#3b5bdb','#059669','#dc2626','#d97706','#7c3aed','#0d9488'];
-  el('contacts-list').innerHTML = S.contacts.map((c,i)=>`
-    <div class="cc">
-      <div class="ca" style="background:${colors[i%colors.length]+'22'};color:${colors[i%colors.length]}">${(c.name||'?')[0].toUpperCase()}</div>
-      <div class="cb2">
-        <div class="cn">${esc(c.name)}</div>
-        <div class="cr">${c.role||''}${c.company?' · '+esc(c.company):''}</div>
-        ${c.phone?`<div class="cp">${esc(c.phone)}</div>`:''}
-      </div>
-      <div class="cacts">
-        ${c.phone?`<a class="cbtn" href="tel:${c.phone}"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.56 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></a>`:''}
-        ${c.email?`<a class="cbtn" href="mailto:${c.email}"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></a>`:''}
-        <button class="cbtn" onclick="openContactModal(${c.id})"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-        <button class="cbtn ibtn-del" onclick="deleteContact(${c.id})"><svg viewBox="0 0 24 24" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
-      </div>
-    </div>`).join('');
-}
-function openContactModal(id){
-  const c = id ? S.contacts.find(x=>x.id===id) : null;
-  S.editContactId = id||null;
-  showModal(`
-    <div class="modal-title">${c?'연락처 수정':'연락처 추가'}</div>
-    <div class="fg"><label>이름 *</label><input type="text" id="m-cn" value="${c?esc(c.name):''}"></div>
-    <div class="form-row">
-      <div class="fg" style="margin:0"><label>역할/직책</label><input type="text" id="m-cr" value="${c?esc(c.role||''):''}"></div>
-      <div class="fg" style="margin:0"><label>회사/업체</label><input type="text" id="m-cc" value="${c?esc(c.company||''):''}"></div>
-    </div>
-    <div class="fg" style="margin-top:10px"><label>전화번호</label><input type="tel" id="m-cp" value="${c?esc(c.phone||''):''}"></div>
-    <div class="fg"><label>이메일</label><input type="email" id="m-ce" value="${c?esc(c.email||''):''}"></div>
-    <div class="fg"><label>메모</label><textarea id="m-cm" style="min-height:60px">${c?esc(c.memo||''):''}</textarea></div>
-    <div class="modal-actions">
-      <button class="btn btn-outline" onclick="closeModal()">취소</button>
-      <button class="btn btn-primary" onclick="saveContact()">저장</button>
-    </div>`);
-  setTimeout(()=>el('m-cn').focus(),100);
-}
-function closeContactModal(){ closeModal(); }
-function saveContact(){
-  const name=el('m-cn').value.trim();
-  if(!name){ showToast('⚠️ 이름 입력 필요'); return; }
-  const data={id:S.editContactId||Date.now(),name,role:el('m-cr').value.trim(),
-    company:el('m-cc').value.trim(),phone:el('m-cp').value.trim(),
-    email:el('m-ce').value.trim(),memo:el('m-cm').value.trim()};
-  if(S.editContactId){
-    const idx=S.contacts.findIndex(x=>x.id===S.editContactId);
-    if(idx!==-1) S.contacts[idx]=data;
-  } else { S.contacts.push(data); }
-  save(); closeModal(); renderContacts(); showToast('✅ 저장됨');
-}
-function deleteContact(id){
-  if(!confirm('삭제하시겠습니까?')) return;
-  S.contacts=S.contacts.filter(c=>c.id!==id);
-  save(); renderContacts(); showToast('삭제됨');
-}
-
-// ════════════════════════════════════════════════════════
-// SEARCH
-// ════════════════════════════════════════════════════════
-function doSearch(q){
-  q = q.trim();
-  if(!q){ el('search-results').innerHTML='<div class="empty-state"><svg viewBox="0 0 24 24" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><p>검색어를 입력하세요</p></div>'; return; }
-  const ql = q.toLowerCase();
-  const results = [];
-  // 매뉴얼
-  for(const cat of CATS){
-    (S.manuals[cat]||[]).forEach(m=>{
-      let hit = m.title.toLowerCase().includes(ql)||(m.overview||'').toLowerCase().includes(ql)||(m.tags||[]).some(t=>t.toLowerCase().includes(ql));
-      let matchedStep = null;
-      if(!hit) matchedStep=(m.steps||[]).find(s=>s.title.toLowerCase().includes(ql)||s.desc.toLowerCase().includes(ql));
-      if(hit||matchedStep) results.push({type:'manual',cat,item:m,matchedStep});
-    });
-  }
-  // 작업기록
-  S.logs.forEach(l=>{
-    if(l.title.toLowerCase().includes(ql)||(l.cat||'').toLowerCase().includes(ql)||(l.worker||'').toLowerCase().includes(ql)||(l.desc||'').toLowerCase().includes(ql))
-      results.push({type:'log',item:l});
-  });
-  // B/A
-  S.ba.forEach(b=>{
-    if(b.title.toLowerCase().includes(ql)||(b.beforeText||'').toLowerCase().includes(ql)||(b.afterText||'').toLowerCase().includes(ql))
-      results.push({type:'ba',item:b});
-  });
-  // 연락처
-  S.contacts.forEach(c=>{
-    if((c.name||'').toLowerCase().includes(ql)||(c.role||'').toLowerCase().includes(ql)||(c.company||'').toLowerCase().includes(ql)||(c.phone||'').toLowerCase().includes(ql))
-      results.push({type:'contact',item:c});
-  });
-
-  if(!results.length){
-    el('search-results').innerHTML=`<div class="empty-state"><svg viewBox="0 0 24 24" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><p>"${esc(q)}" 결과 없음</p></div>`;
-    return;
-  }
-  const typeBg={manual:'#fef3c7',log:'#dbeafe',ba:'#d1fae5',contact:'#ede9fe'};
-  const typeEmoji={manual:'📋',log:'📝',ba:'📸',contact:'👤'};
-  el('search-results').innerHTML=`<p style="font-size:13px;color:var(--text-muted);margin-bottom:10px">${results.length}개 결과</p>`+results.map(r=>{
-    let title='',sub='',extra='',oc='';
-    if(r.type==='manual'){
-      title=r.item.title; sub=CAT_NAMES[r.cat]||r.cat;
-      oc=`showManual('${r.cat}','${r.item.id}');nav('manual-detail')`;
-      if(r.matchedStep) extra=`<div style="font-size:12px;color:var(--primary);margin-top:3px">→ ${highlight(r.matchedStep.title,q)}</div>`;
-      if(r.item.tags?.length) extra+=`<div style="margin-top:4px;display:flex;gap:4px;flex-wrap:wrap">${r.item.tags.map(t=>`<span class="sr-tag">${t}</span>`).join('')}</div>`;
-    } else if(r.type==='log'){
-      title=r.item.title; sub=`${r.item.status} · ${r.item.cat||''}${r.item.date?' · '+r.item.date:''}`;
-      oc=`nav('logs');setTimeout(()=>openLogDetail(${r.item.id}),80)`;
-    } else if(r.type==='ba'){
-      title=r.item.title; sub=`${r.item.cat||''}${r.item.date?' · '+r.item.date:''}`;
-      oc=`nav('ba');setTimeout(()=>openBADetail(${r.item.id}),80)`;
-    } else {
-      title=r.item.name; sub=`${r.item.role||''}${r.item.company?' · '+r.item.company:''}`;
-      oc=`nav('contacts')`;
-      if(r.item.phone) extra=`<div style="font-size:13px;color:var(--text-sub);margin-top:3px;font-family:var(--font-mono)">${r.item.phone}</div>`;
-    }
-    return `<div class="sr-card" onclick="${oc}">
-      <div class="sr-type-badge" style="background:${typeBg[r.type]}">${typeEmoji[r.type]}</div>
-      <div class="sr-body"><div class="sr-title">${highlight(title,q)}</div><div class="sr-sub">${sub}</div>${extra}</div>
-      <svg width="14" height="14" viewBox="0 0 24 24" stroke="var(--text-muted)" fill="none" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
-    </div>`;
-  }).join('');
-}
-function highlight(text, q){
-  if(!q||!text) return esc(text||'');
-  const escaped = esc(text);
-  const escQ = q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-  return escaped.replace(new RegExp(escQ,'gi'), m=>`<mark>${m}</mark>`);
-}
-
-// ════════════════════════════════════════════════════════
-// ADMIN
-// ════════════════════════════════════════════════════════
-function renderAdmin(){
-  const html = CATS.map(cat=>{
-    const items = S.manuals[cat]||[];
-    return `<div class="sec-title" style="margin-top:${cat==='전기'?'0':'20px'}"><span style="color:${CAT_COLORS[cat]}">${CAT_NAMES[cat]}</span><span style="color:var(--text-muted);font-size:12px;font-weight:500;margin-left:4px">(${items.length}개)</span>
-      <button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="openManualEdit('${cat}')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M12 5v14"/><path d="M5 12h14"/></svg>추가</button>
-    </div>
-    <div>${items.map(m=>`
-      <div class="admin-manual-item">
-        <span style="flex:1;font-weight:600;font-size:.9rem">${esc(m.title)}</span>
-        <div class="admin-del-btn">
-          <button class="ibtn ibtn-edit" onclick="openManualEdit('${cat}','${m.id}')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-          <button class="ibtn ibtn-del"  onclick="deleteManual('${cat}','${m.id}')"><svg viewBox="0 0 24 24" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
-        </div>
-      </div>`).join('')||'<p style="font-size:13px;color:var(--text-muted);padding:8px">매뉴얼 없음</p>'}
-    </div>`;
-  }).join('');
-  el('admin-manual-section').innerHTML = html;
-  syncDarkToggle();
-}
-function deleteManual(cat, id){
-  if(!confirm('매뉴얼을 삭제하시겠습니까?')) return;
-  S.manuals[cat]=(S.manuals[cat]||[]).filter(m=>m.id!==id);
-  save(); renderAdmin(); showToast('삭제됨');
-}
-
-// ════════════════════════════════════════════════════════
-// MANUAL EDITOR
-// ════════════════════════════════════════════════════════
-function openManualEdit(cat, id){
-  S.editCat=cat; S.editManualId=id||null;
-  const m = id ? (S.manuals[cat]||[]).find(x=>x.id===id) : null;
-  S.efSteps       = m ? JSON.parse(JSON.stringify(m.steps||[])) : [{title:'',desc:'',photos:[],youtube:''}];
-  S.efSupplies    = m ? [...(m.supplies||[])] : [];
-  S.efCautions    = m ? [...(m.cautions||[])] : [];
-  S.efChecklist   = m ? [...(m.checklist||[])] : [];
-  S.efStepPhotos  = {};
-
-  el('manual-edit-form').innerHTML = `
-    <h2 style="font-size:1.3rem;font-weight:900;margin-bottom:14px">${m?'매뉴얼 수정':'새 매뉴얼 작성'} — ${CAT_NAMES[cat]}</h2>
-    <div class="fg"><label>제목 *</label><input type="text" id="ef-title" value="${m?esc(m.title):''}"></div>
-    <div class="fg"><label>개요</label><textarea id="ef-overview" style="min-height:60px">${m?esc(m.overview||''):''}</textarea></div>
-    <div class="form-row">
-      <div class="fg" style="margin:0"><label>주의사항 (한 줄)</label><input type="text" id="ef-caution" value="${m?esc(m.caution||''):''}"></div>
-      <div class="fg" style="margin:0"><label>Tip (한 줄)</label><input type="text" id="ef-tip" value="${m?esc(m.tip||''):''}"></div>
-    </div>
-    <div class="fg" style="margin-top:4px"><label>태그 (쉼표 구분)</label><input type="text" id="ef-tags" value="${m?(m.tags||[]).join(', '):''}"></div>
-    ${buildEfList('준비물','supplies',S.efSupplies)}
-    ${buildEfList('안전주의사항','cautions',S.efCautions)}
-    ${buildEfList('체크리스트 항목','checklist',S.efChecklist)}
-    <div class="sec-title" style="margin-top:20px"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/></svg>작업 단계</div>
-    <div id="ef-steps-container">${S.efSteps.map((s,i)=>buildStepCard(s,i)).join('')}</div>
-    <button class="btn btn-outline" onclick="addEfStep()" style="margin-bottom:20px">
-      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M12 5v14"/><path d="M5 12h14"/></svg>단계 추가
-    </button>
-    <div style="display:flex;gap:8px;margin-top:8px">
-      <button class="btn btn-outline" onclick="nav('admin')">취소</button>
-      <button class="btn btn-primary" onclick="saveManualEdit()">
-        <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>저장
-      </button>
-    </div>`;
-  nav('manual-edit', false);
-}
-
-function buildEfList(label, type, arr){
-  return `<div class="sec-title" style="margin-top:16px">${label}</div>
-  <div id="ef-${type}-list">${arr.map((v,i)=>`
-    <div style="display:flex;gap:6px;margin-bottom:5px">
-      <input type="text" value="${esc(v)}" id="ef-${type}-${i}" style="flex:1">
-      <button class="ibtn ibtn-del" onclick="removeEfItem('${type}',${i})"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
-    </div>`).join('')}</div>
-  <button class="btn btn-outline btn-sm" onclick="addEfItem('${type}')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M12 5v14"/><path d="M5 12h14"/></svg>추가</button>`;
-}
-function buildStepCard(s, i){
-  return `<div class="ef-step-card" id="ef-step-${i}">
-    <div class="ef-step-head">
-      <span style="font-size:13px;font-weight:700;color:var(--primary)">단계 ${i+1}</span>
-      <button class="ibtn ibtn-del" onclick="removeEfStep(${i})"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
-    </div>
-    <div class="fg"><label>제목</label><input type="text" id="ef-step-title-${i}" value="${esc(s.title||'')}"></div>
-    <div class="fg"><label>설명</label><textarea id="ef-step-desc-${i}" style="min-height:80px">${esc(s.desc||'')}</textarea></div>
-    <div class="fg"><label>YouTube URL</label><input type="url" id="ef-step-yt-${i}" value="${esc(s.youtube||'')}"></div>
-    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px" id="ef-step-photos-${i}">
-      ${(s.photos||[]).map((src,pi)=>`<div style="position:relative"><img src="${src}" style="width:70px;height:70px;object-fit:cover;border-radius:6px;border:1px solid var(--border)"><div style="position:absolute;top:-4px;right:-4px;width:16px;height:16px;border-radius:50%;background:var(--red);color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:900" onclick="removeEfStepPhoto(${i},${pi})">×</div></div>`).join('')}
-      <div style="width:70px;height:70px;border:2px dashed var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;color:var(--text-muted)" onclick="addEfStepPhotoClick(${i})">+</div>
-    </div>
-  </div>`;
-}
-
-function addEfStep(){
-  S.efSteps.push({title:'',desc:'',photos:[],youtube:''});
-  el('ef-steps-container').innerHTML=S.efSteps.map((s,i)=>buildStepCard(s,i)).join('');
-}
-function removeEfStep(i){
-  if(S.efSteps.length<=1){ showToast('최소 1단계 필요'); return; }
-  S.efSteps.splice(i,1);
-  el('ef-steps-container').innerHTML=S.efSteps.map((s,i)=>buildStepCard(s,i)).join('');
-}
-function addEfItem(type){
-  if(type==='supplies')  S.efSupplies.push('');
-  else if(type==='cautions')  S.efCautions.push('');
-  else if(type==='checklist') S.efChecklist.push('');
-  const arr = type==='supplies'?S.efSupplies:type==='cautions'?S.efCautions:S.efChecklist;
-  el(`ef-${type}-list`).innerHTML=arr.map((v,i)=>`<div style="display:flex;gap:6px;margin-bottom:5px"><input type="text" value="${esc(v)}" id="ef-${type}-${i}" style="flex:1"><button class="ibtn ibtn-del" onclick="removeEfItem('${type}',${i})"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>`).join('');
-  setTimeout(()=>{ const last=document.getElementById(`ef-${type}-${arr.length-1}`); if(last) last.focus(); },50);
-}
-function removeEfItem(type, i){
-  if(type==='supplies')  S.efSupplies.splice(i,1);
-  else if(type==='cautions')  S.efCautions.splice(i,1);
-  else if(type==='checklist') S.efChecklist.splice(i,1);
-  const arr = type==='supplies'?S.efSupplies:type==='cautions'?S.efCautions:S.efChecklist;
-  el(`ef-${type}-list`).innerHTML=arr.map((v,i)=>`<div style="display:flex;gap:6px;margin-bottom:5px"><input type="text" value="${esc(v)}" id="ef-${type}-${i}" style="flex:1"><button class="ibtn ibtn-del" onclick="removeEfItem('${type}',${i})"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>`).join('');
-}
-let _efStepPhotoTarget = null;
-function addEfStepPhotoClick(idx){ _efStepPhotoTarget=idx; el('ef-step-photo-inp').click(); }
-function handleEfStepPhoto(e){
-  if(_efStepPhotoTarget===null) return;
-  const idx=_efStepPhotoTarget;
-  const files=[...e.target.files]; if(!files.length) return;
-  files.forEach(f=>{
-    const r=new FileReader();
-    r.onload=ev=>{ S.efSteps[idx].photos=S.efSteps[idx].photos||[]; S.efSteps[idx].photos.push(ev.target.result); refreshEfStepPhotos(idx); };
-    r.readAsDataURL(f);
-  });
-  e.target.value='';
-}
-function removeEfStepPhoto(stepIdx, photoIdx){
-  S.efSteps[stepIdx].photos.splice(photoIdx,1);
-  refreshEfStepPhotos(stepIdx);
-}
-function refreshEfStepPhotos(i){
-  const container=el('ef-step-photos-'+i); if(!container) return;
-  const photos=S.efSteps[i].photos||[];
-  container.innerHTML=photos.map((src,pi)=>`<div style="position:relative"><img src="${src}" style="width:70px;height:70px;object-fit:cover;border-radius:6px;border:1px solid var(--border)"><div style="position:absolute;top:-4px;right:-4px;width:16px;height:16px;border-radius:50%;background:var(--red);color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:900" onclick="removeEfStepPhoto(${i},${pi})">×</div></div>`).join('')
-    +`<div style="width:70px;height:70px;border:2px dashed var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;color:var(--text-muted)" onclick="addEfStepPhotoClick(${i})">+</div>`;
-}
-
-function saveManualEdit(){
-  const title=el('ef-title').value.trim();
-  if(!title){ showToast('⚠️ 제목 입력 필요'); return; }
-  // collect steps
-  const steps=S.efSteps.map((s,i)=>({
-    title:el(`ef-step-title-${i}`)?.value.trim()||s.title,
-    desc: el(`ef-step-desc-${i}`)?.value.trim()||s.desc,
-    youtube:el(`ef-step-yt-${i}`)?.value.trim()||s.youtube||'',
-    photos:s.photos||[]
-  }));
-  const supplies=S.efSupplies.map((_,i)=>el(`ef-supplies-${i}`)?.value.trim()||'').filter(Boolean);
-  const cautions=S.efCautions.map((_,i)=>el(`ef-cautions-${i}`)?.value.trim()||'').filter(Boolean);
-  const checklist=S.efChecklist.map((_,i)=>el(`ef-checklist-${i}`)?.value.trim()||'').filter(Boolean);
-  const tags=(el('ef-tags').value||'').split(',').map(t=>t.trim()).filter(Boolean);
-  const data={
-    id:S.editManualId||uid(), title,
-    overview:el('ef-overview').value.trim(),
-    caution:el('ef-caution').value.trim(),
-    tip:el('ef-tip').value.trim(),
-    tags, supplies, cautions, steps, checklist
-  };
-  if(!S.manuals[S.editCat]) S.manuals[S.editCat]=[];
-  if(S.editManualId){
-    const idx=S.manuals[S.editCat].findIndex(x=>x.id===S.editManualId);
-    if(idx!==-1) S.manuals[S.editCat][idx]=data;
-    else S.manuals[S.editCat].push(data);
-  } else { S.manuals[S.editCat].push(data); }
-  save(); nav('admin'); showToast('✅ 저장됨');
-}
-
-// ════════════════════════════════════════════════════════
-// EXPORT / IMPORT / CLEAR
-// ════════════════════════════════════════════════════════
-function exportData(){
-  const data={logs:S.logs,ba:S.ba,contacts:S.contacts,schedules:S.schedules,manuals:S.manuals,checklistState:S.checklistState};
-  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download=`kfacility_${today()}.json`;
-  a.click();
-  showToast('📥 내보내기 완료');
-}
-function importData(){ el('import-inp').click(); }
-function handleImport(e){
-  const file=e.target.files[0]; if(!file) return;
-  const r=new FileReader();
-  r.onload=ev=>{
-    try {
-      const d=JSON.parse(ev.target.result);
-      if(!confirm('현재 데이터를 덮어쓰겠습니까?')) return;
-      S.logs=d.logs||S.logs; S.ba=d.ba||S.ba;
-      S.contacts=d.contacts||S.contacts; S.schedules=d.schedules||S.schedules;
-      S.manuals=d.manuals||S.manuals; S.checklistState=d.checklistState||S.checklistState;
-      save(); reRenderCurrent(); showToast('✅ 가져오기 완료');
-    } catch { showToast('⚠️ 파일 형식 오류'); }
-  };
-  r.readAsText(file);
-  e.target.value='';
-}
-function clearAll(){
-  if(!confirm('모든 데이터(기록·연락처·B/A)를 삭제합니까?\n매뉴얼은 유지됩니다.')) return;
-  S.logs=[]; S.ba=[]; S.contacts=[]; S.schedules=JSON.parse(JSON.stringify(DEFAULT_SCHEDULES));
-  save(); reRenderCurrent(); showToast('초기화됨');
-}
-
-// ════════════════════════════════════════════════════════
-// UTILS
-// ════════════════════════════════════════════════════════
-function esc(s){ if(!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function showToast(msg){
-  const t=el('toast'); t.textContent=msg; t.classList.add('show');
-  clearTimeout(window._tt); window._tt=setTimeout(()=>t.classList.remove('show'),2400);
-}
-function showModal(html){ el('modal-box').innerHTML=html; el('modal-bg').classList.add('open'); }
-function closeModal(){ el('modal-bg').classList.remove('open'); }
-function previewImg(src){
-  const ov=document.createElement('div'); ov.className='img-ov';
-  ov.onclick=()=>ov.remove();
-  const img=document.createElement('img'); img.src=src; ov.appendChild(img);
-  document.body.appendChild(ov);
-}
-function toggleTheme(){
-  const dark=document.documentElement.getAttribute('data-theme')==='dark';
-  if(dark) document.documentElement.removeAttribute('data-theme');
-  else document.documentElement.setAttribute('data-theme','dark');
-  localStorage.setItem('kf_theme',dark?'light':'dark');
-  syncDarkToggle();
-}
-function syncDarkToggle(){
-  const isDark=document.documentElement.getAttribute('data-theme')==='dark';
-  const t=el('dark-toggle'); if(t) t.classList.toggle('on',isDark);
-  const ti=el('theme-icon');
-  if(ti){
-    if(isDark) ti.innerHTML='<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke-width="2"/>';
-    else ti.innerHTML='<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
-  }
-}
-function toggleSb(){
-  if(window.innerWidth>768) return;
-  const sb=el('sidebar'), ov=el('sb-overlay');
-  const open=sb.classList.toggle('open');
-  ov.style.display=open?'block':'none';
-  document.body.style.overflow=open?'hidden':'';
-}
-function closeSidebar(){
-  el('sidebar').classList.remove('open');
-  const ov=el('sb-overlay'); if(ov) ov.style.display='none';
-  document.body.style.overflow='';
-}
-
-// ════════════════════════════════════════════════════════
-// FIREBASE SDK 동적 로드
-// ════════════════════════════════════════════════════════
-(function(){
-  if(location.protocol==='file:'){
-    console.info('[SDK] file: 프로토콜 — Firebase SDK 로드 건너뜀');
-    return; // signInLocal()은 DOMContentLoaded 핸들러에서 별도 실행
-  }
-
-  // 커스텀 도메인 힌트 (콘솔 + UI)
-  const host = location.hostname;
-  if(host && host !== 'localhost'
-     && !host.endsWith('.firebaseapp.com')
-     && !host.endsWith('.web.app')){
-    const hint = document.getElementById('auth-domain-hint');
-    if(hint) hint.style.display = 'block';
-  }
-
-  const CDN = 'https://www.gstatic.com/firebasejs/10.8.0/';
-  const scripts = [
-    'firebase-app-compat.js',
-    'firebase-firestore-compat.js',
-    'firebase-storage-compat.js',
-    'firebase-auth-compat.js'
-  ];
-  let loaded = 0, failed = 0;
-  let sdkReady = false;
-
-  // SDK 로드 타임아웃: 10초 안에 안 되면 로그인 화면으로 복구
-  const sdkTimeout = setTimeout(() => {
-    if(!sdkReady){
-      console.error('[SDK] 로드 타임아웃 — CDN 차단 또는 네트워크 오류');
-      showLoginScreen();
-      showToast('⚠️ Firebase 연결 실패 — 로컬 모드를 사용하세요');
-    }
-  }, 10000);
-
-  function onAllLoaded(){
-    sdkReady = true;
-    clearTimeout(sdkTimeout);
-    if(failed > 0){
-      console.warn(`[SDK] ${failed}개 로드 실패, ${scripts.length - failed}개 성공`);
-    } else {
-      console.log('[SDK] Firebase SDK 4개 모두 로드 완료 ✅');
-    }
-    tryInitFirebase();
-  }
-
-  function onLoad(){
-    if(++loaded === scripts.length) onAllLoaded();
-  }
-  function onErr(name){
-    return () => {
-      failed++;
-      console.error('[SDK] 로드 실패:', name);
-      if(++loaded === scripts.length) onAllLoaded();
-    };
-  }
-
-  scripts.forEach(s => {
-    const sc = document.createElement('script');
-    sc.src   = CDN + s;
-    sc.async = false; // 의존성 순서 보장
-    sc.onload  = onLoad;
-    sc.onerror = onErr(s);
-    document.body.appendChild(sc);
-  });
-})();
-
-// 로컬 파일(file:) 환경: 로그인 선택 화면 표시
-if(location.protocol==='file:'){
-  window.addEventListener('DOMContentLoaded',()=>showLoginScreen());
-}
-
-// OS 다크모드 실시간 감지
-window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change',e=>{
-  if(localStorage.getItem('kf_theme')) return;
-  if(e.matches) document.documentElement.setAttribute('data-theme','dark');
-  else document.documentElement.removeAttribute('data-theme');
-  syncDarkToggle();
 });
 
+/* 사이드바 */
+document.querySelectorAll('.nav-btn').forEach(b => {
+  b.addEventListener('click', function() {
+    document.querySelectorAll('.nav-btn').forEach(x => x.classList.remove('active'));
+    this.classList.add('active');
+    if (this.dataset.p) goto(this.dataset.p);
+  });
+});
+
+/* 네비게이션 (추후 라우팅 연결) */
+function goto(p) { console.log('goto:', p); }
+
+/* Firebase 초기화 템플릿
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+firebase.initializeApp(firebaseConfig);
+firebase.auth().onAuthStateChanged(user => {
+  if (user) {
+    document.getElementById('overlay').style.display = 'none';
+    setUser(user.displayName.charAt(0), user.displayName);
+  }
+});
+*/
 </script>
 </body>
 </html>
