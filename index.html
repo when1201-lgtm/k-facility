@@ -1120,6 +1120,46 @@ function updateUserUI(){
 // ════════════════════════════════════════════════════════
 // FIREBASE INIT
 // ════════════════════════════════════════════════════════
+
+// 로딩 스피너 표시/숨김
+function showAuthLoading(on){
+  let sp = el('auth-spinner');
+  if(!sp){
+    sp = document.createElement('div');
+    sp.id = 'auth-spinner';
+    sp.style.cssText = [
+      'position:fixed','inset:0','background:var(--bg)','z-index:99999',
+      'display:flex','flex-direction:column','align-items:center',
+      'justify-content:center','gap:14px','transition:opacity .25s'
+    ].join(';');
+    sp.innerHTML = [
+      '<div style="width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:_spin .8s linear infinite"></div>',
+      '<p style="font-size:14px;color:var(--text-muted);font-weight:600">로그인 확인 중...</p>',
+      '<style>@keyframes _spin{to{transform:rotate(360deg)}}</style>'
+    ].join('');
+    document.body.appendChild(sp);
+  }
+  if(on){
+    sp.style.display  = 'flex';
+    sp.style.opacity  = '1';
+    // 뒤 로그인 화면 투명화 → Redirect 복귀 시 깜빡임 방지
+    const ls = el('login-screen'); if(ls) ls.style.opacity = '0';
+  } else {
+    sp.style.opacity = '0';
+    setTimeout(()=>{ sp.style.display = 'none'; }, 260);
+    const ls = el('login-screen'); if(ls) ls.style.opacity = '1';
+  }
+}
+
+// 로그인 화면 복구
+function showLoginScreen(){
+  const ls = el('login-screen');
+  if(ls){ ls.style.display = 'flex'; ls.style.opacity = '1'; }
+  el('app').style.display = 'none';
+  const btn = el('google-btn'); if(btn) btn.disabled = false;
+  const txt = el('google-btn-text'); if(txt) txt.textContent = 'Google로 로그인';
+}
+
 function tryInitFirebase(){
   if(location.protocol === 'file:') return;
   try {
@@ -1129,70 +1169,123 @@ function tryInitFirebase(){
     storage = firebase.storage();
     auth    = firebase.auth();
 
-    // authDomain이 현재 호스트와 다른 경우 자동 감지하여 경고
+    // 커스텀 도메인 감지 → Authorized domains 안내
     const currentHost = location.hostname;
-    const configDomain = FIREBASE_CONFIG.authDomain.replace(/^https?:\/\//, '').split('/')[0];
-    if(currentHost !== 'localhost' && !currentHost.endsWith('.firebaseapp.com') && !currentHost.endsWith('.web.app')){
-      console.info(`[Auth] 커스텀 도메인 감지: ${currentHost}\nFirebase Console > Authentication > Settings > Authorized domains 에 이 도메인을 추가하세요.`);
+    if(currentHost && currentHost !== 'localhost'
+       && !currentHost.endsWith('.firebaseapp.com')
+       && !currentHost.endsWith('.web.app')){
+      console.info('[Auth] 커스텀 도메인:', currentHost,
+        '— Firebase Console > Authentication > Authorized domains 에 등록 필요');
     }
 
     db.enablePersistence({synchronizeTabs:true}).catch(()=>{});
 
-    // ── Redirect 결과 먼저 처리 (페이지 새로고침 후 돌아왔을 때)
-    auth.getRedirectResult().then(result => {
-      if(result && result.user){
-        console.log('✅ Redirect 로그인 성공:', result.user.email);
-        // onAuthStateChanged 가 이어서 처리함
-      }
-    }).catch(e => {
-      console.warn('[getRedirectResult 오류]', e.code, e.message);
-      showGoogleError(e);
-      // 버튼 복구
-      const btn = el('google-btn'); if(btn) btn.disabled = false;
-      const txt = el('google-btn-text'); if(txt) txt.textContent = 'Google로 로그인';
-    });
+    // ══════════════════════════════════════════════════════
+    // Race condition 해결
+    //
+    // [문제 원인]
+    //   signInWithRedirect 후 Google → index.html 복귀 시,
+    //   Firebase SDK는 내부적으로
+    //     ① getRedirectResult()  : 세션 쿠키 교환 → user 확정
+    //     ② onAuthStateChanged   : user 상태를 앱에 전달
+    //   순서로 처리한다.
+    //   그런데 ①이 완료되기 전에 onAuthStateChanged가
+    //   null을 먼저 내보내는 경우가 있다.
+    //   이때 null을 "비로그인"으로 오판해 로그인 화면을
+    //   표시하고 멈추는 것이 이 버그의 정체다.
+    //
+    // [해결책]
+    //   _redirectHandled 플래그: getRedirectResult가
+    //   resolve/reject 되기 전에는 onAuthStateChanged의
+    //   null 분기를 실행하지 않는다.
+    //   또한 페이지 복귀 직후 로딩 스피너를 덮어
+    //   깜빡이는 로그인 화면이 보이지 않도록 한다.
+    // ══════════════════════════════════════════════════════
+    let _redirectHandled = false;
 
-    // ── Auth 상태 변화 감지
+    // 페이지 로드 즉시 로딩 스피너 표시 (로그인 화면 깜빡임 차단)
+    showAuthLoading(true);
+
+    auth.getRedirectResult()
+      .then(result => {
+        _redirectHandled = true;
+        if(result && result.user){
+          // Redirect 로그인 성공 — onAuthStateChanged가 곧 user를 전달함
+          console.log('✅ Redirect 로그인 성공:', result.user.email);
+          // onAuthStateChanged 가 처리하므로 여기서 추가 작업 불필요
+        } else {
+          // 일반 페이지 로드 (Redirect 아님) — 스피너 해제 후 onAuthStateChanged에 위임
+          console.log('[Auth] 일반 로드 — onAuthStateChanged 대기');
+          // 이미 로그인되어 있다면 onAuthStateChanged가 user를 전달해 처리됨
+          // 비로그인이면 onAuthStateChanged null 분기가 로그인 화면 표시
+        }
+      })
+      .catch(e => {
+        _redirectHandled = true;
+        console.warn('[getRedirectResult 오류]', e.code, e.message);
+        showAuthLoading(false);
+        showGoogleError(e);
+      });
+
+    // Auth 상태 감지 (로그인/로그아웃 모두 처리)
+    let _appInitialized = false;
     auth.onAuthStateChanged(user => {
       if(user){
+        // ── 로그인 상태
         _currentUser = user;
+        showAuthLoading(false);
         hideLoginScreen();
         updateUserUI();
-        loadState();
-        nav('home', false);
 
-        // Firestore 실시간 구독
-        db.doc(FB_DOC).onSnapshot(snap=>{
-          if(!snap.exists) return;
-          const d = snap.data();
-          if(d.logs      !== undefined) S.logs           = d.logs;
-          if(d.ba        !== undefined) S.ba             = d.ba;
-          if(d.contacts  !== undefined) S.contacts       = d.contacts;
-          if(d.schedules !== undefined) S.schedules      = d.schedules;
-          if(d.checklistState !== undefined) S.checklistState = d.checklistState;
-          if(d.manuals   !== undefined) S.manuals        = d.manuals;
-          reRenderCurrent();
-          console.log('☁️ 데이터 동기화됨');
-        }, e=>console.warn('Firestore 오류:', e));
+        // 앱 초기화는 최초 1회만
+        if(!_appInitialized){
+          _appInitialized = true;
+          loadState();
+          nav('home', false);
+
+          // Firestore 실시간 구독
+          db.doc(FB_DOC).onSnapshot(snap=>{
+            if(!snap.exists) return;
+            const d = snap.data();
+            if(d.logs      !== undefined) S.logs            = d.logs;
+            if(d.ba        !== undefined) S.ba              = d.ba;
+            if(d.contacts  !== undefined) S.contacts        = d.contacts;
+            if(d.schedules !== undefined) S.schedules       = d.schedules;
+            if(d.checklistState !== undefined) S.checklistState = d.checklistState;
+            if(d.manuals   !== undefined) S.manuals         = d.manuals;
+            reRenderCurrent();
+            console.log('☁️ 데이터 동기화됨');
+          }, e=>console.warn('Firestore 오류:', e));
+        }
 
         const dot = el('fb-dot');
         if(dot) dot.classList.add('connected');
 
       } else {
-        // 비로그인 상태 — 로그인 화면 표시
-        _currentUser = null;
-        const ls = el('login-screen');
-        if(ls) ls.style.display = 'flex';
-        el('app').style.display = 'none';
-        // 버튼 복구 (Redirect 후 실패 등)
-        const btn = el('google-btn'); if(btn) btn.disabled = false;
-        const txt = el('google-btn-text'); if(txt) txt.textContent = 'Google로 로그인';
+        // ── 비로그인 상태
+        // ★ getRedirectResult 완료 전이면 기다린다 (race condition 방지)
+        if(!_redirectHandled){
+          // 안전망: 최대 6초 후에도 Redirect 결과가 없으면 로그인 화면 표시
+          setTimeout(()=>{
+            if(!_currentUser && !_appInitialized){
+              _redirectHandled = true;
+              showAuthLoading(false);
+              showLoginScreen();
+            }
+          }, 6000);
+          return; // ← 핵심: 여기서 리턴하여 로그인 화면 표시를 막는다
+        }
+        _currentUser   = null;
+        _appInitialized = false;
+        showAuthLoading(false);
+        showLoginScreen();
       }
     });
 
     console.log('✅ Firebase 연결 성공');
   } catch(e){
     console.error('Firebase 초기화 실패:', e);
+    showAuthLoading(false);
     showToast('⚠️ 로컬 모드로 실행 중');
   }
 }
