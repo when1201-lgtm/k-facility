@@ -501,10 +501,14 @@ mark{background:transparent;color:var(--primary);font-weight:800}
     </div>
     <h2>K-Facility</h2>
     <p>시설 관리 통합 플랫폼입니다.<br>Google 계정으로 로그인하세요.</p>
-    <button class="google-btn" onclick="signInWithGoogle()">
+    <button class="google-btn" id="google-btn" onclick="signInWithGoogle()">
       <svg viewBox="0 0 24 24" fill="none"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-      Google로 로그인
+      <span id="google-btn-text">Google로 로그인</span>
     </button>
+    <div id="auth-domain-hint" style="margin-top:10px;font-size:11px;color:var(--text-muted);background:var(--bg);border-radius:8px;padding:8px 10px;display:none;text-align:left;line-height:1.6">
+      📌 Firebase Console → Authentication → Settings → Authorized domains 에<br>
+      현재 도메인을 추가해야 Google 로그인이 작동합니다.
+    </div>
     <div class="local-btn" onclick="signInLocal()">
       로그인 없이 로컬에서 사용
     </div>
@@ -1011,12 +1015,57 @@ const DEFAULT_SCHEDULES = [
 // AUTH
 // ════════════════════════════════════════════════════════
 function signInWithGoogle(){
-  if(!auth){ showToast('⚠️ Firebase가 아직 로드 중입니다.'); return; }
+  if(!auth){
+    showToast('⚠️ Firebase 로드 중... 잠시 후 다시 시도하세요.');
+    // SDK 로드 재시도 표시
+    el('google-btn-text').textContent = 'Firebase 로드 중...';
+    return;
+  }
   const provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithPopup(provider).catch(e=>{
+  provider.addScope('email');
+  provider.addScope('profile');
+  provider.setCustomParameters({ prompt: 'select_account' });
+
+  // GitHub Pages·모바일 환경에서 Popup이 차단되는 경우를 대비해
+  // Redirect 방식을 기본으로 사용합니다.
+  el('google-btn-text').textContent = '로그인 중...';
+  el('google-btn').disabled = true;
+
+  auth.signInWithRedirect(provider).catch(e=>{
     console.warn('Google 로그인 실패:', e);
-    showToast('로그인 실패: ' + (e.message||e.code));
+    el('google-btn-text').textContent = 'Google로 로그인';
+    el('google-btn').disabled = false;
+    showGoogleError(e);
   });
+}
+
+function showGoogleError(e){
+  const MAP = {
+    'auth/popup-blocked':        '팝업이 차단되었습니다. 브라우저 팝업 허용 후 재시도하세요.',
+    'auth/popup-closed-by-user': '로그인 창이 닫혔습니다. 다시 시도하세요.',
+    'auth/cancelled-popup-request': '중복 요청이 취소되었습니다.',
+    'auth/unauthorized-domain':  '이 도메인이 Firebase Console에 등록되지 않았습니다.\n\n등록 방법:\nFirebase Console → Authentication → Settings → Authorized domains → 현재 도메인 추가',
+    'auth/operation-not-allowed':'Google 로그인이 Firebase Console에서 활성화되지 않았습니다.',
+    'auth/network-request-failed':'네트워크 오류입니다. 인터넷 연결을 확인하세요.',
+    'auth/too-many-requests':    '요청이 너무 많습니다. 잠시 후 다시 시도하세요.',
+    'auth/user-disabled':        '이 계정은 비활성화되었습니다.',
+    'auth/invalid-api-key':      'Firebase API 키가 올바르지 않습니다.',
+    'auth/app-not-authorized':   'Firebase 앱이 Google 로그인을 허용하지 않습니다.\nConsole에서 Google 제공업체를 활성화하세요.',
+  };
+  const msg = MAP[e.code] || `로그인 실패 (${e.code||e.message})\n\n도움말: Firebase Console → Authentication → Settings → Authorized domains 에 현재 도메인을 추가했는지 확인하세요.`;
+  console.error('[Auth 오류]', e.code, e.message);
+
+  // 진단 정보 팝업 표시
+  showModal(`
+    <div class="modal-title">⚠️ Google 로그인 실패</div>
+    <pre style="background:var(--bg);border-radius:8px;padding:12px;font-size:12px;line-height:1.7;white-space:pre-wrap;color:var(--text-sub);margin-bottom:12px">${msg}</pre>
+    <div style="font-size:13px;color:var(--text-muted);margin-bottom:14px">
+      현재 도메인: <code style="background:var(--bg);padding:2px 6px;border-radius:4px;font-family:var(--font-mono)">${location.hostname}</code>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal();signInLocal()">로컬 모드로 계속</button>
+      <button class="btn btn-primary" onclick="closeModal();signInWithGoogle()">다시 시도</button>
+    </div>`);
 }
 function signInLocal(){
   _currentUser = {uid:'local',displayName:'로컬 사용자',email:'local@local',photoURL:null};
@@ -1080,9 +1129,30 @@ function tryInitFirebase(){
     storage = firebase.storage();
     auth    = firebase.auth();
 
+    // authDomain이 현재 호스트와 다른 경우 자동 감지하여 경고
+    const currentHost = location.hostname;
+    const configDomain = FIREBASE_CONFIG.authDomain.replace(/^https?:\/\//, '').split('/')[0];
+    if(currentHost !== 'localhost' && !currentHost.endsWith('.firebaseapp.com') && !currentHost.endsWith('.web.app')){
+      console.info(`[Auth] 커스텀 도메인 감지: ${currentHost}\nFirebase Console > Authentication > Settings > Authorized domains 에 이 도메인을 추가하세요.`);
+    }
+
     db.enablePersistence({synchronizeTabs:true}).catch(()=>{});
 
-    // Auth 상태 변화 감지
+    // ── Redirect 결과 먼저 처리 (페이지 새로고침 후 돌아왔을 때)
+    auth.getRedirectResult().then(result => {
+      if(result && result.user){
+        console.log('✅ Redirect 로그인 성공:', result.user.email);
+        // onAuthStateChanged 가 이어서 처리함
+      }
+    }).catch(e => {
+      console.warn('[getRedirectResult 오류]', e.code, e.message);
+      showGoogleError(e);
+      // 버튼 복구
+      const btn = el('google-btn'); if(btn) btn.disabled = false;
+      const txt = el('google-btn-text'); if(txt) txt.textContent = 'Google로 로그인';
+    });
+
+    // ── Auth 상태 변화 감지
     auth.onAuthStateChanged(user => {
       if(user){
         _currentUser = user;
@@ -1090,6 +1160,7 @@ function tryInitFirebase(){
         updateUserUI();
         loadState();
         nav('home', false);
+
         // Firestore 실시간 구독
         db.doc(FB_DOC).onSnapshot(snap=>{
           if(!snap.exists) return;
@@ -1103,9 +1174,19 @@ function tryInitFirebase(){
           reRenderCurrent();
           console.log('☁️ 데이터 동기화됨');
         }, e=>console.warn('Firestore 오류:', e));
-        // Firebase 연결 표시
+
         const dot = el('fb-dot');
         if(dot) dot.classList.add('connected');
+
+      } else {
+        // 비로그인 상태 — 로그인 화면 표시
+        _currentUser = null;
+        const ls = el('login-screen');
+        if(ls) ls.style.display = 'flex';
+        el('app').style.display = 'none';
+        // 버튼 복구 (Redirect 후 실패 등)
+        const btn = el('google-btn'); if(btn) btn.disabled = false;
+        const txt = el('google-btn-text'); if(txt) txt.textContent = 'Google로 로그인';
       }
     });
 
@@ -2191,12 +2272,46 @@ function closeSidebar(){
 // ════════════════════════════════════════════════════════
 (function(){
   if(location.protocol==='file:'){ console.info('로컬 파일 모드'); return; }
+
+  // 현재 도메인이 Firebase 기본 도메인이 아니면 힌트 표시
+  const host = location.hostname;
+  if(host && host !== 'localhost' && !host.endsWith('.firebaseapp.com') && !host.endsWith('.web.app')){
+    const hint = document.getElementById('auth-domain-hint');
+    if(hint) hint.style.display = 'block';
+  }
+
   const CDN='https://www.gstatic.com/firebasejs/10.8.0/';
-  let loaded=0;
-  const scripts=['firebase-app-compat.js','firebase-firestore-compat.js','firebase-storage-compat.js','firebase-auth-compat.js'];
-  function onLoad(){ if(++loaded===scripts.length) tryInitFirebase(); }
-  function onErr(n){ return ()=>{ console.warn('SDK 로드 실패:',n); if(++loaded===scripts.length) console.warn('Firebase 부분 로드 실패'); }; }
-  scripts.forEach(s=>{ const sc=document.createElement('script'); sc.src=CDN+s; sc.onload=onLoad; sc.onerror=onErr(s); document.body.appendChild(sc); });
+  let loaded=0, failed=0;
+  const scripts=[
+    'firebase-app-compat.js',
+    'firebase-firestore-compat.js',
+    'firebase-storage-compat.js',
+    'firebase-auth-compat.js'
+  ];
+  function onLoad(){
+    if(++loaded===scripts.length){
+      if(failed>0) console.warn(`Firebase SDK: ${failed}개 로드 실패, ${loaded-failed}개 성공`);
+      tryInitFirebase();
+    }
+  }
+  function onErr(n){
+    return ()=>{
+      failed++;
+      console.warn('SDK 로드 실패:', n);
+      if(++loaded===scripts.length){
+        if(failed>=2) console.error('Firebase SDK 대부분 로드 실패 — 네트워크 차단 가능성');
+        tryInitFirebase(); // 부분 로드라도 시도
+      }
+    };
+  }
+  scripts.forEach(s=>{
+    const sc=document.createElement('script');
+    sc.src=CDN+s;
+    sc.async=false; // 순서 보장
+    sc.onload=onLoad;
+    sc.onerror=onErr(s);
+    document.body.appendChild(sc);
+  });
 })();
 
 // 로컬 파일 환경: 바로 로컬 모드 진입
