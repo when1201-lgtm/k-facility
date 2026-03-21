@@ -512,15 +512,35 @@ function renderHome() {
   const de = $('home-date');
   if (de) de.textContent = new Date().toLocaleDateString('ko-KR', {year:'numeric',month:'long',day:'numeric',weekday:'short'});
 
-  /* 최근 작업 2건 */
+  /* 최근 작업 2건 — imageUrl 썸네일 포함 */
   const mr = $('home-mini-row');
-  if (mr && logs.length) {
-    mr.innerHTML = logs.slice(0, 2).map(l => `
-      <div class="mini" style="cursor:pointer" onclick="openLogDetail('${l.id}')">
-        <div class="ml">최근 ${esc(l.cat || '')} 작업</div>
-        <div class="mv">${esc(l.title)}</div>
-        <div class="md">${l.date || ''}</div>
-      </div>`).join('');
+  if (mr) {
+    if (logs.length) {
+      mr.innerHTML = logs.slice(0, 2).map(l => {
+        /* imageUrl > beforePhotos[0] > photos[0] 순서로 썸네일 */
+        const imgSrc = l.imageUrl || (l.beforePhotos||[])[0] || (l.photos||[])[0] || '';
+        return `
+        <div class="mini home-log-mini" style="cursor:pointer;padding:0;overflow:hidden"
+             onclick="openLogDetail('${l.id}')">
+          ${imgSrc
+            ? `<img src="${imgSrc}" style="width:100%;height:60px;object-fit:cover;display:block;border-radius:8px 8px 0 0">`
+            : `<div style="width:100%;height:40px;background:rgba(255,255,255,.05);border-radius:8px 8px 0 0;display:flex;align-items:center;justify-content:center;font-size:18px">${CAT_ICON[l.cat]||'📋'}</div>`
+          }
+          <div style="padding:8px 10px">
+            <div class="ml">${esc(l.cat||'')} · ${esc(l.status||'')}</div>
+            <div class="mv" style="font-size:13px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(l.title)}</div>
+            <div class="md">${l.date||''}</div>
+          </div>
+        </div>`;
+      }).join('');
+    } else {
+      mr.innerHTML = `
+        <div class="mini" style="opacity:.5;font-size:13px;color:var(--t3);text-align:center;padding:16px">
+          <div style="font-size:24px;margin-bottom:6px">📋</div>
+          작업기록 없음
+        </div>
+        <div class="mini" style="opacity:.3"></div>`;
+    }
   }
 
   /* 이번 달 로드맵 */
@@ -760,15 +780,26 @@ function openManualModal(catKey, id) {
 
   openModal(`
     <div class="modal-title">
-      ${m?'매뉴얼 수정':'매뉴얼 추가'} — ${CAT_KEY_MAP[catKey]||catKey}
+      ${m?'매뉴얼 수정':'매뉴얼 추가'}
       <button class="modal-close" onclick="closeModal()">✕</button>
     </div>
 
     <!-- 기본 정보 -->
-    <div class="lf-group">
-      <label class="lf-label">📌 제목 *</label>
-      <input class="lf-input" id="mf-title" type="text"
-        value="${esc(m?.title||'')}" placeholder="매뉴얼 제목 (예: 분전반 MCB 교체)"/>
+    <div class="lf-row">
+      <div class="lf-group" style="margin:0">
+        <label class="lf-label">🗂 카테고리</label>
+        <select class="lf-select" id="mf-cat">
+          <option value="electric"${catKey==='electric'?' selected':''}>⚡ 전기 설비</option>
+          <option value="mechanical"${catKey==='mechanical'?' selected':''}>⚙️ 기계 설비</option>
+          <option value="construction"${catKey==='construction'?' selected':''}>🔨 영선 / 보수</option>
+          <option value="fire"${catKey==='fire'?' selected':''}>🔥 소방 설비</option>
+        </select>
+      </div>
+      <div class="lf-group" style="margin:0">
+        <label class="lf-label">📌 제목 *</label>
+        <input class="lf-input" id="mf-title" type="text"
+          value="${esc(m?.title||'')}" placeholder="예: 분전반 MCB 교체"/>
+      </div>
     </div>
     <div class="lf-row">
       <div class="lf-group" style="margin:0">
@@ -823,18 +854,23 @@ function openManualModal(catKey, id) {
         value="${esc(m?.tip||'')}" placeholder="교체 후 12시간 모니터링 권장"/>
     </div>
 
-    <!-- 사진 등록 -->
+    <!-- 사진 등록 (file input 모달 내 직접 embed) -->
     <div class="modal-section-divider">📷 매뉴얼 대표 사진</div>
     <div class="lf-group">
-      <label class="lf-label">등록된 사진은 매뉴얼 목록 썸네일로 표시됩니다</label>
-      <div id="mf-photo-preview" class="photo-preview-wrap" style="min-height:40px"></div>
-      <div style="display:flex;gap:8px;margin-top:8px">
-        <button class="btn-gh" style="flex:1;justify-content:center;font-size:13px"
-                onclick="triggerPhotoInput('camera','main','mf-photo-preview')">📷 카메라</button>
-        <button class="btn-gh" style="flex:1;justify-content:center;font-size:13px"
-                onclick="triggerPhotoInput('gallery','main','mf-photo-preview')">🖼 갤러리</button>
+      <label class="lf-label">등록된 사진은 목록 썸네일로 표시됩니다 (800px 자동 압축)</label>
+      <div id="mf-photo-preview" class="photo-preview-wrap" style="min-height:44px;margin-bottom:10px"></div>
+      <div style="display:flex;gap:8px">
+        <label class="btn-gh" style="flex:1;justify-content:center;cursor:pointer;min-height:44px">
+          📷 카메라 촬영
+          <input type="file" accept="image/*" capture="environment"
+            style="display:none" onchange="handleManualPhoto(event)"/>
+        </label>
+        <label class="btn-gh" style="flex:1;justify-content:center;cursor:pointer;min-height:44px">
+          🖼 갤러리 선택
+          <input type="file" accept="image/*" multiple
+            style="display:none" onchange="handleManualPhoto(event)"/>
+        </label>
       </div>
-      <p style="font-size:12px;color:var(--t4);margin-top:6px">800px 자동 압축 · Firebase Storage 저장</p>
     </div>
 
     <div class="modal-actions">
@@ -849,6 +885,37 @@ function openManualModal(catKey, id) {
   }
 }
 
+/* 매뉴얼 전용 사진 핸들러 — 모달 내 input에서 직접 호출 */
+function handleManualPhoto(e) {
+  const files = [...e.target.files];
+  if (!files.length) return;
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      /* side='main' 으로 업로드 버퍼에 추가 */
+      S.uploadPhotos = S.uploadPhotos.filter(p => p.side !== 'main'); /* 기존 1장 교체 */
+      S.uploadPhotos.push({ file, url: ev.target.result, existing: false, side: 'main', storagePath: '' });
+      /* 미리보기 갱신 */
+      const wrap = $('mf-photo-preview');
+      if (wrap) {
+        wrap.innerHTML = S.uploadPhotos.filter(p=>p.side==='main').map((p,i) => `
+          <div class="photo-preview-item">
+            <img src="${p.url}" onclick="previewPhoto('${p.url}')" style="width:80px;height:80px;object-fit:cover;border-radius:10px;border:1px solid rgba(255,255,255,.15)">
+            <button class="photo-preview-del" onclick="removeManualPhoto()">×</button>
+          </div>`).join('');
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+  e.target.value = '';
+}
+
+function removeManualPhoto() {
+  S.uploadPhotos = S.uploadPhotos.filter(p => p.side !== 'main');
+  const wrap = $('mf-photo-preview');
+  if (wrap) wrap.innerHTML = '';
+}
+
 async function saveManual() {
   const title = $('mf-title')?.value.trim();
   if (!title) { toast('⚠️ 제목을 입력하세요'); $('mf-title')?.focus(); return; }
@@ -856,7 +923,9 @@ async function saveManual() {
   if (btn) { btn.disabled=true; btn.textContent='저장 중...'; }
   toast('📤 저장 중...');
 
-  const catKey = S.editManualCat;
+  /* ★ 카테고리는 select에서 읽음 (사용자가 변경했을 수 있음) */
+  const catKey = $('mf-cat')?.value || S.editManualCat;
+  S.editManualCat = catKey; /* 동기화 */
 
   /* ── ① 5섹션 파싱 ── */
 
@@ -1745,6 +1814,8 @@ window.openMemoDetail   = openMemoDetail;
 window.deleteMemo       = deleteMemo;
 window.saveMemo         = saveMemo;
 window.openManualModal  = openManualModal;
+window.handleManualPhoto = handleManualPhoto;
+window.removeManualPhoto = removeManualPhoto;
 window.saveManual       = saveManual;
 window.deleteManual     = deleteManual;
 window.viewManual       = viewManual;
