@@ -358,10 +358,9 @@
             <div class="slbl" style="margin-bottom:10px">상세 내용</div>
             <p style="font-size:16px;color:var(--t2);line-height:1.85;white-space:pre-wrap" id="log-detail-desc"></p>
           </div>
-          <!-- 첨부 사진 -->
+          <!-- Before / After 사진 비교 섹션 (JS openLogDetail이 innerHTML로 채움) -->
           <div class="glass" style="padding:20px;margin-bottom:14px;display:none" id="log-detail-photos">
-            <div class="slbl" style="margin-bottom:14px">📷 현장 사진</div>
-            <div id="log-detail-photos-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px"></div>
+            <!-- JS가 ba-detail-grid 구조를 주입 -->
           </div>
           <!-- 수정/삭제 버튼 -->
           <div class="detail-actions">
