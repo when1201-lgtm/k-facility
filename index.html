@@ -919,7 +919,7 @@ body.fp-mode #bottom-nav{display:none !important}
       <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg><span class="fp-back-text">목록으로</span>
     </button>
     <div style="flex:1"></div>
-    <button class="fp-save" onclick="saveBA()">
+    <button id="fp-ba-save-btn" class="fp-save" onclick="saveBA()">
       <svg viewBox="0 0 24 24" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg><span>저장</span>
     </button>
   </div>
@@ -1938,103 +1938,139 @@ function renderBAThumbs(){
   if(ba2&&ba2!==ba) ba2.innerHTML=ba?.innerHTML||'';
 }
 async function saveBA(){
-  const titleEl = el('fp-ba-title-input')||el('ba-title');
+  // ── 제목 검증 ──
+  const titleEl = el('fp-ba-title-input') || el('ba-title');
   const title   = titleEl?.value?.trim();
-  if(!title){ showFieldError('fp-ba-title-input','작업 제목을 입력해 주세요'); return; }
+  if(!title){
+    showFieldError('fp-ba-title-input','작업 제목을 입력해 주세요');
+    return;
+  }
 
-  const catEl  = el('fp-ba-cat') ||el('ba-cat');
-  const dateEl = el('fp-ba-date')||el('ba-date');
-  const bbEl   = el('fp-ba-before-div')||el('ba-before-text-div');
-  const baEl   = el('fp-ba-after-div') ||el('ba-after-text-div');
+  // ── 버튼 찾기 (여러 방법으로 시도) ──
+  // ★ ID로 직접 찾기 — querySelector 타이밍 이슈 완전 배제
+  const saveBtn = el('fp-ba-save-btn');
 
-  const saveBtn = document.querySelector('#fp-ba .fp-save');
-  if(saveBtn){ saveBtn.disabled=true; saveBtn.innerHTML='<svg viewBox="0 0 24 24" stroke-width="2" width="15" height="15" style="animation:spin .7s linear infinite;stroke:currentColor;fill:none"><path d="M21 12a9 9 0 1 1-6.22-8.56"/></svg> 저장 중...'; }
+  // ── 버튼 비활성화 ──
+  if(saveBtn){
+    saveBtn.disabled = true;
+    saveBtn.textContent = '저장 중...';
+  }
 
-  /* ─── 업로드 헬퍼 ───────────────────────────────────
-     photos: base64/URL 혼합 배열 (표시용)
-     files:  원본 File 객체 배열 (업로드용, 같은 인덱스)
-     이미 URL인 항목(수정 모드 기존 사진)은 그대로 유지 */
+  const catEl  = el('fp-ba-cat')  || el('ba-cat');
+  const dateEl = el('fp-ba-date') || el('ba-date');
+  const bbEl   = el('fp-ba-before-div') || el('ba-before-text-div');
+  const baEl   = el('fp-ba-after-div')  || el('ba-after-text-div');
+
+  // ── 사진 1장 업로드 헬퍼 ──────────────────────────────────
+  // Firebase 10.x compat: ref.put() 은 UploadTask 반환
+  // UploadTask는 Promise처럼 쓸 수 있지만 명시적으로 처리
+  async function uploadOne(file, base64, path){
+    const storageRef = storage.ref(path);
+    if(file instanceof File){
+      const task = storageRef.put(file);
+      await new Promise((resolve, reject) => {
+        task.on('state_changed',
+          null,          // 진행률 무시
+          (err) => {     // 실패
+            console.error('UploadTask 실패:', err?.code, err?.message);
+            reject(err);
+          },
+          () => resolve() // 완료
+        );
+      });
+    } else if(base64 && base64.startsWith('data:')){
+      await storageRef.putString(base64, 'data_url');
+    } else {
+      return null;
+    }
+    return storageRef.getDownloadURL();
+  }
+
+  // ── 그룹 업로드 ──────────────────────────────────────────
   async function uploadGroup(photos, files, folder){
     const urls = [];
-    for(let i=0; i<photos.length; i++){
+    for(let i = 0; i < photos.length; i++){
       const photo = photos[i];
-      // 이미 https URL → 그대로 유지
-      if(photo && photo.startsWith('http')){ urls.push(photo); continue; }
-      // base64 → File 객체로 업로드
+      const file  = files?.[i];
+      // 이미 URL이면 그대로
+      if(photo && (photo.startsWith('https://') || photo.startsWith('http://'))){
+        urls.push(photo);
+        continue;
+      }
       if(!storage){
-        // Storage 없으면 건너뜀 (사진 없이 저장)
-        console.warn('Storage 미연결 — 사진 제외하고 저장');
+        // Storage 없음 → 이 사진 건너뜀 (텍스트만 저장)
         continue;
       }
       try{
-        const file = files[i];
-        const ext  = (file?.type||'image/jpeg').split('/')[1] || 'jpg';
-        const path = `ba/${folder}/${i}_${Date.now()}.${ext}`;
-        const ref  = storage.ref(path);
-        if(file instanceof File){
-          // File 객체 직접 업로드 (가장 신뢰성 높음)
-          await ref.put(file);
-        } else if(photo?.startsWith('data:')){
-          // File 없으면 base64 문자열로 업로드
-          await ref.putString(photo, 'data_url');
-        } else {
-          continue; // 빈 항목 스킵
-        }
-        urls.push(await ref.getDownloadURL());
-      }catch(err){
-        console.error(`사진 ${i} 업로드 실패:`, err.code||err.message);
-        // 실패해도 나머지 계속 (부분 저장 허용)
+        const ext  = file?.type?.split('/')?.[1] || 'jpg';
+        const path = `ba/${folder}/photo_${i}_${Date.now()}.${ext}`;
+        const url  = await uploadOne(file, photo, path);
+        if(url) urls.push(url);
+      } catch(uploadErr){
+        // 사진 1장 실패해도 나머지 계속
+        console.warn(`사진 ${i} 업로드 실패:`, uploadErr?.code || uploadErr?.message);
       }
     }
     return urls;
   }
 
   try{
-    showToast('💾 사진 업로드 중...');
+    console.log('[saveBA] 시작 - 사진수:', S.baBeforePhotos.length, S.baAfterPhotos.length, '/ storage:', !!storage, '/ db:', !!db);
+    showToast('💾 저장 중...');
     const id = S.editBAId || Date.now();
 
-    // Before / After 병렬 업로드
+    // ── Before / After 병렬 업로드 ──
     const [bUrls, aUrls] = await Promise.all([
-      uploadGroup(S.baBeforePhotos, S.baBeforeFiles, `${id}/before`),
-      uploadGroup(S.baAfterPhotos,  S.baAfterFiles,  `${id}/after`)
+      uploadGroup(S.baBeforePhotos, S.baBeforeFiles, `${id}_before`),
+      uploadGroup(S.baAfterPhotos,  S.baAfterFiles,  `${id}_after`)
     ]);
 
+    console.log('[saveBA] 업로드 완료 - Before URLs:', bUrls.length, 'After URLs:', aUrls.length);
+    // ── 데이터 구성 (URL만, base64 없음) ──
     const d = {
+      id,
       title,
-      cat:         catEl?.value  || '기타',
-      date:        dateEl?.value?.trim() || '',
-      beforeText:  (bbEl?.innerText||'').trim(),
-      afterText:   (baEl?.innerText||'').trim(),
-      beforePhotos: bUrls,  // URL만, base64 없음
+      cat:          catEl?.value || '기타',
+      date:         dateEl?.value?.trim() || '',
+      beforeText:   (bbEl?.innerText || '').trim(),
+      afterText:    (baEl?.innerText  || '').trim(),
+      beforePhotos: bUrls,
       afterPhotos:  aUrls
     };
 
+    // ── S.ba 업데이트 ──
     if(S.editBAId){
-      const b = S.ba.find(x=>x.id===S.editBAId);
-      if(b) Object.assign(b, d);
+      const existing = S.ba.find(x => x.id === S.editBAId);
+      if(existing) Object.assign(existing, d);
       showToast('✅ 수정되었습니다');
     } else {
-      S.ba.unshift({id, ...d});
+      S.ba.unshift(d);
       showToast('✅ 저장되었습니다');
     }
 
-    // 임시 배열 정리
-    S.baBeforePhotos=[...bUrls];
-    S.baAfterPhotos =[...aUrls];
-    S.baBeforeFiles =[];
-    S.baAfterFiles  =[];
+    // ── 임시 배열 정리 ──
+    S.baBeforePhotos = [...bUrls];
+    S.baAfterPhotos  = [...aUrls];
+    S.baBeforeFiles  = [];
+    S.baAfterFiles   = [];
 
-    save();       // base64 필터링 후 localStorage/Firestore 저장
+    // ── 저장 (localStorage + Firestore, base64 필터링 포함) ──
+    save();
+    // ── UI 즉시 갱신 ──
+    renderBAThumbs();
     closeFpBA();
     renderBA();
 
-  }catch(err){
+  } catch(err){
     console.error('saveBA 오류:', err);
-    showToast('⚠️ 저장 실패: '+(err.code||err.message||'알 수 없는 오류'));
-  }finally{
+    const msg = err?.code || err?.message || '알 수 없는 오류';
+    showToast('⚠️ 저장 실패: ' + msg);
+
+  } finally{
+    // ── 항상 버튼 복구 ──
     if(saveBtn){
-      saveBtn.disabled=false;
-      saveBtn.innerHTML='<svg viewBox="0 0 24 24" stroke-width="2" width="15" height="15" style="stroke:currentColor;fill:none"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg><span>저장</span>';
+      saveBtn.disabled = false;
+      saveBtn.textContent = '저장';
     }
   }
 }
