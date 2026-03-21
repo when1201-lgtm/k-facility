@@ -2,81 +2,987 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>K-Facility | 시설관리 대시보드</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
   <link rel="stylesheet" href="style.css"/>
-  <!-- Firebase (준비되면 주석 해제, js/main.js 의 FB_CFG 값도 입력) -->
-  <!-- <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>    -->
-  <!-- <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>   -->
+  <!-- Firebase SDK — 준비되면 주석 해제 후 main.js FB_CFG 값 입력 -->
+  <!-- <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script> -->
+  <!-- <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script> -->
   <!-- <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script> -->
-  <!-- <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>  -->
+  <!-- <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script> -->
 </head>
 <body>
-  <div class="bg-layer" aria-hidden="true">
-    <div class="orb o1"></div><div class="orb o2"></div>
-    <div class="orb o3"></div><div class="orb o4"></div>
-  </div>
 
-  <!-- LOGIN OVERLAY -->
-  <div id="lov" role="dialog" aria-modal="true">
-    <div class="lcard">
-      <div class="ll">K-<em>Facility</em></div>
-      <p class="ls">시설관리 통합 대시보드에<br>오신 걸 환영합니다</p>
-      <button class="btn-google" id="btn-google">
-        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
-          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-        </svg>
-        Google로 로그인
-      </button>
-      <div class="ldv">또는</div>
-      <button class="btn-guest" id="btn-guest">👤 게스트로 둘러보기</button>
-      <p class="ln">게스트 모드에서는 데이터 저장이 제한됩니다</p>
-    </div>
-  </div>
+<!-- =====================================================
+  BACKGROUND ORBS (Glassmorphism 배경)
+===================================================== -->
+<div class="bg-layer">
+  <div class="orb o1"></div><div class="orb o2"></div>
+  <div class="orb o3"></div><div class="orb o4"></div>
+</div>
 
-  <!-- APP -->
-  <div id="app">
-    <nav id="sidebar" aria-label="메인 내비게이션">
-      <div class="s-logo">K-<em>F</em></div>
-      <div class="s-div"></div>
-      <button class="nb active" data-p="home"         title="홈">         <i class="fa-solid fa-house"></i>            <span class="tip">홈</span></button>
-      <button class="nb"        data-p="search"       title="검색">       <i class="fa-solid fa-magnifying-glass"></i>  <span class="tip">검색</span></button>
-      <div class="s-div"></div>
-      <button class="nb"        data-p="electric"     title="전기">       <i class="fa-solid fa-bolt"></i>             <span class="tip">전기</span></button>
-      <button class="nb"        data-p="mechanical"   title="기계">       <i class="fa-solid fa-gear"></i>             <span class="tip">기계</span></button>
-      <button class="nb"        data-p="construction" title="영선">       <i class="fa-solid fa-hammer"></i>           <span class="tip">영선</span></button>
-      <button class="nb"        data-p="fire"         title="소방">       <i class="fa-solid fa-fire-extinguisher"></i><span class="tip">소방</span></button>
-      <button class="nb"        data-p="records"      title="작업기록">   <i class="fa-solid fa-clipboard-list"></i>   <span class="tip">작업기록</span></button>
-      <button class="nb"        data-p="memo"         title="학습메모">   <i class="fa-solid fa-book-open"></i>        <span class="tip">학습메모</span></button>
-      <button class="nb"        data-p="roadmap"      title="연간로드맵"> <i class="fa-solid fa-calendar-days"></i>    <span class="tip">연간로드맵</span></button>
-      <div class="s-div" style="margin-top:auto"></div>
-      <button class="nb"        data-p="contacts"     title="연락처">     <i class="fa-solid fa-address-book"></i>     <span class="tip">연락처</span></button>
-      <button class="nb"        data-p="stats"        title="통계">       <i class="fa-solid fa-chart-bar"></i>        <span class="tip">통계</span></button>
-      <button class="nb"        data-p="settings"     title="설정">       <i class="fa-solid fa-sliders"></i>          <span class="tip">설정</span></button>
-    </nav>
-    <div id="main">
-      <header id="hdr">
-        <div class="h-logo">K-<em>Facility</em></div>
-        <div class="srch">
-          <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-          <input type="search" id="si" placeholder="작업기록, 장비, 메모 검색..." aria-label="통합 검색"/>
+<!-- =====================================================
+  LOGIN OVERLAY
+===================================================== -->
+<div id="lov">
+  <div class="lcard">
+    <div class="ll">K-<em>Facility</em></div>
+    <p class="ls">시설관리 통합 대시보드에<br>오신 걸 환영합니다</p>
+    <button class="btn-google" id="btn-google">
+      <svg width="18" height="18" viewBox="0 0 24 24">
+        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+      </svg>
+      Google로 로그인
+    </button>
+    <div class="ldv">또는</div>
+    <button class="btn-guest" id="btn-guest">👤 게스트로 둘러보기</button>
+    <p class="ln">게스트 모드에서는 데이터 저장이 제한됩니다</p>
+  </div>
+</div>
+
+<!-- =====================================================
+  APP SHELL
+===================================================== -->
+<div id="app">
+
+  <!-- ── SIDEBAR ── -->
+  <nav id="sidebar">
+    <div class="s-logo">K-<em>F</em></div>
+    <div class="s-div"></div>
+    <button class="nb active" data-p="home">        <i class="fa-solid fa-house"></i>              <span class="tip">홈</span></button>
+    <button class="nb"        data-p="search">      <i class="fa-solid fa-magnifying-glass"></i>   <span class="tip">검색</span></button>
+    <div class="s-div"></div>
+    <button class="nb"        data-p="electric">    <i class="fa-solid fa-bolt"></i>               <span class="tip">전기</span></button>
+    <button class="nb"        data-p="mechanical">  <i class="fa-solid fa-gear"></i>               <span class="tip">기계</span></button>
+    <button class="nb"        data-p="construction"><i class="fa-solid fa-hammer"></i>             <span class="tip">영선</span></button>
+    <button class="nb"        data-p="fire">        <i class="fa-solid fa-fire-extinguisher"></i>  <span class="tip">소방</span></button>
+    <button class="nb"        data-p="records">     <i class="fa-solid fa-clipboard-list"></i>     <span class="tip">작업기록</span></button>
+    <button class="nb"        data-p="memo">        <i class="fa-solid fa-book-open"></i>          <span class="tip">학습메모</span></button>
+    <button class="nb"        data-p="roadmap">     <i class="fa-solid fa-calendar-days"></i>      <span class="tip">연간로드맵</span></button>
+    <div class="s-div" style="margin-top:auto"></div>
+    <button class="nb"        data-p="contacts">    <i class="fa-solid fa-address-book"></i>       <span class="tip">연락처</span></button>
+    <button class="nb"        data-p="stats">       <i class="fa-solid fa-chart-bar"></i>          <span class="tip">통계</span></button>
+    <button class="nb"        data-p="settings">    <i class="fa-solid fa-sliders"></i>            <span class="tip">설정</span></button>
+  </nav>
+
+  <!-- ── MAIN ── -->
+  <div id="main">
+
+    <!-- HEADER -->
+    <header id="hdr">
+      <div class="h-logo">K-<em>Facility</em></div>
+      <div class="srch">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="search" id="si" placeholder="작업기록, 장비, 메모 검색..."/>
+      </div>
+      <div class="h-right">
+        <button class="ibtn dot" id="btn-alarm"><i class="fa-solid fa-bell"></i></button>
+        <div class="ava" id="ava">KF</div>
+        <span class="uname" id="uname">관리자</span>
+        <button class="tsw" id="tsw"><div class="tsk" id="tsk"></div></button>
+      </div>
+    </header>
+
+    <!-- ==========================================
+      PAGE WRAPPER — 모든 페이지 구조 사전 정의
+      JS는 .page 에 .active 클래스만 토글
+    =========================================== -->
+    <div id="pages">
+
+      <!-- ==========================================
+        PAGE: HOME (홈 대시보드)
+      =========================================== -->
+      <section id="page-home" class="page active">
+        <div class="pi">
+          <div class="breadcrumb">
+            <span class="bc-ico">🏠</span><span class="bc-sep">/</span>
+            <span class="bc-cur">홈 대시보드</span>
+            <span class="bc-date" id="home-date"></span>
+          </div>
+
+          <!-- 상단 Bento 그리드 -->
+          <div class="bento-top">
+
+            <!-- 카드1: 최근 작업기록 -->
+            <div class="glass wcard">
+              <div class="card-head">
+                <div>
+                  <div class="slbl">최근 작업기록</div>
+                  <div class="ctitle">Before / After 요약</div>
+                </div>
+                <button class="btn-o" data-goto="records"><i class="fa-solid fa-plus"></i> 새 기록 추가</button>
+              </div>
+              <div class="thumb-row">
+                <div class="thumb">
+                  <div class="tph"><i class="fa-solid fa-camera"></i><span>Before</span></div>
+                  <div class="tlbl">BEFORE</div>
+                </div>
+                <div class="arw"><i class="fa-solid fa-arrow-right"></i></div>
+                <div class="thumb">
+                  <div class="tph tph-after"><i class="fa-solid fa-check-circle"></i><span>After</span></div>
+                  <div class="tlbl">AFTER</div>
+                </div>
+              </div>
+              <div class="mini-row">
+                <div class="mini">
+                  <div class="ml">최근 작업</div>
+                  <div class="mv">3F 전기패널 점검</div>
+                  <div class="md">2025.03.19</div>
+                </div>
+                <div class="mini">
+                  <div class="ml">이전 작업</div>
+                  <div class="mv">냉각탑 필터 교체</div>
+                  <div class="md">2025.03.15</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 카드2: 이번 달 로드맵 -->
+            <div class="glass rcard">
+              <div class="card-head">
+                <div>
+                  <div class="slbl">이번 달 로드맵</div>
+                  <div class="ctitle">3월 주요 일정</div>
+                </div>
+                <button class="btn-b" data-goto="roadmap">전체 보기 →</button>
+              </div>
+              <div class="ri"><div class="rdot done"></div><span class="rtxt">소방설비 정기 점검</span><span class="rdt">03/05</span><span class="rb rb-done">완료</span></div>
+              <div class="ri"><div class="rdot done"></div><span class="rtxt">전기 안전 검사</span><span class="rdt">03/12</span><span class="rb rb-done">완료</span></div>
+              <div class="ri"><div class="rdot prog"></div><span class="rtxt">냉난방기 필터 교체</span><span class="rdt">03/20</span><span class="rb rb-prog">진행중</span></div>
+              <div class="ri"><div class="rdot todo"></div><span class="rtxt">옥상 방수 점검</span><span class="rdt">03/25</span><span class="rb rb-todo">예정</span></div>
+              <div class="ri"><div class="rdot todo"></div><span class="rtxt">엘리베이터 정기검사</span><span class="rdt">03/28</span><span class="rb rb-todo">예정</span></div>
+            </div>
+
+            <!-- 카드3: 체크리스트 + 통계 (우측, 2행 span) -->
+            <div class="glass ccard">
+              <div class="slbl">오늘 체크리스트</div>
+              <div class="ck-prog-row">
+                <span id="ck-count">3 / 7 완료</span>
+                <span id="ck-pct">43%</span>
+              </div>
+              <div class="pw"><div class="pf" id="pf" style="width:43%"></div></div>
+              <div class="ck-list">
+                <div class="ci"><div class="chk on">✓</div><span class="ct done">소화기 위치 확인</span></div>
+                <div class="ci"><div class="chk on">✓</div><span class="ct done">3F 전등 교체</span></div>
+                <div class="ci"><div class="chk on">✓</div><span class="ct done">보일러실 점검</span></div>
+                <div class="ci"><div class="chk"></div><span class="ct">누수 여부 확인</span></div>
+                <div class="ci"><div class="chk"></div><span class="ct">냉각탑 수위 체크</span></div>
+                <div class="ci"><div class="chk"></div><span class="ct">비상구 점등 확인</span></div>
+                <div class="ci"><div class="chk"></div><span class="ct">일지 기록 업로드</span></div>
+              </div>
+              <div class="sdiv"></div>
+              <div class="slbl">이번 달 통계</div>
+              <div class="sgrid">
+                <div class="sbox"><div class="snum" style="color:var(--orange)">24</div><div class="slb2">완료 작업</div></div>
+                <div class="sbox"><div class="snum" style="color:var(--blue)">6</div><div class="slb2">미완료</div></div>
+                <div class="sbox"><div class="snum" style="color:var(--green)">8</div><div class="slb2">작업기록</div></div>
+                <div class="sbox"><div class="snum" style="color:var(--purple)">3</div><div class="slb2">메모 추가</div></div>
+              </div>
+            </div>
+
+            <!-- 카드4: 7개 메뉴 그리드 -->
+            <div class="msec">
+              <div class="slbl" style="margin-bottom:12px">메뉴</div>
+              <div class="mgrid">
+                <div class="gc mc" data-goto="electric">
+                  <div class="mi" style="background:rgba(224,92,10,.15)">⚡</div>
+                  <div class="mn">전기</div><div class="ms">전기설비 관리</div>
+                  <span class="mbg" style="background:rgba(224,92,10,.15);color:var(--orange)">기록 3건</span>
+                </div>
+                <div class="gc mc" data-goto="mechanical">
+                  <div class="mi" style="background:rgba(29,78,216,.15)">⚙️</div>
+                  <div class="mn">기계</div><div class="ms">기계설비 관리</div>
+                  <span class="mbg" style="background:rgba(29,78,216,.15);color:var(--blue)">점검 예정</span>
+                </div>
+                <div class="gc mc" data-goto="construction">
+                  <div class="mi" style="background:rgba(245,158,11,.15)">🔨</div>
+                  <div class="mn">영선</div><div class="ms">건축·인테리어</div>
+                  <span class="mbg" style="background:rgba(245,158,11,.15);color:var(--amber)">작업 1건</span>
+                </div>
+                <div class="gc mc" data-goto="fire">
+                  <div class="mi" style="background:rgba(244,63,94,.15)">🔥</div>
+                  <div class="mn">소방</div><div class="ms">소방설비 관리</div>
+                  <span class="mbg" style="background:rgba(16,185,129,.15);color:var(--green)">정상</span>
+                </div>
+                <div class="gc mc" data-goto="records">
+                  <div class="mi" style="background:rgba(16,185,129,.15)">📋</div>
+                  <div class="mn">작업기록</div><div class="ms">전체 기록 보기</div>
+                  <span class="mbg" style="background:rgba(16,185,129,.15);color:var(--green)">8건</span>
+                </div>
+                <div class="gc mc" data-goto="memo">
+                  <div class="mi" style="background:rgba(124,58,237,.15)">📒</div>
+                  <div class="mn">학습메모</div><div class="ms">노트 & 자료</div>
+                  <span class="mbg" style="background:rgba(124,58,237,.15);color:var(--purple)">메모 3건</span>
+                </div>
+                <div class="gc mc mc-wide" data-goto="roadmap">
+                  <div class="mi" style="background:rgba(29,78,216,.15)">📅</div>
+                  <div style="flex:1">
+                    <div class="mn">연간 로드맵</div>
+                    <div class="ms">2025년 전체 계획 · 월별 일정</div>
+                  </div>
+                  <div class="bar-prev">
+                    <div class="bar" style="height:24px;background:var(--green);opacity:.7"></div>
+                    <div class="bar" style="height:16px;background:var(--orange);opacity:.7"></div>
+                    <div class="bar" style="height:20px;background:var(--blue);opacity:.7"></div>
+                    <div class="bar" style="height:10px;background:rgba(255,255,255,.2)"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div><!-- /bento-top -->
         </div>
-        <div class="h-right">
-          <button class="ibtn dot" title="알림"><i class="fa-solid fa-bell"></i></button>
-          <div class="ava" id="ava" role="button" tabindex="0">KF</div>
-          <span class="uname" id="uname">관리자</span>
-          <button class="tsw" id="tsw" aria-label="테마 전환"><div class="tsk" id="tsk"></div></button>
-        </div>
-      </header>
-      <div id="page" role="main" aria-live="polite"></div>
-    </div>
-  </div>
+      </section>
 
-  <script src="main.js"></script>
+      <!-- ==========================================
+        PAGE: 전기 설비 (카테고리 매뉴얼 목록)
+      =========================================== -->
+      <section id="page-electric" class="page">
+        <div class="pi">
+          <div class="breadcrumb">
+            <span class="bc-ico bc-link" data-goto="home">🏠</span><span class="bc-sep">/</span>
+            <span class="bc-cur">전기 설비</span>
+          </div>
+          <!-- 히어로 -->
+          <div class="glass cat-hero">
+            <div class="cat-icon" style="background:rgba(224,92,10,.15)">⚡</div>
+            <div class="cat-info">
+              <div class="cat-name">전기 설비</div>
+              <div class="cat-sub">전기설비 점검 및 수리 절차 매뉴얼</div>
+              <div class="cat-count" id="electric-count">매뉴얼 0건</div>
+            </div>
+            <button class="btn-o" id="btn-add-electric">＋ 매뉴얼 추가</button>
+          </div>
+          <!-- 매뉴얼 목록 (JS가 채움) -->
+          <div class="slbl" style="margin-bottom:10px">매뉴얼 목록</div>
+          <div class="manual-list" id="manual-list-electric"></div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+        PAGE: 기계 설비
+      =========================================== -->
+      <section id="page-mechanical" class="page">
+        <div class="pi">
+          <div class="breadcrumb">
+            <span class="bc-ico bc-link" data-goto="home">🏠</span><span class="bc-sep">/</span>
+            <span class="bc-cur">기계 설비</span>
+          </div>
+          <div class="glass cat-hero">
+            <div class="cat-icon" style="background:rgba(29,78,216,.15)">⚙️</div>
+            <div class="cat-info">
+              <div class="cat-name">기계 설비</div>
+              <div class="cat-sub">기계설비 유지보수 절차 매뉴얼</div>
+              <div class="cat-count" id="mechanical-count">매뉴얼 0건</div>
+            </div>
+            <button class="btn-o" id="btn-add-mechanical">＋ 매뉴얼 추가</button>
+          </div>
+          <div class="slbl" style="margin-bottom:10px">매뉴얼 목록</div>
+          <div class="manual-list" id="manual-list-mechanical"></div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+        PAGE: 영선 / 보수
+      =========================================== -->
+      <section id="page-construction" class="page">
+        <div class="pi">
+          <div class="breadcrumb">
+            <span class="bc-ico bc-link" data-goto="home">🏠</span><span class="bc-sep">/</span>
+            <span class="bc-cur">영선 / 보수</span>
+          </div>
+          <div class="glass cat-hero">
+            <div class="cat-icon" style="background:rgba(245,158,11,.15)">🔨</div>
+            <div class="cat-info">
+              <div class="cat-name">영선 / 보수</div>
+              <div class="cat-sub">건축·인테리어 보수 절차 매뉴얼</div>
+              <div class="cat-count" id="construction-count">매뉴얼 0건</div>
+            </div>
+            <button class="btn-o" id="btn-add-construction">＋ 매뉴얼 추가</button>
+          </div>
+          <div class="slbl" style="margin-bottom:10px">매뉴얼 목록</div>
+          <div class="manual-list" id="manual-list-construction"></div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+        PAGE: 소방 설비
+      =========================================== -->
+      <section id="page-fire" class="page">
+        <div class="pi">
+          <div class="breadcrumb">
+            <span class="bc-ico bc-link" data-goto="home">🏠</span><span class="bc-sep">/</span>
+            <span class="bc-cur">소방 설비</span>
+          </div>
+          <div class="glass cat-hero">
+            <div class="cat-icon" style="background:rgba(244,63,94,.15)">🔥</div>
+            <div class="cat-info">
+              <div class="cat-name">소방 설비</div>
+              <div class="cat-sub">소방설비 점검 및 관리 절차 매뉴얼</div>
+              <div class="cat-count" id="fire-count">매뉴얼 0건</div>
+            </div>
+            <button class="btn-o" id="btn-add-fire">＋ 매뉴얼 추가</button>
+          </div>
+          <div class="slbl" style="margin-bottom:10px">매뉴얼 목록</div>
+          <div class="manual-list" id="manual-list-fire"></div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+        PAGE: 매뉴얼 상세
+        (JS가 data-id 읽어서 내용 채움)
+      =========================================== -->
+      <section id="page-manual-detail" class="page">
+        <div class="pi">
+          <div class="breadcrumb">
+            <span class="bc-ico bc-link" data-goto="home">🏠</span><span class="bc-sep">/</span>
+            <span class="bc-link" id="md-bread-cat" data-goto="electric">전기</span><span class="bc-sep">/</span>
+            <span class="bc-cur" id="md-bread-title">매뉴얼 상세</span>
+          </div>
+          <!-- 헤더 카드 -->
+          <div class="glass md-header-card">
+            <div class="md-cat-badge" id="md-cat-badge">⚡ 전기</div>
+            <h2 class="md-main-title" id="md-title">-</h2>
+            <div class="md-stat-row">
+              <span class="md-stat" id="md-stat-steps">단계 0</span>
+              <span class="md-stat" id="md-stat-supplies">준비물 0</span>
+              <span class="md-stat" id="md-stat-checklist">체크리스트 0항목</span>
+            </div>
+            <div class="md-tags-row" id="md-tags"></div>
+          </div>
+          <!-- 개요 -->
+          <div class="glass md-overview" id="md-overview-wrap">
+            <p id="md-overview-text"></p>
+          </div>
+          <!-- ① 준비물 -->
+          <div class="glass md-section" id="md-supplies-wrap">
+            <div class="md-sec-title"><span>📦</span> 준비물 / 자재 <span class="md-sec-count" id="md-supplies-count"></span></div>
+            <div class="supply-grid" id="md-supplies-list"></div>
+          </div>
+          <!-- ② 안전주의사항 -->
+          <div class="caution-section" id="md-cautions-wrap">
+            <div class="caution-header">⚠️ 안전주의사항 — 작업 전 필독</div>
+            <div class="caution-body" id="md-cautions-list"></div>
+          </div>
+          <!-- ③ 작업 절차 타임라인 -->
+          <div class="slbl" style="margin-bottom:12px">상세 작업 절차</div>
+          <div class="steps-wrap" id="md-steps-list"></div>
+          <!-- ④ 점검 체크리스트 -->
+          <div class="glass md-section" id="md-checklist-wrap">
+            <div class="md-sec-title">
+              <span>✅</span> 점검 체크리스트
+              <span class="md-sec-count" id="md-ck-counter">0/0</span>
+              <button class="ck-reset-btn" id="md-ck-reset">초기화</button>
+            </div>
+            <div class="ck-progress-wrap"><div class="ck-progress-fill" id="md-ck-bar" style="width:0%"></div></div>
+            <div class="ck-list">
+              <div class="ck-header">
+                <span class="ck-h-num">No.</span>
+                <span class="ck-h-item">점검 항목</span>
+                <span class="ck-h-check">확인</span>
+              </div>
+              <div id="md-ck-list"></div>
+            </div>
+          </div>
+          <!-- ⑤ 주의·팁 박스 -->
+          <div class="alert-box alert-caution" id="md-caution-box">
+            <span class="alert-icon">⚠️</span><div id="md-caution-text"></div>
+          </div>
+          <div class="alert-box alert-tip" id="md-tip-box">
+            <span class="alert-icon">💡</span><div id="md-tip-text"></div>
+          </div>
+          <!-- ⑥ 작업 기록하기 -->
+          <div class="glass md-action-bar">
+            <button class="btn-o" style="width:100%;justify-content:center;padding:13px" data-goto="records">
+              ＋ 이 작업 기록하기
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+        PAGE: 작업기록
+      =========================================== -->
+      <section id="page-records" class="page">
+        <div class="pi">
+          <div class="breadcrumb">
+            <span class="bc-ico bc-link" data-goto="home">🏠</span><span class="bc-sep">/</span>
+            <span class="bc-cur">작업기록</span>
+          </div>
+          <!-- 히어로 -->
+          <div class="glass log-hero">
+            <div class="log-hero-left">
+              <div class="log-hero-icon">📋</div>
+              <div>
+                <div style="font-size:18px;font-weight:700;color:var(--t1)">작업기록</div>
+                <div style="font-size:13px;color:var(--t3)">시설 작업 이력 관리</div>
+              </div>
+            </div>
+            <button class="btn-o" data-goto="records-form">＋ 새 기록</button>
+          </div>
+          <!-- 통계 바 -->
+          <div class="log-stats-row">
+            <div class="log-stat-box"><div class="log-stat-num" id="log-stat-total" style="color:var(--t1)">0</div><div class="log-stat-lbl">전체</div></div>
+            <div class="log-stat-box"><div class="log-stat-num" id="log-stat-done"  style="color:var(--green)">0</div><div class="log-stat-lbl">완료</div></div>
+            <div class="log-stat-box"><div class="log-stat-num" id="log-stat-prog"  style="color:var(--blue)">0</div><div class="log-stat-lbl">진행중</div></div>
+            <div class="log-stat-box"><div class="log-stat-num" id="log-stat-wait"  style="color:var(--amber)">0</div><div class="log-stat-lbl">대기</div></div>
+          </div>
+          <!-- 필터 -->
+          <div class="filter-wrap">
+            <div class="filter-scroll" id="log-cat-filter"></div>
+            <div class="filter-scroll" id="log-status-filter" style="margin-top:7px"></div>
+          </div>
+          <!-- 목록 (JS가 채움) -->
+          <div class="slbl" id="log-list-count" style="margin-bottom:10px">0건</div>
+          <div class="log-list" id="log-list"></div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+        PAGE: 작업기록 폼 (새 기록 / 수정)
+      =========================================== -->
+      <section id="page-records-form" class="page">
+        <div class="pi">
+          <div class="breadcrumb">
+            <span class="bc-ico bc-link" data-goto="home">🏠</span><span class="bc-sep">/</span>
+            <span class="bc-link" data-goto="records">작업기록</span><span class="bc-sep">/</span>
+            <span class="bc-cur" id="log-form-title">새 기록</span>
+          </div>
+          <div class="glass" style="padding:20px">
+            <!-- 작업 유형 (Dropdown) -->
+            <div class="lf-row">
+              <div class="lf-group">
+                <label class="lf-label">작업 유형</label>
+                <select class="lf-select" id="lf-cat">
+                  <option value="전기">⚡ 전기</option>
+                  <option value="기계">⚙️ 기계</option>
+                  <option value="영선">🔨 영선</option>
+                  <option value="소방">🔥 소방</option>
+                  <option value="기타">📋 기타</option>
+                </select>
+              </div>
+              <div class="lf-group">
+                <label class="lf-label">처리 상태</label>
+                <select class="lf-select" id="lf-status">
+                  <option value="완료">✅ 완료</option>
+                  <option value="진행중">🔄 진행중</option>
+                  <option value="대기">⏳ 대기</option>
+                </select>
+              </div>
+            </div>
+            <!-- 제목 -->
+            <div class="lf-group">
+              <label class="lf-label">작업 제목 *</label>
+              <input class="lf-input" id="lf-title" type="text"
+                     placeholder="예: 3층 분전반 MCB 교체"
+                     autocomplete="off" autocorrect="off" spellcheck="false"/>
+            </div>
+            <!-- 작업자 / 날짜 -->
+            <div class="lf-row">
+              <div class="lf-group">
+                <label class="lf-label">작업자</label>
+                <input class="lf-input" id="lf-worker" type="text" placeholder="이름"/>
+              </div>
+              <div class="lf-group">
+                <label class="lf-label">작업일</label>
+                <input class="lf-input" id="lf-date" type="date"/>
+              </div>
+            </div>
+            <!-- 상세 내용 -->
+            <div class="lf-group">
+              <label class="lf-label">상세 내용</label>
+              <textarea class="lf-textarea" id="lf-desc" rows="5"
+                        placeholder="작업 상세 내용, 특이사항, 교체 부품 등..."></textarea>
+            </div>
+            <!-- 📷 사진 업로드 -->
+            <div class="lf-group">
+              <label class="lf-label">현장 사진</label>
+              <!-- 사진 미리보기 -->
+              <div id="log-photo-preview"
+                   style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;min-height:0"></div>
+              <!-- 카메라/갤러리 버튼 -->
+              <div style="display:flex;gap:8px">
+                <button class="btn-gh" id="btn-log-camera"
+                        style="flex:1;justify-content:center;gap:8px">
+                  📷 카메라 촬영
+                </button>
+                <button class="btn-gh" id="btn-log-gallery"
+                        style="flex:1;justify-content:center;gap:8px">
+                  🖼 갤러리 선택
+                </button>
+              </div>
+              <!-- 카메라 전용 (capture) -->
+              <input type="file" id="log-photo-camera"
+                     accept="image/*" capture="environment"
+                     style="display:none" onchange="handleLogPhotoSelect(event)"/>
+              <!-- 갤러리 (multiple) -->
+              <input type="file" id="log-photo-input"
+                     accept="image/*" multiple
+                     style="display:none" onchange="handleLogPhotoSelect(event)"/>
+              <p style="font-size:12px;color:var(--t4);margin-top:6px">
+                최대 10MB / 장 · 자동 압축 저장
+              </p>
+            </div>
+            <!-- 저장 / 취소 버튼 -->
+            <div style="display:flex;gap:10px;margin-top:8px">
+              <button class="btn-gh" style="flex:1;justify-content:center" data-goto="records">취소</button>
+              <button class="btn-o"  style="flex:2;justify-content:center" id="btn-save-log">
+                💾 저장하기
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+        PAGE: 작업기록 상세
+      =========================================== -->
+      <section id="page-records-detail" class="page">
+        <div class="pi">
+          <div class="breadcrumb">
+            <span class="bc-ico bc-link" data-goto="home">🏠</span><span class="bc-sep">/</span>
+            <span class="bc-link" data-goto="records">작업기록</span><span class="bc-sep">/</span>
+            <span class="bc-cur" id="log-detail-breadcrumb">상세</span>
+          </div>
+          <div class="glass" style="padding:20px;margin-bottom:14px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+              <span class="lc-badge" id="log-detail-status-badge"></span>
+              <div style="display:flex;gap:7px">
+                <button class="lc-btn lc-btn-edit" id="btn-log-detail-edit">✏️ 수정</button>
+                <button class="lc-btn lc-btn-del"  id="btn-log-detail-del">🗑 삭제</button>
+              </div>
+            </div>
+            <h2 style="font-size:18px;font-weight:800;color:var(--t1);margin-bottom:12px" id="log-detail-title"></h2>
+            <div class="spg">
+              <div class="spi"><div class="spll">작업 유형</div><div class="spvl" id="log-detail-cat"></div></div>
+              <div class="spi"><div class="spll">상태</div><div class="spvl" id="log-detail-statusval"></div></div>
+              <div class="spi"><div class="spll">작업자</div><div class="spvl" id="log-detail-worker"></div></div>
+              <div class="spi"><div class="spll">작업일</div><div class="spvl" id="log-detail-date"></div></div>
+            </div>
+          </div>
+          <!-- 상세 내용 -->
+          <div class="glass" style="padding:18px;margin-bottom:14px" id="log-detail-desc-wrap">
+            <div class="slbl" style="margin-bottom:8px">상세 내용</div>
+            <p style="font-size:17px;color:var(--t2);line-height:1.8;white-space:pre-wrap" id="log-detail-desc"></p>
+          </div>
+          <!-- 첨부 사진 (JS openLogDetail이 채움) -->
+          <div class="glass" style="padding:18px;margin-bottom:14px;display:none" id="log-detail-photos">
+            <div class="slbl" style="margin-bottom:12px">📷 현장 사진</div>
+          </div>
+          <!-- 액션 버튼 -->
+          <div style="display:flex;gap:10px;margin-bottom:4px">
+            <button class="btn-o"  style="flex:2;justify-content:center" id="btn-log-detail-edit">✏️ 수정하기</button>
+            <button class="btn-gh" style="flex:1;justify-content:center" id="btn-log-detail-del">🗑 삭제</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+        PAGE: Before/After 상세
+      =========================================== -->
+      <section id="page-ba-detail" class="page">
+        <div class="pi">
+          <div class="breadcrumb">
+            <span class="bc-ico bc-link" data-goto="home">🏠</span><span class="bc-sep">/</span>
+            <span class="bc-link" data-goto="records">작업기록</span><span class="bc-sep">/</span>
+            <span class="bc-cur">Before / After</span>
+          </div>
+          <!-- 헤더 -->
+          <div class="glass" style="display:flex;align-items:center;gap:10px;padding:14px 18px;margin-bottom:16px;flex-wrap:wrap">
+            <div style="flex:1;min-width:0">
+              <div class="slbl">작업기록 #2025-0319</div>
+              <div class="ctitle">3F 전기패널 MCB 교체 작업</div>
+            </div>
+            <div class="spill"><div class="sdot"></div><span class="stxt">완료</span></div>
+          </div>
+          <!-- 메타 칩 -->
+          <div class="meta-chips">
+            <div class="glass mc2">👤 홍길동</div>
+            <div class="glass mc2">⏱ 4시간 20분</div>
+            <div class="glass mc2">📅 2025.03.19</div>
+            <div class="glass mc2">⚡ 전기</div>
+            <div class="glass mc2">📍 3층 분전반</div>
+          </div>
+          <!-- Before/After 그리드 -->
+          <div class="ba-grid">
+            <div class="glass-s" style="overflow:hidden">
+              <div class="ba-ch">
+                <div class="ba-cl" style="color:var(--red)"><div style="width:8px;height:8px;border-radius:50%;background:var(--red)"></div>BEFORE</div>
+                <span style="font-size:10px;color:var(--t4)">사진 4장</span>
+              </div>
+              <div style="font-size:14px;font-weight:600;color:var(--t1);padding:0 16px 10px">고장 전 상태</div>
+              <div class="bgal">
+                <div class="gi wide"><div class="gph"><div class="gi2">📷</div><div class="gt2">메인 사진</div></div></div>
+                <div class="gi"><div class="gph"><div class="gi2">📷</div><div class="gt2">상세 1</div></div></div>
+                <div class="gi"><div class="gph"><div class="gi2">📷</div><div class="gt2">상세 2</div></div></div>
+              </div>
+            </div>
+            <div class="glass-s" style="overflow:hidden">
+              <div class="ba-ch">
+                <div class="ba-cl" style="color:var(--green)"><div style="width:8px;height:8px;border-radius:50%;background:var(--green)"></div>AFTER</div>
+                <span style="font-size:10px;color:var(--t4)">사진 3장</span>
+              </div>
+              <div style="font-size:14px;font-weight:600;color:var(--t1);padding:0 16px 10px">수리 완료 상태</div>
+              <div class="bgal">
+                <div class="gi wide"><div class="gph"><div class="gi2">📷</div><div class="gt2">완료 사진</div></div></div>
+                <div class="gi"><div class="gph"><div class="gi2">📷</div><div class="gt2">교체 부품</div></div></div>
+                <div class="gi"><div class="gph"><div class="gi2">📷</div><div class="gt2">점검표</div></div></div>
+              </div>
+            </div>
+          </div>
+          <!-- 비교 슬라이더 -->
+          <div class="glass" style="margin-bottom:14px;padding:14px 16px 16px">
+            <div class="slbl" style="margin-bottom:10px">⇄ Before / After 비교 슬라이더</div>
+            <div class="ctk" id="ctk">
+              <div class="ctb"><span class="cfl">BEFORE</span></div>
+              <div class="cta" id="cta"><span class="cfl">AFTER</span></div>
+              <div class="cln" id="cln"></div>
+              <div class="chn" id="chn">⇄</div>
+            </div>
+            <div style="font-size:11px;color:var(--t4);text-align:center;margin-top:7px">← 드래그하여 비교 →</div>
+          </div>
+          <!-- 작업 상세 패널 -->
+          <div class="glass" style="padding:18px;margin-bottom:14px">
+            <div class="slbl" style="margin-bottom:12px">🔵 작업 상세 정보</div>
+            <div class="spg">
+              <div class="spi"><div class="spll">현재 상태</div><div class="spvl" style="color:var(--green)">✓ 완료</div></div>
+              <div class="spi"><div class="spll">작업자</div><div class="spvl">홍길동</div></div>
+              <div class="spi"><div class="spll">소요 시간</div><div class="spvl">4시간 20분</div></div>
+              <div class="spi"><div class="spll">부품 비용</div><div class="spvl">₩ 128,000</div></div>
+              <div class="spi"><div class="spll">분류</div><div class="spvl">전기 / 패널</div></div>
+              <div class="spi"><div class="spll">우선순위</div><div class="spvl" style="color:var(--amber)">⚠ 높음</div></div>
+              <div class="spi wide"><div class="spll">작업 메모</div><div class="spvl" style="font-weight:400;font-size:12px;line-height:1.7;color:var(--t2)">3F 분전반 MCB 과부하 트립 반복. B형 30A 차단기 교체 완료, 부하 재분배 처리.</div></div>
+            </div>
+          </div>
+          <!-- AI 요약 -->
+          <div class="glass" style="padding:18px;margin-bottom:14px">
+            <div style="display:flex;align-items:center;gap:9px;margin-bottom:12px">
+              <div class="ai-ic">✦</div>
+              <span style="font-size:11px;font-weight:700;letter-spacing:.07em;color:var(--t3);text-transform:uppercase">AI 분석 요약</span>
+              <span class="ai-bt">Beta</span>
+            </div>
+            <div style="font-size:13px;color:var(--t2);line-height:1.7">
+              이 고장 유형(<span class="ai-hi">MCB 과부하 트립</span>)은 최근 <span class="ai-hi">3회 반복 발생</span>했습니다.
+              <div class="ai-rc">💡 예방 조치 추천: 40A급 차단기 규격 상향 및 부하 분산 재검토 → 여름철 전 시행 권장</div>
+            </div>
+          </div>
+          <!-- 부품 목록 -->
+          <div class="glass" style="margin-bottom:14px;overflow:hidden">
+            <div style="padding:14px 16px 10px;font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--t3);text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.06)">🔧 사용 부품 / 자재</div>
+            <div class="pr"><div><div class="prn">MCB 차단기 (B형 30A)</div><div class="prs">LS산전 / BKN-b 30A</div></div><div class="prq">×2 — ₩96,000</div></div>
+            <div class="pr"><div><div class="prn">인슐레이션 테이프</div><div class="prs">3M 스카치 / 19mm</div></div><div class="prq">×1 — ₩4,000</div></div>
+            <div class="pr"><div><div class="prn">단자 접속 커버</div><div class="prs">범용 / 분전반용</div></div><div class="prq">×4 — ₩28,000</div></div>
+            <div style="display:flex;justify-content:flex-end;align-items:center;gap:12px;padding:12px 16px;border-top:1px solid rgba(255,255,255,.06)">
+              <span style="font-size:12px;color:var(--t3)">총 비용</span>
+              <span style="font-size:16px;font-weight:700;color:var(--t1)">₩ 128,000</span>
+            </div>
+          </div>
+          <!-- 액션 -->
+          <div style="display:flex;gap:10px">
+            <button class="btn-o" style="flex:2;padding:14px;justify-content:center">✏️ 수정하기</button>
+            <button class="btn-gh glass" style="flex:1;padding:14px;justify-content:center">📄 PDF</button>
+            <button class="btn-gh glass" style="flex:1;padding:14px;justify-content:center">🔗 공유</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+        PAGE: 학습메모
+      =========================================== -->
+      <section id="page-memo" class="page">
+        <div class="pi">
+          <div class="breadcrumb">
+            <span class="bc-ico bc-link" data-goto="home">🏠</span><span class="bc-sep">/</span>
+            <span class="bc-cur">학습메모</span>
+          </div>
+          <div class="glass memo-hero">
+            <div style="display:flex;align-items:center;gap:14px;flex:1">
+              <div class="log-hero-icon" style="background:rgba(124,58,237,.15)">📒</div>
+              <div>
+                <div style="font-size:18px;font-weight:700;color:var(--t1)">학습 메모</div>
+                <div style="font-size:13px;color:var(--t3)">기술 노트 & 현장 지식 아카이브</div>
+              </div>
+            </div>
+            <button class="btn-o" data-goto="memo-form">＋ 메모 추가</button>
+          </div>
+          <!-- 필터 -->
+          <div class="filter-wrap">
+            <div class="filter-scroll" id="memo-filter"></div>
+          </div>
+          <!-- 메모 그리드 (JS가 채움) -->
+          <div class="slbl" id="memo-list-count" style="margin-bottom:10px">0건</div>
+          <div class="memo-grid" id="memo-list"></div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+        PAGE: 학습메모 상세
+      =========================================== -->
+      <section id="page-memo-detail" class="page">
+        <div class="pi">
+          <div class="breadcrumb">
+            <span class="bc-ico bc-link" data-goto="home">🏠</span><span class="bc-sep">/</span>
+            <span class="bc-link" data-goto="memo">학습메모</span><span class="bc-sep">/</span>
+            <span class="bc-cur" id="memo-detail-breadcrumb">상세</span>
+          </div>
+          <div class="glass" style="padding:20px;margin-bottom:14px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:10px">
+              <span class="memo-cat-badge" id="memo-detail-cat-badge"></span>
+              <div style="display:flex;gap:7px">
+                <button class="lc-btn lc-btn-edit" id="btn-memo-detail-edit">✏️ 수정</button>
+                <button class="lc-btn lc-btn-del"  id="btn-memo-detail-del">🗑 삭제</button>
+              </div>
+            </div>
+            <h2 style="font-size:18px;font-weight:800;color:var(--t1);margin-bottom:6px" id="memo-detail-title"></h2>
+            <div style="font-size:11px;color:var(--t4);margin-bottom:14px" id="memo-detail-date"></div>
+            <div id="memo-detail-tags" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px"></div>
+            <div class="memo-content-box" id="memo-detail-content"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+        PAGE: 학습메모 폼
+      =========================================== -->
+      <section id="page-memo-form" class="page">
+        <div class="pi">
+          <div class="breadcrumb">
+            <span class="bc-ico bc-link" data-goto="home">🏠</span><span class="bc-sep">/</span>
+            <span class="bc-link" data-goto="memo">학습메모</span><span class="bc-sep">/</span>
+            <span class="bc-cur" id="memo-form-title">새 메모</span>
+          </div>
+          <div class="glass" style="padding:20px">
+            <div class="lf-row">
+              <div class="lf-group">
+                <label class="lf-label">카테고리</label>
+                <select class="lf-select" id="mf-cat">
+                  <option>전기</option><option>기계</option>
+                  <option>영선</option><option>소방</option><option>일반</option>
+                </select>
+              </div>
+              <div class="lf-group">
+                <label class="lf-label">작성일</label>
+                <input class="lf-input" id="mf-date" type="date"/>
+              </div>
+            </div>
+            <div class="lf-group">
+              <label class="lf-label">제목 *</label>
+              <input class="lf-input" id="mf-title" type="text" placeholder="메모 제목"/>
+            </div>
+            <div class="lf-group">
+              <label class="lf-label">태그 (쉼표 구분)</label>
+              <input class="lf-input" id="mf-tags" type="text" placeholder="예: MCB, 전기기초"/>
+            </div>
+            <div class="lf-group">
+              <label class="lf-label">내용 *</label>
+              <textarea class="lf-textarea" id="mf-content" rows="10" placeholder="학습 내용, 현장 메모, 규정 기준..."></textarea>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:4px">
+              <button class="btn-gh" style="flex:1;justify-content:center" data-goto="memo">취소</button>
+              <button class="btn-o"  style="flex:2;justify-content:center" id="btn-save-memo">💾 저장</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+        PAGE: 연간 로드맵
+      =========================================== -->
+      <section id="page-roadmap" class="page">
+        <div class="pi">
+          <div class="breadcrumb">
+            <span class="bc-ico bc-link" data-goto="home">🏠</span><span class="bc-sep">/</span>
+            <span class="bc-cur">연간 로드맵</span>
+          </div>
+          <div class="glass rm-hero">
+            <div style="display:flex;align-items:center;gap:14px;flex:1">
+              <div class="log-hero-icon" style="background:rgba(29,78,216,.15)">📅</div>
+              <div>
+                <div style="font-size:18px;font-weight:700;color:var(--t1)">연간 로드맵</div>
+                <div style="font-size:13px;color:var(--t3)">월별 법정·정기·계절 점검 일정</div>
+              </div>
+            </div>
+            <button class="btn-o" data-goto="roadmap-form">＋ 일정 추가</button>
+          </div>
+          <!-- 연간 미니맵 -->
+          <div class="glass" style="padding:16px;margin-bottom:14px">
+            <div class="slbl" style="margin-bottom:10px">2025년 전체 일정</div>
+            <div class="rm-year-grid" id="rm-year-grid"></div>
+            <div class="rm-legend">
+              <span class="rm-leg-item"><span class="rm-dot" style="background:var(--red)"></span>법정</span>
+              <span class="rm-leg-item"><span class="rm-dot" style="background:var(--blue)"></span>정기</span>
+              <span class="rm-leg-item"><span class="rm-dot" style="background:var(--green)"></span>계절</span>
+            </div>
+          </div>
+          <!-- 월 탭 -->
+          <div class="rm-month-tabs" id="rm-month-tabs"></div>
+          <!-- 월별 일정 목록 (JS가 채움) -->
+          <div class="slbl" id="rm-list-count" style="margin-bottom:10px">0건</div>
+          <div class="rm-list" id="rm-list"></div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+        PAGE: 로드맵 폼
+      =========================================== -->
+      <section id="page-roadmap-form" class="page">
+        <div class="pi">
+          <div class="breadcrumb">
+            <span class="bc-ico bc-link" data-goto="home">🏠</span><span class="bc-sep">/</span>
+            <span class="bc-link" data-goto="roadmap">연간 로드맵</span><span class="bc-sep">/</span>
+            <span class="bc-cur" id="rm-form-title">일정 추가</span>
+          </div>
+          <div class="glass" style="padding:20px">
+            <div class="lf-row">
+              <div class="lf-group">
+                <label class="lf-label">월</label>
+                <select class="lf-select" id="sf-month"></select>
+              </div>
+              <div class="lf-group">
+                <label class="lf-label">유형</label>
+                <select class="lf-select" id="sf-type">
+                  <option>법정</option><option>정기</option><option>계절</option>
+                </select>
+              </div>
+            </div>
+            <div class="lf-group">
+              <label class="lf-label">일정 제목 *</label>
+              <input class="lf-input" id="sf-title" type="text" placeholder="점검·작업 제목"/>
+            </div>
+            <div class="lf-group">
+              <label class="lf-label">설명</label>
+              <textarea class="lf-textarea" id="sf-desc" rows="4" placeholder="세부 내용, 준비사항..."></textarea>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:4px">
+              <button class="btn-gh" style="flex:1;justify-content:center" data-goto="roadmap">취소</button>
+              <button class="btn-o"  style="flex:2;justify-content:center" id="btn-save-schedule">💾 저장</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+        PAGE: 검색
+      =========================================== -->
+      <section id="page-search" class="page">
+        <div class="pi">
+          <div class="breadcrumb">
+            <span class="bc-ico bc-link" data-goto="home">🏠</span><span class="bc-sep">/</span>
+            <span class="bc-cur">검색</span>
+          </div>
+          <div class="glass" style="padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px">
+            <i class="fa-solid fa-magnifying-glass" style="color:var(--t3)"></i>
+            <input class="lf-input" id="search-input" type="search" placeholder="매뉴얼, 작업기록, 메모 검색..." style="border:none;background:transparent;padding:0"/>
+          </div>
+          <div id="search-results">
+            <div style="text-align:center;padding:40px 20px;color:var(--t4)">
+              <div style="font-size:32px;margin-bottom:10px;opacity:.3">🔍</div>
+              <div style="font-size:13px">검색어를 입력하세요</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+        PAGE: 연락처
+      =========================================== -->
+      <section id="page-contacts" class="page">
+        <div class="pi">
+          <div class="breadcrumb">
+            <span class="bc-ico bc-link" data-goto="home">🏠</span><span class="bc-sep">/</span>
+            <span class="bc-cur">연락처</span>
+          </div>
+          <div class="glass log-hero">
+            <div class="log-hero-left">
+              <div class="log-hero-icon" style="background:rgba(13,148,136,.15)">📇</div>
+              <div>
+                <div style="font-size:18px;font-weight:700;color:var(--t1)">연락처</div>
+                <div style="font-size:13px;color:var(--t3)">협력업체 및 담당자 연락처</div>
+              </div>
+            </div>
+            <button class="btn-o" id="btn-add-contact">＋ 추가</button>
+          </div>
+          <div class="contacts-list" id="contacts-list"></div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+        PAGE: 통계
+      =========================================== -->
+      <section id="page-stats" class="page">
+        <div class="pi">
+          <div class="breadcrumb">
+            <span class="bc-ico bc-link" data-goto="home">🏠</span><span class="bc-sep">/</span>
+            <span class="bc-cur">통계</span>
+          </div>
+          <div class="glass log-hero" style="margin-bottom:14px">
+            <div class="log-hero-left">
+              <div class="log-hero-icon" style="background:rgba(124,58,237,.15)">📊</div>
+              <div>
+                <div style="font-size:18px;font-weight:700;color:var(--t1)">통계</div>
+                <div style="font-size:13px;color:var(--t3)">작업 완료율 및 현황</div>
+              </div>
+            </div>
+          </div>
+          <div class="log-stats-row" style="margin-bottom:14px">
+            <div class="log-stat-box"><div class="log-stat-num" id="stats-total" style="color:var(--t1)">0</div><div class="log-stat-lbl">전체 작업</div></div>
+            <div class="log-stat-box"><div class="log-stat-num" id="stats-done"  style="color:var(--green)">0</div><div class="log-stat-lbl">완료</div></div>
+            <div class="log-stat-box"><div class="log-stat-num" id="stats-prog"  style="color:var(--blue)">0</div><div class="log-stat-lbl">진행중</div></div>
+            <div class="log-stat-box"><div class="log-stat-num" id="stats-memo"  style="color:var(--purple)">0</div><div class="log-stat-lbl">학습메모</div></div>
+          </div>
+          <div class="glass" style="padding:18px;text-align:center;color:var(--t4)">
+            <div style="font-size:32px;margin-bottom:10px;opacity:.3">📊</div>
+            <div style="font-size:13px">차트 기능 준비 중입니다</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================
+        PAGE: 설정
+      =========================================== -->
+      <section id="page-settings" class="page">
+        <div class="pi">
+          <div class="breadcrumb">
+            <span class="bc-ico bc-link" data-goto="home">🏠</span><span class="bc-sep">/</span>
+            <span class="bc-cur">설정</span>
+          </div>
+          <div class="glass" style="padding:18px;margin-bottom:14px">
+            <div class="slbl" style="margin-bottom:14px">계정</div>
+            <div class="settings-row">
+              <div><div class="settings-label">로그인 계정</div><div class="settings-desc" id="settings-user-email">-</div></div>
+              <button class="btn-gh" id="btn-logout" style="padding:8px 14px">로그아웃</button>
+            </div>
+          </div>
+          <div class="glass" style="padding:18px;margin-bottom:14px">
+            <div class="slbl" style="margin-bottom:14px">앱 설정</div>
+            <div class="settings-row">
+              <div><div class="settings-label">다크 모드</div><div class="settings-desc">현재 항상 다크 모드</div></div>
+              <button class="tsw" id="tsw2"><div class="tsk" style="left:22px"></div></button>
+            </div>
+            <div class="settings-row">
+              <div><div class="settings-label">Firebase 연결</div><div class="settings-desc">main.js FB_CFG 값 입력 후 SDK 주석 해제</div></div>
+              <span style="font-size:11px;color:var(--t3);background:rgba(255,255,255,.07);padding:4px 10px;border-radius:99px">미연결</span>
+            </div>
+          </div>
+          <div class="glass" style="padding:18px">
+            <div class="slbl" style="margin-bottom:14px">데이터</div>
+            <div class="settings-row">
+              <div><div class="settings-label">데이터 내보내기</div><div class="settings-desc">모든 기록을 JSON으로 저장</div></div>
+              <button class="btn-gh" id="btn-export" style="padding:8px 14px">내보내기</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div><!-- /pages -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<script src="main.js"></script>
 </body>
 </html>
