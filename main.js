@@ -579,19 +579,27 @@ function renderManualCat(catKey) {
   const cnt  = $(catKey + '-count'); if (cnt) cnt.textContent = '매뉴얼 ' + list.length + '건';
   const el   = $('manual-list-' + catKey); if (!el) return;
 
-  el.innerHTML = list.length ? list.map(m => `
+  el.innerHTML = list.length ? list.map(m => {
+    /* ★ imageUrl 있으면 썸네일 표시 */
+    const thumb = m.imageUrl
+      ? `<img src="${m.imageUrl}" onclick="event.stopPropagation();previewPhoto('${m.imageUrl}')"
+           class="mc-thumb" title="매뉴얼 대표 사진">`
+      : `<div class="mc-num-badge">${(m.steps||[]).length}<span>단계</span></div>`;
+    return `
     <div class="gc manual-card" onclick="viewManual('${catKey}','${m.id}')">
-      <div class="mc-num-badge">${(m.steps||[]).length}<span>단계</span></div>
+      ${thumb}
       <div class="mc-body">
         <div class="mc-title">${esc(m.title)}</div>
         <div class="mc-meta">
-          <span>준비물 ${(m.supplies||[]).length}개</span>
-          <span>체크리스트 ${(m.checklist||[]).length}항목</span>
+          <span>📦 준비물 ${(m.supplies||[]).length}개</span>
+          <span>✅ 체크리스트 ${(m.checklist||[]).length}항목</span>
+          <span>🔧 절차 ${(m.steps||[]).length}단계</span>
         </div>
         <div class="mc-tags">${(m.tags||[]).map(t=>`<span class="m-tag">${esc(t)}</span>`).join('')}</div>
       </div>
       <div class="mc-arrow">›</div>
-    </div>`).join('') :
+    </div>`;
+  }).join('') :
   `<div class="gc" style="padding:48px;text-align:center;color:var(--t4)">
     <div style="font-size:36px;opacity:.3;margin-bottom:12px">📋</div>
     <div style="font-size:15px">등록된 매뉴얼이 없습니다</div>
@@ -736,70 +744,189 @@ function updateCkUI(ckKey, checklist) {
   const b=$('md-ck-bar');     if(b) b.style.width=pct+'%';
 }
 
-/* ── 매뉴얼 추가/수정 모달 ── */
+/* ── 매뉴얼 추가/수정 모달 (5섹션 + 사진 업로드) ── */
 function openManualModal(catKey, id) {
-  S.editManualCat = catKey;
-  S.editManualId  = id || null;
+  S.editManualCat  = catKey;
+  S.editManualId   = id || null;
+  S.uploadPhotos   = [];           /* 사진 버퍼 초기화 */
+  S.photoTarget    = 'mf-photo-preview';
+  S.photoSide      = 'main';
   const m = id ? (manuals[catKey]||[]).find(x=>x.id===id) : null;
+
+  /* steps → 편집용 텍스트 변환: "제목|설명" 줄바꿈 */
+  const stepsText = (m?.steps||[]).map(s=>s.title+'|'+s.desc).join('\n');
+  /* checklist → 줄바꿈 텍스트 */
+  const ckText = (m?.checklist||[]).join('\n');
 
   openModal(`
     <div class="modal-title">
-      ${m ? '매뉴얼 수정' : '매뉴얼 추가'} — ${CAT_KEY_MAP[catKey]||catKey}
+      ${m?'매뉴얼 수정':'매뉴얼 추가'} — ${CAT_KEY_MAP[catKey]||catKey}
       <button class="modal-close" onclick="closeModal()">✕</button>
     </div>
+
+    <!-- 기본 정보 -->
     <div class="lf-group">
-      <label class="lf-label">제목 *</label>
-      <input class="lf-input" id="mf-title" type="text" value="${esc(m?.title||'')}" placeholder="매뉴얼 제목"/>
+      <label class="lf-label">📌 제목 *</label>
+      <input class="lf-input" id="mf-title" type="text"
+        value="${esc(m?.title||'')}" placeholder="매뉴얼 제목 (예: 분전반 MCB 교체)"/>
     </div>
-    <div class="lf-group">
-      <label class="lf-label">개요</label>
-      <textarea class="lf-textarea" id="mf-overview" rows="3" placeholder="이 매뉴얼의 목적과 주의사항 요약">${esc(m?.overview||'')}</textarea>
+    <div class="lf-row">
+      <div class="lf-group" style="margin:0">
+        <label class="lf-label">개요</label>
+        <textarea class="lf-textarea" id="mf-overview" rows="2"
+          placeholder="이 매뉴얼의 목적 요약">${esc(m?.overview||'')}</textarea>
+      </div>
+      <div class="lf-group" style="margin:0">
+        <label class="lf-label">태그 (쉼표 구분)</label>
+        <textarea class="lf-textarea" id="mf-tags" rows="2"
+          placeholder="MCB, 차단기, 전기">${esc((m?.tags||[]).join(', '))}</textarea>
+      </div>
     </div>
+
+    <div class="modal-section-divider">📦 섹션 1 — 준비물 / 자재</div>
     <div class="lf-group">
-      <label class="lf-label">태그 (쉼표 구분)</label>
-      <input class="lf-input" id="mf-tags" type="text" value="${esc((m?.tags||[]).join(', '))}" placeholder="예: MCB, 차단기, 전기"/>
+      <label class="lf-label">한 줄에 하나씩 입력</label>
+      <textarea class="lf-textarea" id="m-manual-tools" rows="4"
+        placeholder="드라이버(+/-)&#10;절연 장갑&#10;검전기&#10;교체용 MCB (동일 규격)">${esc((m?.supplies||[]).join('\n'))}</textarea>
     </div>
+
+    <div class="modal-section-divider">⚠️ 섹션 2 — 안전주의사항</div>
     <div class="lf-group">
-      <label class="lf-label">준비물 (줄바꿈으로 구분)</label>
-      <textarea class="lf-textarea" id="mf-supplies" rows="3" placeholder="드라이버\n절연장갑\n검전기">${esc((m?.supplies||[]).join('\n'))}</textarea>
+      <label class="lf-label">한 줄에 하나씩 입력</label>
+      <textarea class="lf-textarea" id="m-manual-safety" rows="4"
+        placeholder="주 차단기 OFF 후 작업&#10;검전기로 무전압 확인&#10;동일 용량 MCB만 사용">${esc((m?.cautions||[]).join('\n'))}</textarea>
     </div>
+
+    <div class="modal-section-divider">🔧 섹션 3 — 상세 작업 절차</div>
     <div class="lf-group">
-      <label class="lf-label">안전주의사항 (줄바꿈으로 구분)</label>
-      <textarea class="lf-textarea" id="mf-cautions" rows="3" placeholder="주 차단기 OFF 확인\n검전기 무전압 확인">${esc((m?.cautions||[]).join('\n'))}</textarea>
+      <label class="lf-label">형식: <code style="background:rgba(255,255,255,.1);padding:1px 6px;border-radius:4px">제목|설명</code> — 한 줄에 하나씩</label>
+      <textarea class="lf-textarea" id="m-manual-steps" rows="6"
+        placeholder="전원 차단 및 잠금|주 차단기를 OFF하고 검전기로 무전압 확인&#10;기존 MCB 제거|전선 분리 후 단자 위치 사진 촬영&#10;신규 MCB 설치|동일 규격 MCB를 딘레일에 고정&#10;투입 테스트|정상 전압 공급 확인">${esc(stepsText)}</textarea>
     </div>
+
+    <div class="modal-section-divider">✅ 섹션 4 — 점검 체크리스트</div>
     <div class="lf-group">
-      <label class="lf-label">최종 주의 (한 줄)</label>
-      <input class="lf-input" id="mf-caution" type="text" value="${esc(m?.caution||'')}" placeholder="활선 작업 절대 금지"/>
+      <label class="lf-label">한 줄에 하나씩 입력</label>
+      <textarea class="lf-textarea" id="m-manual-check" rows="5"
+        placeholder="주 차단기 OFF 확인&#10;검전기 무전압 확인&#10;MCB 사양 메모&#10;결선 사진 촬영&#10;투입 후 전압 측정">${esc(ckText)}</textarea>
+    </div>
+
+    <div class="modal-section-divider">💡 섹션 5 — 주의 및 Tip</div>
+    <div class="lf-group">
+      <label class="lf-label" id="m-manual-tip-label">최종 주의사항 (한 줄)</label>
+      <input class="lf-input" id="m-manual-tip" type="text"
+        value="${esc(m?.caution||'')}" placeholder="활선 작업 절대 금지. 반드시 정전 확인 후 진행"/>
     </div>
     <div class="lf-group">
       <label class="lf-label">Tip (한 줄)</label>
-      <input class="lf-input" id="mf-tip" type="text" value="${esc(m?.tip||'')}" placeholder="팁을 입력하세요"/>
+      <input class="lf-input" id="mf-tip" type="text"
+        value="${esc(m?.tip||'')}" placeholder="교체 후 12시간 모니터링 권장"/>
     </div>
+
+    <!-- 사진 등록 -->
+    <div class="modal-section-divider">📷 매뉴얼 대표 사진</div>
+    <div class="lf-group">
+      <label class="lf-label">등록된 사진은 매뉴얼 목록 썸네일로 표시됩니다</label>
+      <div id="mf-photo-preview" class="photo-preview-wrap" style="min-height:40px"></div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn-gh" style="flex:1;justify-content:center;font-size:13px"
+                onclick="triggerPhotoInput('camera','main','mf-photo-preview')">📷 카메라</button>
+        <button class="btn-gh" style="flex:1;justify-content:center;font-size:13px"
+                onclick="triggerPhotoInput('gallery','main','mf-photo-preview')">🖼 갤러리</button>
+      </div>
+      <p style="font-size:12px;color:var(--t4);margin-top:6px">800px 자동 압축 · Firebase Storage 저장</p>
+    </div>
+
     <div class="modal-actions">
       <button class="btn-gh" onclick="closeModal()">취소</button>
-      <button class="btn-o"  id="btn-save-manual" onclick="saveManual()">💾 저장</button>
+      <button class="btn-o" id="btn-save-manual" onclick="saveManual()">💾 저장</button>
     </div>`);
+
+  /* 기존 대표 사진 미리보기 */
+  if (m?.imageUrl) {
+    S.uploadPhotos = [{ url: m.imageUrl, existing: true, side: 'main', storagePath: m.imageStoragePath||'', file: null }];
+    renderPhotoPreview('mf-photo-preview', 'main');
+  }
 }
 
 async function saveManual() {
   const title = $('mf-title')?.value.trim();
-  if (!title) { toast('⚠️ 제목을 입력하세요'); return; }
+  if (!title) { toast('⚠️ 제목을 입력하세요'); $('mf-title')?.focus(); return; }
   const btn = $('btn-save-manual');
   if (btn) { btn.disabled=true; btn.textContent='저장 중...'; }
+  toast('📤 저장 중...');
 
   const catKey = S.editManualCat;
-  const existingM = S.editManualId ? (manuals[catKey]||[]).find(x=>x.id===S.editManualId) : null;
+
+  /* ── ① 5섹션 파싱 ── */
+
+  /* 섹션1: 준비물 */
+  const supplies = ($('m-manual-tools')?.value||'').split('\n').map(s=>s.trim()).filter(Boolean);
+
+  /* 섹션2: 안전주의사항 */
+  const cautions = ($('m-manual-safety')?.value||'').split('\n').map(s=>s.trim()).filter(Boolean);
+
+  /* 섹션3: 절차 — "제목|설명" 형식 파싱 */
+  const steps = ($('m-manual-steps')?.value||'').split('\n')
+    .map(line => line.trim()).filter(Boolean)
+    .map(line => {
+      const sep = line.indexOf('|');
+      if (sep === -1) return { title: line, desc: '', youtube: '' };
+      return { title: line.slice(0, sep).trim(), desc: line.slice(sep+1).trim(), youtube: '' };
+    });
+
+  /* 섹션4: 체크리스트 */
+  const checklist = ($('m-manual-check')?.value||'').split('\n').map(s=>s.trim()).filter(Boolean);
+
+  /* 섹션5: 주의 + Tip */
+  const caution = $('m-manual-tip')?.value.trim() || '';
+  const tip     = $('mf-tip')?.value.trim()       || '';
+
+  /* ── ② 대표 사진 Storage 업로드 ── */
+  let imageUrl         = '';
+  let imageStoragePath = '';
+  const photoBuf = S.uploadPhotos.filter(p => p.side === 'main');
+
+  if (photoBuf.length) {
+    const p = photoBuf[0];
+    if (p.existing) {
+      imageUrl         = p.url;
+      imageStoragePath = p.storagePath || '';
+    } else if (S.fbReady && !S.isGuest && storage && p.file) {
+      try {
+        const uid_  = S.user?.uid || 'guest';
+        const docId = S.editManualId || (db ? db.collection('manuals').doc().id : 'local_'+genId());
+        const fname = `manual_${Date.now()}.jpg`;
+        const spath = `manuals/${uid_}/${docId}/${fname}`;
+        const result = await uploadPhoto(p.file, spath);
+        imageUrl         = result.url;
+        imageStoragePath = result.storagePath;
+      } catch(uploadErr) {
+        console.warn('[매뉴얼 사진 업로드 실패]', uploadErr.message);
+        toast('⚠️ 사진 업로드 실패 (텍스트만 저장)');
+      }
+    } else {
+      /* 게스트: base64 그대로 */
+      imageUrl = p.url;
+    }
+  }
+
+  /* ── ③ Firestore 저장 객체 구성 ── */
   const data = {
-    cat:      catKey,
+    cat:              catKey,
     title,
-    overview: $('mf-overview')?.value.trim() || '',
-    tags:     ($('mf-tags')?.value||'').split(',').map(t=>t.trim()).filter(Boolean),
-    supplies: ($('mf-supplies')?.value||'').split('\n').map(s=>s.trim()).filter(Boolean),
-    cautions: ($('mf-cautions')?.value||'').split('\n').map(s=>s.trim()).filter(Boolean),
-    caution:  $('mf-caution')?.value.trim() || '',
-    tip:      $('mf-tip')?.value.trim() || '',
-    steps:    existingM?.steps    || [],
-    checklist:existingM?.checklist|| [],
+    overview:         $('mf-overview')?.value.trim() || '',
+    tags:             ($('mf-tags')?.value||'').split(',').map(t=>t.trim()).filter(Boolean),
+    /* ★ 5섹션 데이터 */
+    supplies,          /* 준비물 배열 */
+    cautions,          /* 안전주의사항 배열 */
+    steps,             /* 절차 [{title,desc,youtube}] */
+    checklist,         /* 체크리스트 배열 */
+    caution,           /* 최종 주의 (한 줄) */
+    tip,               /* Tip (한 줄) */
+    /* ★ 대표 사진 */
+    imageUrl,
+    imageStoragePath,
     updatedAt: new Date().toISOString(),
   };
 
@@ -811,21 +938,23 @@ async function saveManual() {
         data.createdAt = new Date().toISOString();
         await db.collection('manuals').add(data);
       }
-      /* onSnapshot이 자동 반영 */
+      /* onSnapshot이 자동으로 manuals 배열 갱신 + 카테고리 목록 재렌더 */
     } else {
-      /* 로컬 */
+      /* 게스트 / 오프라인 */
       if (!manuals[catKey]) manuals[catKey] = [];
       if (S.editManualId) {
         const idx = manuals[catKey].findIndex(x=>x.id===S.editManualId);
-        if (idx!==-1) manuals[catKey][idx] = { id:S.editManualId, ...data };
+        if (idx !== -1) manuals[catKey][idx] = { id: S.editManualId, ...data };
       } else {
-        manuals[catKey].push({ id:'local_'+genId(), ...data });
+        manuals[catKey].push({ id: 'local_'+genId(), ...data });
       }
       renderManualCat(catKey);
     }
+    S.uploadPhotos = [];
     toast('✅ 저장됐습니다');
     closeModal();
   } catch(e) {
+    console.error('[saveManual]', e);
     toast('⚠️ 저장 실패: '+e.message);
     if (btn) { btn.disabled=false; btn.textContent='💾 저장'; }
   }
