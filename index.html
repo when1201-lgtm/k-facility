@@ -493,6 +493,31 @@ mark{background:transparent;color:var(--primary);font-weight:800}
 </head>
 <body>
 
+<!-- ══ 초기 로딩 스피너 ══
+     JS 실행 전부터 표시. SDK 로드 완료 후 showAuthLoading()이 이 엘리먼트를 재사용.
+     인증 결과에 따라 showAppScreen() 또는 showLoginScreen()이 제거함. -->
+<div id="auth-spinner" style="
+  position:fixed;inset:0;
+  background:#f5f6fa;
+  z-index:99999;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:14px">
+  <div style="
+    width:40px;height:40px;
+    border:3px solid #e2e6ef;
+    border-top-color:#3b5bdb;
+    border-radius:50%;
+    animation:_kspin .8s linear infinite">
+  </div>
+  <p style="font-size:14px;color:#8890a8;font-weight:600;font-family:sans-serif">
+    로그인 확인 중...
+  </p>
+  <style>@keyframes _kspin{to{transform:rotate(360deg)}}</style>
+</div>
+
 <!-- ══ LOGIN SCREEN ══ -->
 <div id="login-screen" style="display:none">
   <div class="login-card">
@@ -2416,12 +2441,12 @@ function closeSidebar(){
   let loaded = 0, failed = 0;
   let sdkReady = false;
 
-  // SDK 로드 타임아웃: 10초 안에 안 되면 경고
+  // SDK 로드 타임아웃: 10초 안에 안 되면 로그인 화면으로 복구
   const sdkTimeout = setTimeout(() => {
     if(!sdkReady){
-      console.error('[SDK] 로드 타임아웃 — CDN 차단 또는 네트워크 오류 가능성');
-      const btn = document.getElementById('google-btn-text');
-      if(btn) btn.textContent = 'Firebase 연결 실패 (네트워크 확인)';
+      console.error('[SDK] 로드 타임아웃 — CDN 차단 또는 네트워크 오류');
+      showLoginScreen();
+      showToast('⚠️ Firebase 연결 실패 — 로컬 모드를 사용하세요');
     }
   }, 10000);
 
