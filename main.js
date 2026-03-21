@@ -512,34 +512,68 @@ function renderHome() {
   const de = $('home-date');
   if (de) de.textContent = new Date().toLocaleDateString('ko-KR', {year:'numeric',month:'long',day:'numeric',weekday:'short'});
 
-  /* 최근 작업 2건 — imageUrl 썸네일 포함 */
+  /* 최근 작업 2건 — Before/After 나란히 + 큰 이미지 */
   const mr = $('home-mini-row');
   if (mr) {
     if (logs.length) {
       mr.innerHTML = logs.slice(0, 2).map(l => {
-        /* imageUrl > beforePhotos[0] > photos[0] 순서로 썸네일 */
-        const imgSrc = l.imageUrl || (l.beforePhotos||[])[0] || (l.photos||[])[0] || '';
+        const beforeSrc = (l.beforePhotos||[])[0] || l.imageUrl || (l.photos||[])[0] || '';
+        const afterSrc  = (l.afterPhotos||[])[0]  || (l.photos||[])[1] || '';
+        const sc = STATUS_COLOR[l.status] || 'var(--t3)';
+
+        /* Before/After 사진이 모두 있으면 나란히, 하나만 있으면 단독 */
+        const photoHtml = (beforeSrc && afterSrc) ? `
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px;height:120px">
+            <div style="position:relative;overflow:hidden">
+              <img src="${beforeSrc}"
+                style="width:100%;height:120px;object-fit:cover;display:block">
+              <span style="position:absolute;bottom:4px;left:4px;background:rgba(244,63,94,.8);
+                color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px">BEFORE</span>
+            </div>
+            <div style="position:relative;overflow:hidden">
+              <img src="${afterSrc}"
+                style="width:100%;height:120px;object-fit:cover;display:block">
+              <span style="position:absolute;bottom:4px;left:4px;background:rgba(16,185,129,.8);
+                color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px">AFTER</span>
+            </div>
+          </div>` : beforeSrc ? `
+          <div style="height:120px;overflow:hidden">
+            <img src="${beforeSrc}"
+              style="width:100%;height:120px;object-fit:cover;display:block">
+          </div>` : `
+          <div style="height:80px;background:rgba(255,255,255,.05);
+            display:flex;align-items:center;justify-content:center;
+            font-size:28px;color:var(--t4)">${CAT_ICON[l.cat]||'📋'}</div>`;
+
         return `
-        <div class="mini home-log-mini" style="cursor:pointer;padding:0;overflow:hidden"
+        <div class="mini" style="cursor:pointer;padding:0;overflow:hidden;border-radius:12px;
+             border:1px solid rgba(255,255,255,.1);flex:1;min-width:140px"
              onclick="openLogDetail('${l.id}')">
-          ${imgSrc
-            ? `<img src="${imgSrc}" style="width:100%;height:60px;object-fit:cover;display:block;border-radius:8px 8px 0 0">`
-            : `<div style="width:100%;height:40px;background:rgba(255,255,255,.05);border-radius:8px 8px 0 0;display:flex;align-items:center;justify-content:center;font-size:18px">${CAT_ICON[l.cat]||'📋'}</div>`
-          }
-          <div style="padding:8px 10px">
-            <div class="ml">${esc(l.cat||'')} · ${esc(l.status||'')}</div>
-            <div class="mv" style="font-size:13px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(l.title)}</div>
-            <div class="md">${l.date||''}</div>
+          ${photoHtml}
+          <div style="padding:10px 12px">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+              <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;
+                background:${sc}22;color:${sc};border:1px solid ${sc}44">${esc(l.status||'')}</span>
+              <span style="font-size:11px;color:var(--t3)">${esc(l.cat||'')}</span>
+            </div>
+            <div style="font-size:13px;font-weight:600;color:var(--t1);
+              white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(l.title)}</div>
+            <div style="font-size:11px;color:var(--t4);margin-top:3px">
+              ${l.worker?esc(l.worker)+' · ':''}${l.date||''}
+            </div>
           </div>
         </div>`;
       }).join('');
     } else {
       mr.innerHTML = `
-        <div class="mini" style="opacity:.5;font-size:13px;color:var(--t3);text-align:center;padding:16px">
-          <div style="font-size:24px;margin-bottom:6px">📋</div>
-          작업기록 없음
-        </div>
-        <div class="mini" style="opacity:.3"></div>`;
+        <div class="mini" style="opacity:.5;font-size:13px;color:var(--t3);
+          text-align:center;padding:24px;border-radius:12px;
+          border:1px dashed rgba(255,255,255,.12);flex:1">
+          <div style="font-size:28px;margin-bottom:8px;opacity:.4">📋</div>
+          작업기록 없음<br>
+          <button class="btn-o" style="margin:12px auto 0;display:flex;font-size:12px;padding:7px 14px"
+            onclick="openLogModal()">＋ 첫 기록 작성</button>
+        </div>`;
     }
   }
 
@@ -843,13 +877,19 @@ function openManualModal(catKey, id) {
     </div>
 
     <div class="modal-section-divider">💡 섹션 5 — 주의사항 / Tip</div>
-    <div class="lf-group">
-      <label class="lf-label">주의사항과 Tip을 각각 한 줄씩 입력</label>
-      <textarea class="lf-textarea" id="mf-tip" rows="3"
-        placeholder="주의: 활선 작업 절대 금지&#10;Tip: 교체 후 12시간 모니터링 권장">${esc([m?.caution, m?.tip].filter(Boolean).join('\n'))}</textarea>
-      <p style="font-size:12px;color:var(--t4);margin-top:4px">
-        첫 줄 → 주의사항(⚠️), 이후 줄 → Tip(💡)으로 자동 분리 저장됩니다
-      </p>
+    <div class="lf-row">
+      <div class="lf-group" style="margin:0">
+        <label class="lf-label">⚠️ 최종 주의사항</label>
+        <input class="lf-input" id="mf-tip-caution" type="text"
+          value="${esc(m?.caution||'')}"
+          placeholder="활선 작업 절대 금지"/>
+      </div>
+      <div class="lf-group" style="margin:0">
+        <label class="lf-label">💡 Tip</label>
+        <input class="lf-input" id="mf-tip" type="text"
+          value="${esc(m?.tip||'')}"
+          placeholder="교체 후 12시간 모니터링 권장"/>
+      </div>
     </div>
 
     <!-- 사진 등록 (file input 모달 내 직접 embed) -->
@@ -887,31 +927,48 @@ function openManualModal(catKey, id) {
 function handleManualPhoto(e) {
   const files = [...e.target.files];
   if (!files.length) return;
-  files.forEach(file => {
+  const MAX = 3;  /* 매뉴얼 대표 사진 최대 3장 */
+  files.slice(0, MAX).forEach(file => {
     const reader = new FileReader();
     reader.onload = ev => {
-      /* side='main' 으로 업로드 버퍼에 추가 */
-      S.uploadPhotos = S.uploadPhotos.filter(p => p.side !== 'main'); /* 기존 1장 교체 */
-      S.uploadPhotos.push({ file, url: ev.target.result, existing: false, side: 'main', storagePath: '' });
-      /* 미리보기 갱신 */
-      const wrap = $('mf-photo-preview');
-      if (wrap) {
-        wrap.innerHTML = S.uploadPhotos.filter(p=>p.side==='main').map((p,i) => `
-          <div class="photo-preview-item">
-            <img src="${p.url}" onclick="previewPhoto('${p.url}')" style="width:80px;height:80px;object-fit:cover;border-radius:10px;border:1px solid rgba(255,255,255,.15)">
-            <button class="photo-preview-del" onclick="removeManualPhoto()">×</button>
-          </div>`).join('');
+      const cur = S.uploadPhotos.filter(p => p.side === 'main');
+      if (cur.length >= MAX) {
+        toast('사진은 최대 ' + MAX + '장까지 등록 가능합니다');
+        return;
       }
+      S.uploadPhotos.push({ file, url: ev.target.result, existing: false, side: 'main', storagePath: '' });
+      _refreshManualPhotoPreview();
     };
     reader.readAsDataURL(file);
   });
   e.target.value = '';
 }
 
-function removeManualPhoto() {
-  S.uploadPhotos = S.uploadPhotos.filter(p => p.side !== 'main');
+function removeManualPhoto(idx) {
+  /* side=main 인 것 중 idx번째 제거 */
+  let mainCount = 0;
+  S.uploadPhotos = S.uploadPhotos.filter(p => {
+    if (p.side !== 'main') return true;
+    return mainCount++ !== idx;
+  });
+  _refreshManualPhotoPreview();
+}
+
+function _refreshManualPhotoPreview() {
   const wrap = $('mf-photo-preview');
-  if (wrap) wrap.innerHTML = '';
+  if (!wrap) return;
+  const list = S.uploadPhotos.filter(p => p.side === 'main');
+  if (!list.length) {
+    wrap.innerHTML = '<div style="font-size:12px;color:var(--t4);padding:6px 0">사진 없음</div>';
+    return;
+  }
+  wrap.innerHTML = list.map((p, i) => `
+    <div class="photo-preview-item">
+      <img src="${p.url}" onclick="previewPhoto('${p.url}')"
+        style="width:80px;height:80px;object-fit:cover;border-radius:10px;
+               border:1px solid rgba(255,255,255,.15);cursor:zoom-in">
+      <button class="photo-preview-del" onclick="removeManualPhoto(${i})">×</button>
+    </div>`).join('');
 }
 
 async function saveManual() {
@@ -945,10 +1002,9 @@ async function saveManual() {
   /* 섹션4: 체크리스트 */
   const checklist = ($('mf-check')?.value||'').split('\n').map(s=>s.trim()).filter(Boolean);
 
-  /* 섹션5: mf-tip textarea — 첫 줄=주의사항, 나머지=Tip */
-  const tipLines = ($('mf-tip')?.value||'').split('\n').map(l=>l.trim()).filter(Boolean);
-  const caution  = tipLines[0] || '';
-  const tip      = tipLines.slice(1).join(' / ') || '';
+  /* 섹션5: 주의사항(mf-tip-caution) + Tip(mf-tip) 분리 읽기 */
+  const caution = $('mf-tip-caution')?.value.trim() || $('mf-tip')?.value.trim() || '';
+  const tip     = $('mf-tip')?.value.trim() || '';
 
   /* ── ② 대표 사진 Storage 업로드 ── */
   let imageUrl         = '';
@@ -1021,6 +1077,7 @@ async function saveManual() {
     S.uploadPhotos = [];
     toast('✅ 저장됐습니다');
     closeModal();
+    goto(catKey);           /* ★ 저장 후 해당 카테고리 목록으로 이동 */
   } catch(e) {
     console.error('[saveManual]', e);
     toast('⚠️ 저장 실패: '+e.message);
@@ -1373,8 +1430,8 @@ async function saveLog() {
 
     S.editLogId = null;
     toast('✅ 저장됐습니다');
-    closeModal();
-    if (S.currentPage==='records') renderRecords();
+    closeModal();           /* 모달 닫기 */
+    goto('records');        /* ★ 무조건 목록으로 이동 (무한 루프 방지) */
 
   } catch(e) {
     console.error('[saveLog]', e);
@@ -1815,6 +1872,7 @@ window.saveMemo         = saveMemo;
 window.openManualModal  = openManualModal;
 window.handleManualPhoto = handleManualPhoto;
 window.removeManualPhoto = removeManualPhoto;
+window._refreshManualPhotoPreview = _refreshManualPhotoPreview;
 window.saveManual       = saveManual;
 window.deleteManual     = deleteManual;
 window.viewManual       = viewManual;
