@@ -870,9 +870,11 @@ function renderRecords() {
 
   ll.innerHTML = list.length ? list.map(l => {
     const sc = STATUS_COLOR[l.status]||'var(--t3)';
-    const thumb = (l.photos||[])[0]
-      ? `<img src="${l.photos[0]}" onclick="event.stopPropagation();previewPhoto('${l.photos[0]}')"
-           style="width:56px;height:56px;border-radius:9px;object-fit:cover;flex-shrink:0;border:1px solid rgba(255,255,255,.12);cursor:zoom-in">`
+    /* ★ imageUrl 우선 → beforePhotos[0] → photos[0] 순으로 썸네일 */
+    const thumbUrl = l.imageUrl || (l.beforePhotos||[])[0] || (l.photos||[])[0] || '';
+    const thumb = thumbUrl
+      ? `<img src="${thumbUrl}" onclick="event.stopPropagation();previewPhoto('${thumbUrl}')"
+           style="width:56px;height:56px;border-radius:9px;object-fit:cover;flex-shrink:0;border:1px solid rgba(255,255,255,.14);cursor:zoom-in">`
       : '';
     return `
     <div class="gc log-card" onclick="openLogDetail('${l.id}')">
@@ -927,14 +929,35 @@ function openLogDetail(id) {
   const dw=$('log-detail-desc-wrap'); const de=$('log-detail-desc');
   if(dw&&de){ if(l.desc){dw.style.display='';de.textContent=l.desc;}else{dw.style.display='none';} }
 
-  /* 사진 */
-  const pw=$('log-detail-photos'); const pg=$('log-detail-photos-grid');
-  if(pw&&pg){
-    const photos=l.photos||[];
-    if(photos.length){
+  /* Before / After 사진 그리드 */
+  const pw=$('log-detail-photos');
+  if(pw){
+    const before = l.beforePhotos || (l.photos||[]).slice(0,1);
+    const after  = l.afterPhotos  || (l.photos||[]).slice(1);
+    if(before.length || after.length){
       pw.style.display='';
-      pg.innerHTML=photos.map(url=>`<img src="${url}" onclick="previewPhoto('${url}')"
-        style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;cursor:zoom-in;border:1px solid rgba(255,255,255,.12)">`).join('');
+      pw.innerHTML = `
+        <div class="slbl" style="margin-bottom:14px">📷 작업 전/후 사진 비교</div>
+        <div class="ba-detail-grid">
+          <!-- BEFORE -->
+          <div class="ba-detail-col">
+            <div class="ba-col-header ba-col-before">🔴 BEFORE</div>
+            <div class="ba-col-body">
+              ${before.length
+                ? before.map(u=>`<img src="${u}" onclick="previewPhoto('${u}')" class="ba-detail-img">`).join('')
+                : '<div class="ba-no-photo">사진 없음</div>'}
+            </div>
+          </div>
+          <!-- AFTER -->
+          <div class="ba-detail-col">
+            <div class="ba-col-header ba-col-after">🟢 AFTER</div>
+            <div class="ba-col-body">
+              ${after.length
+                ? after.map(u=>`<img src="${u}" onclick="previewPhoto('${u}')" class="ba-detail-img">`).join('')
+                : '<div class="ba-no-photo">사진 없음</div>'}
+            </div>
+          </div>
+        </div>`;
     }else{pw.style.display='none';}
   }
 
@@ -986,62 +1009,95 @@ function openLogModal(id) {
       <label class="lf-label">상세 내용</label>
       <textarea class="lf-textarea" id="lm-desc" rows="4" placeholder="작업 내용, 특이사항, 교체 부품...">${esc(l?.desc||'')}</textarea>
     </div>
+    <!-- ★ Before / After 사진 업로드 섹션 -->
     <div class="lf-group">
-      <label class="lf-label">현장 사진</label>
-      <div id="lm-photo-preview" class="photo-preview-wrap"></div>
-      <div style="display:flex;gap:8px;margin-top:8px">
-        <button class="btn-gh" style="flex:1;justify-content:center" onclick="triggerPhotoInput('camera')">📷 카메라</button>
-        <button class="btn-gh" style="flex:1;justify-content:center" onclick="triggerPhotoInput('gallery')">🖼 갤러리</button>
+      <label class="lf-label">현장 사진 (Before / After)</label>
+      <!-- BEFORE -->
+      <div class="ba-upload-section">
+        <div class="ba-upload-header ba-upload-before">
+          <span>🔴 BEFORE — 작업 전 상태</span>
+        </div>
+        <div id="lm-before-preview" class="photo-preview-wrap" style="min-height:40px;padding:6px 0"></div>
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <button class="btn-gh" style="flex:1;justify-content:center;font-size:12px" onclick="triggerPhotoInput('camera','before','lm-before-preview')">📷 카메라</button>
+          <button class="btn-gh" style="flex:1;justify-content:center;font-size:12px" onclick="triggerPhotoInput('gallery','before','lm-before-preview')">🖼 갤러리</button>
+        </div>
       </div>
-      <p style="font-size:12px;color:var(--t4);margin-top:6px">최대 10MB/장 · 800px 자동 압축</p>
+      <!-- AFTER -->
+      <div class="ba-upload-section" style="margin-top:10px">
+        <div class="ba-upload-header ba-upload-after">
+          <span>🟢 AFTER — 작업 후 상태</span>
+        </div>
+        <div id="lm-after-preview" class="photo-preview-wrap" style="min-height:40px;padding:6px 0"></div>
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <button class="btn-gh" style="flex:1;justify-content:center;font-size:12px" onclick="triggerPhotoInput('camera','after','lm-after-preview')">📷 카메라</button>
+          <button class="btn-gh" style="flex:1;justify-content:center;font-size:12px" onclick="triggerPhotoInput('gallery','after','lm-after-preview')">🖼 갤러리</button>
+        </div>
+      </div>
+      <p style="font-size:12px;color:var(--t4);margin-top:8px">📱 최대 10MB/장 · 800px 자동 압축 저장</p>
     </div>
     <div class="modal-actions">
       <button class="btn-gh" onclick="closeModal()">취소</button>
       <button class="btn-o" id="btn-save-log" onclick="saveLog()">💾 저장</button>
     </div>`);
 
-  /* 기존 사진 미리보기 */
-  if (l && (l.photos||[]).length) {
-    S.uploadPhotos = (l.photos||[]).map((url,i) => ({
-      url, existing:true, storagePath:(l.storagePaths||[])[i]||'', file:null
-    }));
-    renderPhotoPreview('lm-photo-preview');
+  /* 기존 사진 미리보기 — Before / After 분리 */
+  if (l) {
+    const before = l.beforePhotos || (l.photos||[]).slice(0,1);
+    const after  = l.afterPhotos  || (l.photos||[]).slice(1);
+    S.uploadPhotos = [
+      ...before.map((url,i) => ({ url, existing:true, side:'before', storagePath:(l.storagePaths||[])[i]||'', file:null })),
+      ...after.map((url,i)  => ({ url, existing:true, side:'after',  storagePath:(l.storagePaths||[])[before.length+i]||'', file:null })),
+    ];
+    renderPhotoPreview('lm-before-preview', 'before');
+    renderPhotoPreview('lm-after-preview',  'after');
   }
 }
 
-/* 사진 input 트리거 */
-function triggerPhotoInput(type) {
-  S.photoTarget = 'lm-photo-preview';
+/* 사진 input 트리거 (type, side, wrapperId 모두 지원) */
+function triggerPhotoInput(type, side, wrapperId) {
+  S.photoTarget  = wrapperId || 'lm-before-preview';
+  S.photoSide    = side || 'before';
   const inp = $(type==='camera' ? 'photo-input-camera' : 'photo-input-gallery');
   if (inp) { inp.onchange = handlePhotoSelect; inp.click(); }
 }
 
 function handlePhotoSelect(e) {
-  const files = [...e.target.files];
+  const files  = [...e.target.files];
+  const side   = S.photoSide   || 'before';
+  const target = S.photoTarget || 'lm-before-preview';
   if (!files.length) return;
   files.forEach(file => {
     const reader = new FileReader();
     reader.onload = ev => {
-      S.uploadPhotos.push({ file, url:ev.target.result, existing:false, storagePath:'' });
-      renderPhotoPreview(S.photoTarget || 'lm-photo-preview');
+      S.uploadPhotos.push({ file, url:ev.target.result, existing:false, side, storagePath:'' });
+      renderPhotoPreview(target, side);
     };
     reader.readAsDataURL(file);
   });
   e.target.value = '';
 }
 
-function renderPhotoPreview(wrapperId) {
+function renderPhotoPreview(wrapperId, side) {
   const wrap = $(wrapperId); if (!wrap) return;
-  wrap.innerHTML = S.uploadPhotos.map((p,i) => `
-    <div class="photo-preview-item">
-      <img src="${p.url}" onclick="previewPhoto('${p.url}')">
-      <button class="photo-preview-del" onclick="removeUploadPhoto(${i})">×</button>
-    </div>`).join('');
+  /* side가 지정되면 해당 side 사진만, 없으면 전체 표시 */
+  const list = side
+    ? S.uploadPhotos.map((p,i)=>({...p,_i:i})).filter(p=>p.side===side)
+    : S.uploadPhotos.map((p,i)=>({...p,_i:i}));
+  wrap.innerHTML = list.length
+    ? list.map(p => `
+        <div class="photo-preview-item">
+          <img src="${p.url}" onclick="previewPhoto('${p.url}')">
+          <button class="photo-preview-del" onclick="removeUploadPhoto(${p._i})">×</button>
+        </div>`).join('')
+    : '<div style="font-size:12px;color:var(--t4);padding:8px 0">사진 없음 — 위 버튼으로 추가</div>';
 }
 
 function removeUploadPhoto(i) {
-  S.uploadPhotos.splice(i, 1);
-  renderPhotoPreview(S.photoTarget || 'lm-photo-preview');
+  const removed = S.uploadPhotos.splice(i, 1)[0];
+  const side    = removed?.side || 'before';
+  const target  = side==='after' ? 'lm-after-preview' : 'lm-before-preview';
+  renderPhotoPreview(target, side);
 }
 
 /* saveLog: Firestore + Storage 동시 저장 */
@@ -1058,22 +1114,33 @@ async function saveLog() {
     const finalPhotos = [];
     const finalPaths  = [];
 
+    /* Before / After 각각 업로드 */
+    const beforePhotos = []; const beforePaths = [];
+    const afterPhotos  = []; const afterPaths  = [];
+
     for (const p of S.uploadPhotos) {
+      const isBefore = (p.side !== 'after');
       if (p.existing) {
-        finalPhotos.push(p.url);
-        finalPaths.push(p.storagePath||'');
+        if (isBefore) { beforePhotos.push(p.url); beforePaths.push(p.storagePath||''); }
+        else          { afterPhotos.push(p.url);  afterPaths.push(p.storagePath||''); }
       } else if (S.fbReady && !S.isGuest && storage) {
-        const fname = `${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
+        const side  = p.side || 'before';
+        const fname = `${side}_${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
         const spath = `logs/${uid_}/${docId}/${fname}`;
         const { url } = await uploadPhoto(p.file, spath);
-        finalPhotos.push(url);
-        finalPaths.push(spath);
+        if (isBefore) { beforePhotos.push(url); beforePaths.push(spath); }
+        else          { afterPhotos.push(url);  afterPaths.push(spath); }
+        finalPhotos.push(url); finalPaths.push(spath);
       } else {
         /* 게스트: base64 그대로 */
-        finalPhotos.push(p.url);
-        finalPaths.push('');
+        if (isBefore) { beforePhotos.push(p.url); beforePaths.push(''); }
+        else          { afterPhotos.push(p.url);  afterPaths.push(''); }
+        finalPhotos.push(p.url); finalPaths.push('');
       }
     }
+    /* finalPhotos = before + after 합산 */
+    finalPhotos.splice(0, finalPhotos.length, ...beforePhotos, ...afterPhotos);
+    finalPaths.splice(0, finalPaths.length,   ...beforePaths,  ...afterPaths);
 
     const data = {
       title,
@@ -1084,6 +1151,10 @@ async function saveLog() {
       desc:         $('lm-desc')?.value.trim()   || '',
       photos:       finalPhotos,
       storagePaths: finalPaths,
+      /* ★ imageUrl: 썸네일 (before 첫 번째) */
+      imageUrl:     beforePhotos[0] || finalPhotos[0] || '',
+      beforePhotos,
+      afterPhotos,
       updatedAt:    new Date().toISOString(),
     };
 
