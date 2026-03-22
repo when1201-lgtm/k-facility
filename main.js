@@ -770,27 +770,40 @@ function renderManualDetail() {
       <div class="caution-row"><div class="caution-num">${i+1}</div><div class="caution-txt">${esc(c)}</div></div>`).join('');
   }
 
-  /* ③ 절차 타임라인 — 문자열/객체 둘 다 처리, 번호 + 제목 + 설명 */
+  /* ③ 절차 타임라인 — {text, imgUrl} 신형 / {title, desc} 구형 / 문자열 모두 지원
+       출력: 번호 → 설명 → 사진 순서로 1:1 매칭 */
   const stEl = $('md-steps-list');
   if (stEl) {
-    const stepList = (m.steps||[]).map(s =>
-      typeof s === 'string' ? { title: s, desc: '', youtube: '' } : s
-    ).filter(s => s.title);
+    const stepList = (m.steps||[]).map(s => {
+      if (typeof s === 'string')  return { text: s,      imgUrl: '' };
+      if (s.text !== undefined)   return { text: s.text, imgUrl: s.imgUrl||'' };
+      /* 구형 {title, desc} */
+      const t = (s.title||'').trim();
+      const d = (s.desc ||'').trim();
+      return { text: d ? t + ' — ' + d : t, imgUrl: '' };
+    }).filter(s => s.text);
+
     stEl.innerHTML = stepList.length ? stepList.map((s, i) => `
       <div class="step-row">
         <div class="step-left">
           <div class="step-num-circle">${i + 1}</div>
           ${i < stepList.length - 1 ? '<div class="step-connector"></div>' : ''}
         </div>
-        <div class="glass step-card">
+        <div class="glass step-card" style="overflow:hidden">
           <div class="step-card-head">
-            <div class="step-title">${esc(s.title)}</div>
-            ${s.desc ? `<div class="step-desc">${esc(s.desc)}</div>` : ''}
-            ${s.youtube ? `<a href="${esc(s.youtube)}" target="_blank" class="step-yt-link">▶ YouTube 영상 보기</a>` : ''}
+            <!-- 설명 -->
+            <div class="step-title">${esc(s.text)}</div>
+            <!-- ★ 사진 — 설명 바로 아래 1:1 매칭 -->
+            ${s.imgUrl
+              ? `<img src="${s.imgUrl}" onclick="previewPhoto('${s.imgUrl}')"
+                   style="width:100%;max-height:220px;object-fit:cover;
+                          border-radius:10px;margin-top:12px;cursor:zoom-in;
+                          border:1px solid rgba(255,255,255,.12);display:block">`
+              : ''}
           </div>
         </div>
       </div>`).join('')
-    : '<div style="padding:16px;font-size:14px;color:var(--t4)">등록된 절차가 없습니다</div>';
+    : '<div style="padding:20px;font-size:14px;color:var(--t4)">등록된 절차가 없습니다</div>';
   }
 
   /* ④ 체크리스트 */
@@ -859,19 +872,25 @@ function updateCkUI(ckKey, checklist) {
 function openManualModal(catKey, id) {
   S.editManualCat  = catKey;
   S.editManualId   = id || null;
-  S.uploadPhotos   = [];           /* 사진 버퍼 초기화 */
+  S.uploadPhotos   = [];
   S.photoTarget    = 'mf-photo-preview';
   S.photoSide      = 'main';
+  /* ★ 절차 항목 버퍼: [{text, imgUrl, imgPath, file, previewUrl}] */
+  S.stepItems      = [];
   const m = id ? (manuals[catKey]||[]).find(x=>x.id===id) : null;
 
-  /* steps → 편집용 텍스트 변환: "제목|설명" 줄바꿈 */
-  /* steps → 편집용 텍스트: desc 있으면 "제목|설명", 없으면 "제목"만 */
-  const stepsText = (m?.steps||[]).map(s => {
-    if (typeof s === 'string') return s;          /* 문자열 형태 하위 호환 */
+  /* 기존 steps → stepItems 버퍼로 변환 (하위 호환) */
+  const existingSteps = (m?.steps||[]).map(s => {
+    if (typeof s === 'string') return { text: s,      imgUrl: '', imgPath: '', file: null, previewUrl: '' };
+    /* 신형 {text, imgUrl} */
+    if (s.text !== undefined)  return { text: s.text, imgUrl: s.imgUrl||'', imgPath: s.imgPath||'', file: null, previewUrl: s.imgUrl||'' };
+    /* 구형 {title, desc} */
     const t = (s.title||'').trim();
     const d = (s.desc ||'').trim();
-    return d ? t + '|' + d : t;
-  }).filter(Boolean).join('\n');
+    return { text: d ? t + ' — ' + d : t, imgUrl: '', imgPath: '', file: null, previewUrl: '' };
+  }).filter(si => si.text);
+  S.stepItems = existingSteps.length ? existingSteps : [{ text:'', imgUrl:'', imgPath:'', file:null, previewUrl:'' }];
+
   /* checklist → 줄바꿈 텍스트 */
   const ckText = (m?.checklist||[]).join('\n');
 
@@ -925,35 +944,17 @@ function openManualModal(catKey, id) {
         placeholder="주 차단기 OFF 후 작업&#10;검전기로 무전압 확인&#10;동일 용량 MCB만 사용">${esc((m?.cautions||[]).join('\n'))}</textarea>
     </div>
 
-    <div class="modal-section-divider">🔧 섹션 3 — 상세 작업 절차</div>
-    <div class="lf-group">
-      <label class="lf-label">
-        한 줄에 하나씩 입력 &nbsp;·&nbsp;
-        <span style="color:var(--t4);font-weight:400">
-          설명 추가: <code style="background:rgba(255,255,255,.08);padding:1px 5px;border-radius:3px;font-size:11px">절차명|세부 설명</code> (선택)
-        </span>
-      </label>
-      <textarea class="lf-textarea" id="mf-steps-raw" rows="6"
-        placeholder="전원 차단 및 잠금&#10;기존 MCB 제거&#10;신규 MCB 설치&#10;투입 테스트">${esc(stepsText)}</textarea>
+    <!-- ★ 섹션3: 절차 항목 (설명+사진 1:1 세트) -->
+    <div class="modal-section-divider">
+      🔧 섹션 3 — 상세 작업 절차
+      <button type="button" onclick="addStepItem()"
+        style="margin-left:auto;background:var(--orange);color:#fff;border:none;
+               border-radius:8px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer">
+        ＋ 절차 추가
+      </button>
     </div>
-
-    <!-- 📷 사진 — 섹션 3(작업절차) 바로 아래 -->
-    <div class="modal-section-divider">📷 작업 현장 사진</div>
-    <div class="lf-group">
-      <label class="lf-label">목록 썸네일로 표시됩니다 · 800px 자동 압축 · 최대 3장</label>
-      <div id="mf-photo-preview" class="photo-preview-wrap" style="min-height:44px;margin-bottom:10px"></div>
-      <div style="display:flex;gap:8px">
-        <label class="btn-gh" style="flex:1;justify-content:center;cursor:pointer;min-height:44px">
-          📷 카메라 촬영
-          <input type="file" accept="image/*" capture="environment"
-            style="display:none" onchange="handleManualPhoto(event)"/>
-        </label>
-        <label class="btn-gh" style="flex:1;justify-content:center;cursor:pointer;min-height:44px">
-          🖼 갤러리 선택
-          <input type="file" accept="image/*" multiple
-            style="display:none" onchange="handleManualPhoto(event)"/>
-        </label>
-      </div>
+    <div id="mf-steps-container" style="display:flex;flex-direction:column;gap:12px;margin-bottom:4px">
+      <!-- JS renderStepItems()가 채움 -->
     </div>
 
     <div class="modal-section-divider">✅ 섹션 4 — 점검 체크리스트</div>
@@ -984,11 +985,126 @@ function openManualModal(catKey, id) {
       <button class="btn-o" id="btn-save-manual" onclick="saveManual()">💾 저장</button>
     </div>`);
 
-  /* 기존 대표 사진 미리보기 */
+  /* 기존 대표 사진 미리보기 (대표 이미지 필드 유지) */
   if (m?.imageUrl) {
     S.uploadPhotos = [{ url: m.imageUrl, existing: true, side: 'main', storagePath: m.imageStoragePath||'', file: null }];
-    renderPhotoPreview('mf-photo-preview', 'main');
   }
+  /* ★ 절차 항목 렌더링 */
+  renderStepItems();
+}
+
+/* ═══════════════════════════════════════════════════
+   절차 항목 동적 UI (설명 + 사진 1:1 세트)
+   S.stepItems = [{text, imgUrl, imgPath, file, previewUrl}]
+═══════════════════════════════════════════════════ */
+
+/** 항목 전체를 #mf-steps-container에 렌더링 */
+function renderStepItems() {
+  const container = document.getElementById('mf-steps-container');
+  if (!container) return;
+
+  container.innerHTML = S.stepItems.map((item, i) => `
+    <div class="step-item-block" id="step-block-${i}"
+      style="border:1px solid rgba(255,255,255,.14);border-radius:12px;
+             background:rgba(255,255,255,.05);overflow:hidden;">
+      <!-- 헤더: 번호 + 삭제 버튼 -->
+      <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;
+                  background:rgba(224,92,10,.18);border-bottom:1px solid rgba(255,255,255,.08)">
+        <span style="width:24px;height:24px;border-radius:50%;background:var(--orange);
+                     color:#fff;font-size:13px;font-weight:800;display:flex;
+                     align-items:center;justify-content:center;flex-shrink:0">${i + 1}</span>
+        <span style="font-size:13px;font-weight:600;color:var(--t2);flex:1">절차 ${i + 1}</span>
+        ${S.stepItems.length > 1
+          ? `<button type="button" onclick="removeStepItem(${i})"
+               style="background:rgba(244,63,94,.25);color:#fca5a5;border:none;
+                      border-radius:7px;padding:4px 10px;font-size:12px;cursor:pointer">삭제</button>`
+          : ''}
+      </div>
+      <!-- 설명 입력 -->
+      <div style="padding:12px 14px 8px">
+        <textarea
+          id="step-text-${i}"
+          class="lf-textarea"
+          rows="2"
+          placeholder="예: 주 차단기를 OFF하고 검전기로 무전압 확인"
+          style="font-size:14px;line-height:1.65;margin-bottom:0"
+          oninput="S.stepItems[${i}].text=this.value"
+        >${esc(item.text)}</textarea>
+      </div>
+      <!-- 사진 미리보기 + 버튼 -->
+      <div style="padding:0 14px 12px">
+        ${item.previewUrl
+          ? `<div style="position:relative;display:inline-block;margin-bottom:8px">
+               <img src="${item.previewUrl}"
+                 style="width:90px;height:90px;object-fit:cover;border-radius:9px;
+                        border:1px solid rgba(255,255,255,.15);display:block">
+               <button type="button" onclick="removeStepPhoto(${i})"
+                 style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;
+                        border-radius:50%;background:var(--red);color:#fff;border:none;
+                        font-size:12px;cursor:pointer;font-weight:800">×</button>
+             </div>`
+          : ''}
+        <div style="display:flex;gap:7px">
+          <label style="flex:1;display:flex;align-items:center;justify-content:center;
+                        gap:5px;padding:8px;border-radius:9px;cursor:pointer;font-size:12px;
+                        font-weight:600;color:var(--t2);border:1px solid rgba(255,255,255,.16);
+                        background:rgba(255,255,255,.06)">
+            📷
+            <input type="file" accept="image/*" capture="environment"
+              style="display:none" onchange="handleStepPhoto(event,${i})"/>
+          </label>
+          <label style="flex:1;display:flex;align-items:center;justify-content:center;
+                        gap:5px;padding:8px;border-radius:9px;cursor:pointer;font-size:12px;
+                        font-weight:600;color:var(--t2);border:1px solid rgba(255,255,255,.16);
+                        background:rgba(255,255,255,.06)">
+            🖼
+            <input type="file" accept="image/*"
+              style="display:none" onchange="handleStepPhoto(event,${i})"/>
+          </label>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+/** 절차 항목 추가 */
+function addStepItem() {
+  S.stepItems.push({ text: '', imgUrl: '', imgPath: '', file: null, previewUrl: '' });
+  renderStepItems();
+  /* 새 항목으로 스크롤 */
+  const container = document.getElementById('mf-steps-container');
+  if (container) container.lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+/** 절차 항목 삭제 */
+function removeStepItem(i) {
+  S.stepItems.splice(i, 1);
+  if (S.stepItems.length === 0)
+    S.stepItems.push({ text: '', imgUrl: '', imgPath: '', file: null, previewUrl: '' });
+  renderStepItems();
+}
+
+/** 절차 항목 사진 선택 */
+function handleStepPhoto(e, idx) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    S.stepItems[idx].file       = file;
+    S.stepItems[idx].previewUrl = ev.target.result;
+    /* imgUrl은 저장 시 Storage 업로드 후 채워짐 */
+    renderStepItems();
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+}
+
+/** 절차 항목 사진 제거 */
+function removeStepPhoto(idx) {
+  S.stepItems[idx].file       = null;
+  S.stepItems[idx].previewUrl = '';
+  S.stepItems[idx].imgUrl     = '';
+  S.stepItems[idx].imgPath    = '';
+  renderStepItems();
 }
 
 /* 매뉴얼 전용 사진 핸들러 — 모달 내 input에서 직접 호출 */
@@ -1058,22 +1174,36 @@ async function saveManual() {
   /* 섹션2: 안전주의사항 */
   const cautions = ($('mf-safety')?.value||'').split('\n').map(s=>s.trim()).filter(Boolean);
 
-  /* 섹션3: 절차 파싱 — 한 줄 = 하나의 절차 (빈 줄 자동 제거)
-     형식 A: "절차명"          → { title:"절차명", desc:"" }
-     형식 B: "절차명|세부 설명" → { title:"절차명", desc:"세부 설명" } */
-  const steps = ($('mf-steps-raw')?.value||'')
-    .split('\n')
-    .map(line => line.trim())
-    .filter(line => line.length > 0)          /* ★ 빈 줄 완전 제거 */
-    .map(line => {
-      const sep = line.indexOf('|');
-      if (sep === -1) return { title: line, desc: '', youtube: '' };
-      return {
-        title:   line.slice(0, sep).trim(),
-        desc:    line.slice(sep + 1).trim(),
-        youtube: '',
-      };
-    });
+  /* ★ 섹션3: S.stepItems에서 읽고, 신규 사진은 Storage 업로드 */
+  const uid_step = S.user?.uid || 'guest';
+  const docIdStep = S.editManualId || (db ? db.collection('manuals').doc().id : 'local_'+genId());
+  const steps = [];
+  for (let si = 0; si < S.stepItems.length; si++) {
+    const item = S.stepItems[si];
+    const text = (document.getElementById('step-text-'+si)?.value || item.text || '').trim();
+    if (!text) continue;                        /* 빈 항목 제외 */
+
+    let imgUrl  = item.imgUrl  || '';
+    let imgPath = item.imgPath || '';
+
+    /* 새로 선택한 사진 → Storage 업로드 */
+    if (item.file && S.fbReady && !S.isGuest && storage) {
+      try {
+        const fname = 'step' + si + '_' + Date.now() + '.jpg';
+        const spath = 'manuals/' + uid_step + '/' + docIdStep + '/' + fname;
+        const res   = await uploadPhoto(item.file, spath);
+        imgUrl  = res.url;
+        imgPath = res.storagePath;
+      } catch(se) {
+        console.warn('[절차 사진 업로드 실패]', se.message);
+      }
+    } else if (item.file && S.isGuest) {
+      /* 게스트: base64 그대로 */
+      imgUrl = item.previewUrl || '';
+    }
+
+    steps.push({ text, imgUrl, imgPath });
+  }
 
   /* 섹션4: 체크리스트 */
   const checklist = ($('mf-check')?.value||'').split('\n').map(s=>s.trim()).filter(Boolean);
@@ -1120,13 +1250,13 @@ async function saveManual() {
     /* ★ 5섹션 데이터 */
     supplies,          /* 준비물 배열 */
     cautions,          /* 안전주의사항 배열 */
-    steps,             /* 절차 [{title,desc,youtube}] */
+    steps,             /* ★ 절차 [{text, imgUrl, imgPath}] */
     checklist,         /* 체크리스트 배열 */
     caution,           /* 최종 주의 (한 줄) */
     tip,               /* Tip (한 줄) */
-    /* ★ 대표 사진 */
-    imageUrl,
-    imageStoragePath,
+    /* ★ 대표 사진 — steps[0].imgUrl 또는 별도 업로드 */
+    imageUrl:         imageUrl || (steps[0]?.imgUrl || ''),
+    imageStoragePath: imageStoragePath || (steps[0]?.imgPath || ''),
     updatedAt: new Date().toISOString(),
   };
 
@@ -1957,6 +2087,11 @@ window.openMemoDetail   = openMemoDetail;
 window.deleteMemo       = deleteMemo;
 window.saveMemo         = saveMemo;
 window.openManualModal  = openManualModal;
+window.renderStepItems  = renderStepItems;
+window.addStepItem      = addStepItem;
+window.removeStepItem   = removeStepItem;
+window.handleStepPhoto  = handleStepPhoto;
+window.removeStepPhoto  = removeStepPhoto;
 window.handleManualPhoto = handleManualPhoto;
 window.removeManualPhoto = removeManualPhoto;
 window._refreshManualPhotoPreview = _refreshManualPhotoPreview;
