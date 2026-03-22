@@ -1805,6 +1805,7 @@ function renderMemo() {
     const preview = (m.content||'').slice(0,100) + ((m.content||'').length > 100 ? '…' : '');
     /* 대표 이미지: imgUrls 배열 첫 번째 */
     const thumbUrl = Array.isArray(m.imgUrls) && m.imgUrls[0] ? m.imgUrls[0] : '';
+    /* 썸네일: 64px 고정 높이 소형 */
     const thumbHtml = thumbUrl
       ? `<img class="memo-card-thumb" src="${thumbUrl}"
            onclick="event.stopPropagation();previewPhoto('${thumbUrl}')"
@@ -1832,18 +1833,41 @@ function renderMemo() {
 function setMemoFilter(f){ S.memoFilter=f; renderMemo(); }
 
 function openMemoDetail(id) {
-  const m=memos.find(x=>x.id===id); if(!m) return;
-  S.editMemoId=id;
-  const bg=MEMO_COLORS[m.cat]||'rgba(255,255,255,.1)';
-  const sv=(el,v)=>{ const e=$(el); if(e) e.textContent=v; };
+  const m = memos.find(x => x.id === id); if (!m) return;
+  S.editMemoId = id;
+  const bg = MEMO_COLORS[m.cat] || 'rgba(255,255,255,.1)';
+  const sv = (el, v) => { const e=$(el); if(e) e.textContent=v; };
   sv('memo-detail-breadcrumb', m.title);
   sv('memo-detail-title',      m.title);
-  sv('memo-detail-date',       '📅 '+(m.date||'-'));
-  const cb=$('memo-detail-cat-badge'); if(cb){cb.textContent=m.cat;cb.style.background=bg;}
-  const tg=$('memo-detail-tags'); if(tg) tg.innerHTML=(m.tags||[]).map(t=>`<span class="m-tag">${esc(t)}</span>`).join('');
-  const co=$('memo-detail-content'); if(co) co.textContent=m.content||'';
-  const eb=$('btn-memo-detail-edit'); if(eb) eb.onclick=()=>openMemoModal(id);
-  const db3=$('btn-memo-detail-del'); if(db3) db3.onclick=()=>deleteMemo(id);
+  sv('memo-detail-date',       '📅 ' + (m.date||'-'));
+  const cb = $('memo-detail-cat-badge');
+  if (cb) { cb.textContent = m.cat; cb.style.background = bg; }
+  const tg = $('memo-detail-tags');
+  if (tg) tg.innerHTML = (m.tags||[]).map(t=>`<span class="m-tag">${esc(t)}</span>`).join('');
+  const co = $('memo-detail-content');
+  if (co) co.textContent = m.content || '';
+
+  /* ★ 참고 사진 */
+  const pw = $('memo-detail-photos');
+  const pg = $('memo-detail-photos-grid');
+  if (pw && pg) {
+    const imgs = (m.imgUrls||[]).filter(u => u && u.trim());
+    if (imgs.length) {
+      pw.classList.remove('hidden');
+      pg.innerHTML = imgs.map(u => `
+        <img src="${u}" class="memo-detail-img"
+          onclick="previewPhoto('${u}')"
+          alt="참고 사진"
+          onerror="this.style.display='none'">`).join('');
+    } else {
+      pw.classList.add('hidden');
+    }
+  }
+
+  const eb  = $('btn-memo-detail-edit');
+  const db3 = $('btn-memo-detail-del');
+  if (eb)  eb.onclick  = () => openMemoModal(id);
+  if (db3) db3.onclick = () => deleteMemo(id);
   goto('memo-detail');
 }
 
