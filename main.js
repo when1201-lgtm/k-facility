@@ -226,6 +226,26 @@ function toast(msg, dur = 2500) {
   t._t = setTimeout(() => { t.style.opacity = '0'; }, dur);
 }
 
+/* ── 인증 로딩 스피너 제어 ──
+   페이지 진입 시 스피너만 보이다가
+   onAuthStateChanged 결과가 오면 정확한 화면으로 전환 */
+function hideAuthLoader() {
+  const loader = document.getElementById('auth-loader');
+  const app    = document.getElementById('app');
+  if (!loader) return;
+  /* 페이드아웃 후 완전 제거 */
+  loader.style.opacity = '0';
+  setTimeout(() => {
+    loader.style.display = 'none';
+    if (app) app.style.display = '';   /* #app 표시 */
+  }, 260);
+}
+
+function showLoginScreen() {
+  const lov = document.getElementById('lov');
+  if (lov) lov.style.display = 'flex'; /* 로그인 화면 표시 */
+}
+
 /* 라이트박스 */
 function previewPhoto(url) {
   let ov = $('kf-lightbox');
@@ -254,18 +274,20 @@ function initFirebase() {
     /* 오프라인 캐시 */
     db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
 
-    /* 이미 로그인된 사용자 감지 */
+    /* ── onAuthStateChanged: 최초 1회 결과가 오면 스피너 숨기고 화면 결정 ── */
+    let _firstAuthCheck = true;   /* 첫 번째 콜백 여부 */
     auth.onAuthStateChanged(user => {
-      /* ── 디버그 로그 (문제 해결 후 삭제해도 됨) ── */
       if (user) {
-        console.log('%c[K-Facility] ✅ 로그인 감지', 'color:#10b981;font-weight:bold');
-        console.log('  사용자:', user.displayName, '(' + user.email + ')');
-        console.log('  UID:', user.uid);
-        console.log('  Firestore 구독 시작...');
+        console.log('%c[K-Facility] ✅ 로그인 감지', 'color:#10b981;font-weight:bold',
+          user.displayName, user.uid);
+        hideAuthLoader();          /* 스피너 숨기고 #app 표시 */
         doLogin(user, false);
       } else {
-        console.log('%c[K-Facility] 👤 미로그인 상태 (onAuthStateChanged null)', 'color:#f59e0b;font-weight:bold');
+        console.log('%c[K-Facility] 👤 미로그인 (onAuthStateChanged null)', 'color:#f59e0b;font-weight:bold');
+        hideAuthLoader();          /* 스피너 숨기고 #app 표시 */
+        showLoginScreen();         /* 로그인 화면만 표시 */
       }
+      _firstAuthCheck = false;
     });
 
     /* 설정 페이지 상태 표시 */
@@ -300,6 +322,7 @@ function loginGoogle() {
 }
 
 function loginGuest() {
+  hideAuthLoader();   /* 혹시 스피너가 남아있으면 제거 */
   doLogin({ displayName:'게스트', uid:'guest', email:'' }, true);
 }
 
@@ -312,7 +335,9 @@ function doLogin(user, isGuest) {
   const ava  = $('ava');   if (ava)  { ava.textContent = init; if (isGuest) ava.style.background = 'linear-gradient(135deg,#64748b,#475569)'; }
   const un   = $('uname'); if (un)   un.textContent = user.displayName || '사용자';
   const em   = $('settings-user-email'); if (em) em.textContent = user.email || (isGuest ? '게스트 모드' : '');
-  $('lov').classList.add('hidden');
+  /* 로그인 오버레이 닫기 (display:none 방식) */
+  const _lov = document.getElementById('lov');
+  if (_lov) _lov.style.display = 'none';
 
   if (S.fbReady && !isGuest) {
     subscribeFirestore();
