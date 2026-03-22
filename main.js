@@ -796,9 +796,10 @@ function renderManualDetail() {
             <!-- ★ 사진 — 설명 바로 아래 1:1 매칭 -->
             ${s.imgUrl
               ? `<img src="${s.imgUrl}" onclick="previewPhoto('${s.imgUrl}')"
-                   style="width:100%;max-height:220px;object-fit:cover;
+                   style="max-width:100%;max-height:200px;object-fit:contain;
                           border-radius:10px;margin-top:12px;cursor:zoom-in;
-                          border:1px solid rgba(255,255,255,.12);display:block">`
+                          border:1px solid rgba(255,255,255,.12);display:block;
+                          background:rgba(0,0,0,.2)">`
               : ''}
           </div>
         </div>
@@ -1004,62 +1005,37 @@ function renderStepItems() {
   if (!container) return;
 
   container.innerHTML = S.stepItems.map((item, i) => `
-    <div class="step-item-block" id="step-block-${i}"
-      style="border:1px solid rgba(255,255,255,.14);border-radius:12px;
-             background:rgba(255,255,255,.05);overflow:hidden;">
-      <!-- 헤더: 번호 + 삭제 버튼 -->
-      <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;
-                  background:rgba(224,92,10,.18);border-bottom:1px solid rgba(255,255,255,.08)">
-        <span style="width:24px;height:24px;border-radius:50%;background:var(--orange);
-                     color:#fff;font-size:13px;font-weight:800;display:flex;
-                     align-items:center;justify-content:center;flex-shrink:0">${i + 1}</span>
-        <span style="font-size:13px;font-weight:600;color:var(--t2);flex:1">절차 ${i + 1}</span>
+    <div class="step-item-block" id="step-block-${i}">
+      <div class="step-item-block__header">
+        <span class="step-item-block__num">${i + 1}</span>
+        <span class="step-item-block__label">절차 ${i + 1}</span>
         ${S.stepItems.length > 1
-          ? `<button type="button" onclick="removeStepItem(${i})"
-               style="background:rgba(244,63,94,.25);color:#fca5a5;border:none;
-                      border-radius:7px;padding:4px 10px;font-size:12px;cursor:pointer">삭제</button>`
+          ? `<button type="button" class="step-item-block__del" onclick="removeStepItem(${i})">삭제</button>`
           : ''}
       </div>
-      <!-- 설명 입력 -->
-      <div style="padding:12px 14px 8px">
-        <textarea
-          id="step-text-${i}"
-          class="lf-textarea"
-          rows="2"
+      <div class="step-item-block__body">
+        <textarea id="step-text-${i}" class="lf-textarea" rows="2"
           placeholder="예: 주 차단기를 OFF하고 검전기로 무전압 확인"
-          style="font-size:14px;line-height:1.65;margin-bottom:0"
           oninput="S.stepItems[${i}].text=this.value"
         >${esc(item.text)}</textarea>
       </div>
-      <!-- 사진 미리보기 + 버튼 -->
-      <div style="padding:0 14px 12px">
+      <div class="step-item-block__photo">
         ${item.previewUrl
-          ? `<div style="position:relative;display:inline-block;margin-bottom:8px">
-               <img src="${item.previewUrl}"
-                 style="width:90px;height:90px;object-fit:cover;border-radius:9px;
-                        border:1px solid rgba(255,255,255,.15);display:block">
-               <button type="button" onclick="removeStepPhoto(${i})"
-                 style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;
-                        border-radius:50%;background:var(--red);color:#fff;border:none;
-                        font-size:12px;cursor:pointer;font-weight:800">×</button>
+          ? `<div class="step-item-block__photo-thumb">
+               <img src="${item.previewUrl}">
+               <button type="button" class="step-item-block__photo-del" onclick="removeStepPhoto(${i})">×</button>
              </div>`
           : ''}
-        <div style="display:flex;gap:7px">
-          <label style="flex:1;display:flex;align-items:center;justify-content:center;
-                        gap:5px;padding:8px;border-radius:9px;cursor:pointer;font-size:12px;
-                        font-weight:600;color:var(--t2);border:1px solid rgba(255,255,255,.16);
-                        background:rgba(255,255,255,.06)">
+        <div class="step-item-block__btns">
+          <label class="step-item-block__btn">
             📷
             <input type="file" accept="image/*" capture="environment"
-              style="display:none" onchange="handleStepPhoto(event,${i})"/>
+              class="hidden" onchange="handleStepPhoto(event,${i})"/>
           </label>
-          <label style="flex:1;display:flex;align-items:center;justify-content:center;
-                        gap:5px;padding:8px;border-radius:9px;cursor:pointer;font-size:12px;
-                        font-weight:600;color:var(--t2);border:1px solid rgba(255,255,255,.16);
-                        background:rgba(255,255,255,.06)">
+          <label class="step-item-block__btn">
             🖼
             <input type="file" accept="image/*"
-              style="display:none" onchange="handleStepPhoto(event,${i})"/>
+              class="hidden" onchange="handleStepPhoto(event,${i})"/>
           </label>
         </div>
       </div>
