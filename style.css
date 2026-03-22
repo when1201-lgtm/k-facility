@@ -1072,3 +1072,38 @@ textarea { caret-color: var(--orange); }
   transition: opacity .18s;
 }
 .memo-card-thumb:hover { opacity: .88; }
+
+/* 메모 카드 썸네일 — 크기 축소 */
+.memo-card-thumb {
+  display: block;
+  width: 100%;
+  height: 64px;        /* 110px → 64px 축소 */
+  object-fit: cover;
+  border-radius: 8px;
+  margin-top: 8px;
+  border: 1px solid rgba(255,255,255,.12);
+  cursor: zoom-in;
+  transition: opacity .18s;
+}
+.memo-card-thumb:hover { opacity: .85; }
+
+/* 메모 상세 사진 그리드 */
+.memo-photos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+}
+.memo-detail-img {
+  width: 100%;
+  aspect-ratio: 4/3;
+  object-fit: cover;
+  border-radius: 10px;
+  cursor: zoom-in;
+  border: 1px solid rgba(255,255,255,.12);
+  transition: transform .18s, box-shadow .18s;
+  display: block;
+}
+.memo-detail-img:hover {
+  transform: scale(1.03);
+  box-shadow: 0 6px 18px rgba(0,0,0,.5);
+}
