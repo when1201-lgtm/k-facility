@@ -1529,32 +1529,42 @@ function openLogModal(id) {
       <label class="lf-label">상세 내용</label>
       <textarea class="lf-textarea" id="lm-desc" rows="4" placeholder="작업 내용, 특이사항, 교체 부품...">${esc(l?.desc||'')}</textarea>
     </div>
-    <!-- ★ Before / After 사진 업로드 섹션 -->
+    <!-- ★ Before / After 사진 업로드 -->
     <div class="lf-group">
-      <label class="lf-label">현장 사진 (Before / After)</label>
-      <!-- BEFORE -->
+      <label class="lf-label">📷 현장 사진 (Before / After, 각 최대 3장)</label>
       <div class="ba-upload-section">
-        <div class="ba-upload-header ba-upload-before">
-          <span>🔴 BEFORE — 작업 전 상태</span>
-        </div>
-        <div id="lm-before-preview" class="photo-preview-wrap" style="min-height:40px;padding:6px 0"></div>
-        <div style="display:flex;gap:8px;margin-top:6px">
-          <button class="btn-gh" style="flex:1;justify-content:center;font-size:12px" onclick="triggerPhotoInput('camera','before','lm-before-preview')">📷 카메라</button>
-          <button class="btn-gh" style="flex:1;justify-content:center;font-size:12px" onclick="triggerPhotoInput('gallery','before','lm-before-preview')">🖼 갤러리</button>
+        <div class="ba-upload-header ba-upload-before">🔴 BEFORE — 작업 전</div>
+        <div id="lm-before-preview" class="photo-preview-wrap"></div>
+        <div class="photo-btn-row">
+          <label class="photo-add-btn">
+            📷 카메라
+            <input type="file" accept="image/*" capture="environment" multiple
+              class="hidden" onchange="handleFormPhoto(event,'before','lm-before-preview')"/>
+          </label>
+          <label class="photo-add-btn">
+            🖼 갤러리
+            <input type="file" accept="image/*" multiple
+              class="hidden" onchange="handleFormPhoto(event,'before','lm-before-preview')"/>
+          </label>
         </div>
       </div>
-      <!-- AFTER -->
       <div class="ba-upload-section" style="margin-top:10px">
-        <div class="ba-upload-header ba-upload-after">
-          <span>🟢 AFTER — 작업 후 상태</span>
-        </div>
-        <div id="lm-after-preview" class="photo-preview-wrap" style="min-height:40px;padding:6px 0"></div>
-        <div style="display:flex;gap:8px;margin-top:6px">
-          <button class="btn-gh" style="flex:1;justify-content:center;font-size:12px" onclick="triggerPhotoInput('camera','after','lm-after-preview')">📷 카메라</button>
-          <button class="btn-gh" style="flex:1;justify-content:center;font-size:12px" onclick="triggerPhotoInput('gallery','after','lm-after-preview')">🖼 갤러리</button>
+        <div class="ba-upload-header ba-upload-after">🟢 AFTER — 작업 후</div>
+        <div id="lm-after-preview" class="photo-preview-wrap"></div>
+        <div class="photo-btn-row">
+          <label class="photo-add-btn">
+            📷 카메라
+            <input type="file" accept="image/*" capture="environment" multiple
+              class="hidden" onchange="handleFormPhoto(event,'after','lm-after-preview')"/>
+          </label>
+          <label class="photo-add-btn">
+            🖼 갤러리
+            <input type="file" accept="image/*" multiple
+              class="hidden" onchange="handleFormPhoto(event,'after','lm-after-preview')"/>
+          </label>
         </div>
       </div>
-      <p style="font-size:12px;color:var(--t4);margin-top:8px">📱 최대 10MB/장 · 800px 자동 압축 저장</p>
+      <p class="photo-hint">800px 자동 압축 · Firebase Storage 저장</p>
     </div>
     <div class="modal-actions">
       <button class="btn-gh" onclick="closeModal()">취소</button>
@@ -1563,14 +1573,18 @@ function openLogModal(id) {
 
   /* 기존 사진 미리보기 — Before / After 분리 */
   if (l) {
-    const before = l.beforePhotos || (l.photos||[]).slice(0,1);
-    const after  = l.afterPhotos  || (l.photos||[]).slice(1);
+    const before = Array.isArray(l.beforePhotos) && l.beforePhotos.length
+      ? l.beforePhotos.filter(Boolean)
+      : (l.photos||[]).slice(0, 1);
+    const after  = Array.isArray(l.afterPhotos)  && l.afterPhotos.length
+      ? l.afterPhotos.filter(Boolean)
+      : (l.photos||[]).slice(1);
     S.uploadPhotos = [
-      ...before.map((url,i) => ({ url, existing:true, side:'before', storagePath:(l.storagePaths||[])[i]||'', file:null })),
-      ...after.map((url,i)  => ({ url, existing:true, side:'after',  storagePath:(l.storagePaths||[])[before.length+i]||'', file:null })),
+      ...before.map((url, i) => ({ url, existing:true, side:'before', storagePath:(l.storagePaths||[])[i]||'', file:null })),
+      ...after.map((url, i)  => ({ url, existing:true, side:'after',  storagePath:(l.storagePaths||[])[before.length+i]||'', file:null })),
     ];
-    renderPhotoPreview('lm-before-preview', 'before');
-    renderPhotoPreview('lm-after-preview',  'after');
+    renderFormPhotoPreview('lm-before-preview', 'before');
+    renderFormPhotoPreview('lm-after-preview',  'after');
   }
 }
 
@@ -1618,6 +1632,53 @@ function removeUploadPhoto(i) {
   const side    = removed?.side || 'before';
   const target  = side==='after' ? 'lm-after-preview' : 'lm-before-preview';
   renderPhotoPreview(target, side);
+}
+
+
+/* ══════════════════════════════════════════════════════
+   공용 폼 사진 핸들러 — openLogModal / openMemoModal 공유
+   handleFormPhoto(e, side, previewId)
+   renderFormPhotoPreview(previewId, side)
+══════════════════════════════════════════════════════ */
+
+/** 사진 선택 핸들러 (inline label+input 전용) */
+function handleFormPhoto(e, side, previewId) {
+  const files = [...e.target.files];
+  if (!files.length) return;
+  const MAX = 3;
+  const cur = S.uploadPhotos.filter(p => p.side === side).length;
+  if (cur >= MAX) { toast('사진은 최대 ' + MAX + '장까지 등록 가능합니다'); e.target.value=''; return; }
+
+  files.slice(0, MAX - cur).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      S.uploadPhotos.push({ file, url: ev.target.result, existing: false, side, storagePath: '' });
+      renderFormPhotoPreview(previewId, side);
+    };
+    reader.readAsDataURL(file);
+  });
+  e.target.value = '';
+}
+
+/** 미리보기 렌더링 */
+function renderFormPhotoPreview(previewId, side) {
+  const wrap = $(previewId);
+  if (!wrap) return;
+  const list = S.uploadPhotos.map((p, i) => ({...p, _i: i})).filter(p => p.side === side);
+  wrap.innerHTML = list.length
+    ? list.map(p => `
+        <div class="photo-preview-item">
+          <img src="${p.url}" onclick="previewPhoto('${p.url}')">
+          <button class="photo-preview-del"
+            onclick="removeFormPhoto(${p._i},'${previewId}','${side}')">×</button>
+        </div>`).join('')
+    : '<span class="photo-hint-empty">사진 없음</span>';
+}
+
+/** 사진 개별 삭제 */
+function removeFormPhoto(idx, previewId, side) {
+  S.uploadPhotos.splice(idx, 1);
+  renderFormPhotoPreview(previewId, side);
 }
 
 /* saveLog: Firestore + Storage 동시 저장 */
@@ -1779,7 +1840,8 @@ function openMemoDetail(id) {
 }
 
 function openMemoModal(id) {
-  S.editMemoId = id || null;
+  S.editMemoId  = id || null;
+  S.uploadPhotos = [];          /* 사진 버퍼 초기화 */
   const m = id ? memos.find(x=>x.id===id) : null;
   openModal(`
     <div class="modal-title">
@@ -1810,35 +1872,109 @@ function openMemoModal(id) {
       <label class="lf-label">내용 *</label>
       <textarea class="lf-textarea" id="mm-content" rows="8" placeholder="학습 내용, 현장 메모, 규정 기준...">${esc(m?.content||'')}</textarea>
     </div>
+    <!-- ★ 참고 사진 (최대 3장) -->
+    <div class="lf-group">
+      <label class="lf-label">📷 참고 사진 (최대 3장)</label>
+      <div id="mm-photo-preview" class="photo-preview-wrap"></div>
+      <div class="photo-btn-row">
+        <label class="photo-add-btn">
+          📷 카메라
+          <input type="file" accept="image/*" capture="environment" multiple
+            class="hidden" onchange="handleFormPhoto(event,'memo','mm-photo-preview')"/>
+        </label>
+        <label class="photo-add-btn">
+          🖼 갤러리
+          <input type="file" accept="image/*" multiple
+            class="hidden" onchange="handleFormPhoto(event,'memo','mm-photo-preview')"/>
+        </label>
+      </div>
+      <p class="photo-hint">800px 자동 압축 · Firebase Storage 저장</p>
+    </div>
     <div class="modal-actions">
       <button class="btn-gh" onclick="closeModal()">취소</button>
       <button class="btn-o" id="btn-save-memo" onclick="saveMemo()">💾 저장</button>
     </div>`);
+
+  /* 기존 사진 미리보기 */
+  if (m && Array.isArray(m.imgUrls) && m.imgUrls.length) {
+    S.uploadPhotos = m.imgUrls.filter(Boolean).map((url, i) => ({
+      url, existing: true, side: 'memo',
+      storagePath: (m.imgPaths||[])[i] || '', file: null,
+    }));
+    renderFormPhotoPreview('mm-photo-preview', 'memo');
+  }
 }
 
 async function saveMemo() {
-  const title=$('mm-title')?.value.trim();
-  if(!title){ toast('⚠️ 제목을 입력하세요'); return; }
-  const btn=$('btn-save-memo'); if(btn){btn.disabled=true;btn.textContent='저장 중...';}
-  const data={
-    title, content:$('mm-content')?.value.trim()||'',
-    cat:$('mm-cat')?.value||'일반', date:$('mm-date')?.value||today(),
-    tags:($('mm-tags')?.value||'').split(',').map(t=>t.trim()).filter(Boolean),
-    updatedAt:new Date().toISOString(),
+  const title = $('mm-title')?.value.trim();
+  if (!title) { toast('⚠️ 제목을 입력하세요'); return; }
+  const btn = $('btn-save-memo');
+  if (btn) { btn.disabled=true; btn.textContent='저장 중...'; }
+  toast('📤 저장 중...');
+
+  /* ── 사진 업로드 ── */
+  const uid_  = S.user?.uid || 'guest';
+  const docId = S.editMemoId || (db ? db.collection('memos').doc().id : 'local_'+genId());
+  const imgUrls  = [];
+  const imgPaths = [];
+
+  for (const p of S.uploadPhotos.filter(x => x.side === 'memo')) {
+    if (p.existing) {
+      imgUrls.push(p.url);
+      imgPaths.push(p.storagePath || '');
+    } else if (S.fbReady && !S.isGuest && storage && p.file) {
+      try {
+        const fname = 'memo_' + Date.now() + '_' + Math.random().toString(36).slice(2) + '.jpg';
+        const spath = 'memos/' + uid_ + '/' + docId + '/' + fname;
+        const res   = await uploadPhoto(p.file, spath);
+        imgUrls.push(res.url);
+        imgPaths.push(res.storagePath);
+      } catch (ue) {
+        console.warn('[메모 사진 업로드 실패]', ue.message);
+      }
+    } else if (p.file) {
+      /* 게스트: base64 그대로 */
+      imgUrls.push(p.url);
+      imgPaths.push('');
+    }
+  }
+
+  const data = {
+    title,
+    content:  $('mm-content')?.value.trim() || '',
+    cat:      $('mm-cat')?.value  || '일반',
+    date:     $('mm-date')?.value || today(),
+    tags:     ($('mm-tags')?.value||'').split(',').map(t=>t.trim()).filter(Boolean),
+    imgUrls,    /* ★ 사진 URL 배열 */
+    imgPaths,   /* ★ Storage 경로 배열 */
+    updatedAt: new Date().toISOString(),
   };
+
   try {
-    if(S.fbReady&&!S.isGuest&&db){
-      if(S.editMemoId){ await db.collection('memos').doc(S.editMemoId).update(data); }
-      else { data.createdAt=new Date().toISOString(); await db.collection('memos').add(data); }
+    if (S.fbReady && !S.isGuest && db) {
+      if (S.editMemoId) {
+        await db.collection('memos').doc(S.editMemoId).update(data);
+      } else {
+        data.createdAt = new Date().toISOString();
+        await db.collection('memos').doc(docId).set(data);
+      }
     } else {
-      data.id=S.editMemoId||'local_'+genId();
-      if(S.editMemoId){ const idx=memos.findIndex(x=>x.id===S.editMemoId); if(idx!==-1)memos[idx]=data; else memos.push(data); }
-      else { memos.unshift(data); }
+      data.id = docId;
+      if (S.editMemoId) {
+        const idx = memos.findIndex(x => x.id === S.editMemoId);
+        if (idx !== -1) memos[idx] = data; else memos.unshift(data);
+      } else { memos.unshift(data); }
       renderMemo();
     }
-    S.editMemoId=null; toast('✅ 저장됐습니다'); closeModal();
-    if(S.currentPage==='memo') renderMemo();
-  } catch(e){ toast('⚠️ 저장 실패: '+e.message); if(btn){btn.disabled=false;btn.textContent='💾 저장';} }
+    S.editMemoId  = null;
+    S.uploadPhotos = [];
+    toast('✅ 저장됐습니다');
+    closeModal();
+    if (S.currentPage === 'memo') renderMemo();
+  } catch(e) {
+    toast('⚠️ 저장 실패: ' + e.message);
+    if (btn) { btn.disabled=false; btn.textContent='💾 저장'; }
+  }
 }
 
 async function deleteMemo(id) {
@@ -2188,6 +2324,9 @@ window.triggerPhotoInput = triggerPhotoInput;
 window.removeUploadPhoto = removeUploadPhoto;
 window.previewPhoto     = previewPhoto;
 window.saveLog          = saveLog;
+window.handleFormPhoto  = handleFormPhoto;
+window.renderFormPhotoPreview = renderFormPhotoPreview;
+window.removeFormPhoto  = removeFormPhoto;
 window.openMemoModal    = openMemoModal;
 window.openMemoDetail   = openMemoDetail;
 window.deleteMemo       = deleteMemo;
