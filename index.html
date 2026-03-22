@@ -7,8 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
   <link rel="stylesheet" href="style.css"/>
-
-  <!-- ★ Firebase SDK (활성화 완료) -->
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -16,21 +15,27 @@
 </head>
 <body>
 
-<!-- BACKGROUND ORBS -->
-<div class="bg-layer">
-  <div class="orb o1"></div><div class="orb o2"></div>
-  <div class="orb o3"></div><div class="orb o4"></div>
+<!-- 인증 로딩 스피너 -->
+<div id="auth-loader">
+  <div class="auth-spinner"></div>
+  <span class="auth-label">K-Facility</span>
 </div>
 
-<!-- =====================================================
-  LOGIN OVERLAY
-===================================================== -->
-<div id="lov" style="display:none">
+<!-- 배경 오브 -->
+<div class="bg-layer">
+  <div class="orb o1"></div>
+  <div class="orb o2"></div>
+  <div class="orb o3"></div>
+  <div class="orb o4"></div>
+</div>
+
+<!-- 로그인 오버레이 -->
+<div id="lov" class="hidden">
   <div class="lcard">
     <div class="ll">K-<em>Facility</em></div>
     <p class="ls">시설관리 통합 대시보드에<br>오신 걸 환영합니다</p>
     <button class="btn-google" id="btn-google">
-      <svg width="18" height="18" viewBox="0 0 24 24">
+      <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
         <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
         <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
@@ -44,43 +49,62 @@
   </div>
 </div>
 
-<!-- =====================================================
-  MODAL OVERLAY (작업기록 추가/수정, 메모 추가/수정 공용)
-===================================================== -->
+<!-- 모달 오버레이 -->
 <div id="modal-overlay" onclick="if(event.target===this)closeModal()">
-  <div id="modal-box">
-    <!-- JS가 innerHTML로 채움 -->
-  </div>
+  <div id="modal-box"></div>
 </div>
 
-<!-- =====================================================
-  APP SHELL
-===================================================== -->
-<div id="app" style="display:none">
+<!-- 앱 쉘 -->
+<div id="app" class="hidden">
 
-  <!-- SIDEBAR -->
+  <!-- 사이드바 -->
   <nav id="sidebar">
     <div class="s-logo">K-<em>F</em></div>
     <div class="s-div"></div>
-    <button class="nb active" data-p="home">        <i class="fa-solid fa-house"></i>              <span class="tip">홈</span></button>
-    <button class="nb"        data-p="search">      <i class="fa-solid fa-magnifying-glass"></i>   <span class="tip">검색</span></button>
+    <button class="nb active" data-p="home">
+      <i class="fa-solid fa-house"></i><span class="tip">홈</span>
+    </button>
+    <button class="nb" data-p="search">
+      <i class="fa-solid fa-magnifying-glass"></i><span class="tip">검색</span>
+    </button>
     <div class="s-div"></div>
-    <button class="nb"        data-p="electric">    <i class="fa-solid fa-bolt"></i>               <span class="tip">전기</span></button>
-    <button class="nb"        data-p="mechanical">  <i class="fa-solid fa-gear"></i>               <span class="tip">기계</span></button>
-    <button class="nb"        data-p="construction"><i class="fa-solid fa-hammer"></i>             <span class="tip">영선</span></button>
-    <button class="nb"        data-p="fire">        <i class="fa-solid fa-fire-extinguisher"></i>  <span class="tip">소방</span></button>
-    <button class="nb"        data-p="records">     <i class="fa-solid fa-clipboard-list"></i>     <span class="tip">작업기록</span></button>
-    <button class="nb"        data-p="memo">        <i class="fa-solid fa-book-open"></i>          <span class="tip">학습메모</span></button>
-    <button class="nb"        data-p="roadmap">     <i class="fa-solid fa-calendar-days"></i>      <span class="tip">연간로드맵</span></button>
-    <div class="s-div" style="margin-top:auto"></div>
-    <button class="nb"        data-p="contacts">    <i class="fa-solid fa-address-book"></i>       <span class="tip">연락처</span></button>
-    <button class="nb"        data-p="stats">       <i class="fa-solid fa-chart-bar"></i>          <span class="tip">통계</span></button>
-    <button class="nb"        data-p="settings">    <i class="fa-solid fa-sliders"></i>            <span class="tip">설정</span></button>
+    <button class="nb" data-p="electric">
+      <i class="fa-solid fa-bolt"></i><span class="tip">전기</span>
+    </button>
+    <button class="nb" data-p="mechanical">
+      <i class="fa-solid fa-gear"></i><span class="tip">기계</span>
+    </button>
+    <button class="nb" data-p="construction">
+      <i class="fa-solid fa-hammer"></i><span class="tip">영선</span>
+    </button>
+    <button class="nb" data-p="fire">
+      <i class="fa-solid fa-fire-extinguisher"></i><span class="tip">소방</span>
+    </button>
+    <button class="nb" data-p="records">
+      <i class="fa-solid fa-clipboard-list"></i><span class="tip">작업기록</span>
+    </button>
+    <button class="nb" data-p="memo">
+      <i class="fa-solid fa-book-open"></i><span class="tip">학습메모</span>
+    </button>
+    <button class="nb" data-p="roadmap">
+      <i class="fa-solid fa-calendar-days"></i><span class="tip">연간로드맵</span>
+    </button>
+    <div class="s-div s-div--push"></div>
+    <button class="nb" data-p="contacts">
+      <i class="fa-solid fa-address-book"></i><span class="tip">연락처</span>
+    </button>
+    <button class="nb" data-p="stats">
+      <i class="fa-solid fa-chart-bar"></i><span class="tip">통계</span>
+    </button>
+    <button class="nb" data-p="settings">
+      <i class="fa-solid fa-sliders"></i><span class="tip">설정</span>
+    </button>
   </nav>
 
-  <!-- MAIN -->
+  <!-- 메인 영역 -->
   <div id="main">
-    <!-- HEADER -->
+
+    <!-- 헤더 -->
     <header id="hdr">
       <div class="h-logo">K-<em>Facility</em></div>
       <div class="srch">
@@ -88,59 +112,72 @@
         <input type="search" id="si" placeholder="작업기록, 장비, 메모 검색..." autocomplete="off"/>
       </div>
       <div class="h-right">
-        <button class="ibtn dot" id="btn-alarm"><i class="fa-solid fa-bell"></i></button>
+        <button class="ibtn ibtn--dot" id="btn-alarm">
+          <i class="fa-solid fa-bell"></i>
+        </button>
         <div class="ava" id="ava">KF</div>
         <span class="uname" id="uname">관리자</span>
         <button class="tsw" id="tsw"><div class="tsk" id="tsk"></div></button>
       </div>
     </header>
 
-    <!-- ===================================================
-      PAGES — 모든 페이지 HTML 구조 사전 정의
-      JS는 .active 클래스 토글 + 데이터 바인딩만 담당
-    =================================================== -->
+    <!-- 페이지 컨테이너 -->
     <div id="pages">
 
-      <!-- ===================== HOME ===================== -->
+      <!-- ===== 홈 ===== -->
       <section id="page-home" class="page active">
         <div class="pi">
           <div class="breadcrumb">
-            <span class="bc-ico">🏠</span><span class="bc-sep">/</span>
+            <span class="bc-ico">🏠</span>
+            <span class="bc-sep">/</span>
             <span class="bc-cur">홈 대시보드</span>
             <span class="bc-date" id="home-date"></span>
           </div>
           <div class="bento-top">
 
-            <!-- 최근 작업기록 카드 -->
+            <!-- 최근 작업기록 -->
             <div class="glass wcard">
               <div class="card-head">
-                <div><div class="slbl">최근 작업기록</div><div class="ctitle">Before / After 요약</div></div>
+                <div>
+                  <div class="slbl">최근 작업기록</div>
+                  <div class="ctitle">Before / After 요약</div>
+                </div>
                 <button class="btn-o" onclick="openLogModal()">＋ 새 기록</button>
               </div>
               <div id="home-mini-row" class="mini-row">
-                <div class="mini"><div class="ml">불러오는 중</div><div class="mv">-</div><div class="md">-</div></div>
-                <div class="mini"><div class="ml">-</div><div class="mv">-</div><div class="md">-</div></div>
+                <div class="mini">
+                  <div class="ml">불러오는 중</div>
+                  <div class="mv">-</div>
+                  <div class="md">-</div>
+                </div>
               </div>
             </div>
 
-            <!-- 이번 달 로드맵 카드 -->
+            <!-- 이번 달 로드맵 -->
             <div class="glass rcard">
               <div class="card-head">
-                <div><div class="slbl">이번 달 로드맵</div><div class="ctitle" id="home-rm-month">-</div></div>
+                <div>
+                  <div class="slbl">이번 달 로드맵</div>
+                  <div class="ctitle" id="home-rm-month">-</div>
+                </div>
                 <button class="btn-b" data-goto="roadmap">전체 보기 →</button>
               </div>
               <div id="home-rm-list">
-                <div class="ri"><div class="rdot todo"></div><span class="rtxt">불러오는 중...</span></div>
+                <div class="ri">
+                  <div class="rdot rdot--todo"></div>
+                  <span class="rtxt">불러오는 중...</span>
+                </div>
               </div>
             </div>
 
-            <!-- 체크리스트 + 통계 카드 -->
+            <!-- 체크리스트 + 통계 -->
             <div class="glass ccard">
               <div class="slbl">오늘 체크리스트</div>
               <div class="ck-prog-row">
-                <span id="ck-count">0 / 7 완료</span><span id="ck-pct">0%</span>
+                <span id="ck-count">0 / 7 완료</span>
+                <span id="ck-pct">0%</span>
               </div>
-              <div class="pw"><div class="pf" id="pf" style="width:0%"></div></div>
+              <div class="pw"><div class="pf" id="pf"></div></div>
               <div class="ck-list" id="home-ck-list">
                 <div class="ci"><div class="chk" data-idx="0"></div><span class="ct">소화기 위치 확인</span></div>
                 <div class="ci"><div class="chk" data-idx="1"></div><span class="ct">3F 전등 교체</span></div>
@@ -153,96 +190,172 @@
               <div class="sdiv"></div>
               <div class="slbl">이번 달 통계</div>
               <div class="sgrid">
-                <div class="sbox"><div class="snum" id="h-stat-done" style="color:var(--orange)">0</div><div class="slb2">완료 작업</div></div>
-                <div class="sbox"><div class="snum" id="h-stat-prog" style="color:var(--blue)">0</div><div class="slb2">진행중</div></div>
-                <div class="sbox"><div class="snum" id="h-stat-wait" style="color:var(--green)">0</div><div class="slb2">대기</div></div>
-                <div class="sbox"><div class="snum" id="h-stat-memo" style="color:var(--purple)">0</div><div class="slb2">메모</div></div>
+                <div class="sbox">
+                  <div class="snum snum--orange" id="h-stat-done">0</div>
+                  <div class="slb2">완료 작업</div>
+                </div>
+                <div class="sbox">
+                  <div class="snum snum--blue" id="h-stat-prog">0</div>
+                  <div class="slb2">진행중</div>
+                </div>
+                <div class="sbox">
+                  <div class="snum snum--green" id="h-stat-wait">0</div>
+                  <div class="slb2">대기</div>
+                </div>
+                <div class="sbox">
+                  <div class="snum snum--purple" id="h-stat-memo">0</div>
+                  <div class="slb2">메모</div>
+                </div>
               </div>
             </div>
 
             <!-- 메뉴 그리드 -->
             <div class="msec">
-              <div class="slbl" style="margin-bottom:12px">메뉴</div>
+              <div class="slbl slbl--mb">메뉴</div>
               <div class="mgrid">
-                <div class="gc mc" data-goto="electric"><div class="mi" style="background:rgba(224,92,10,.15)">⚡</div><div class="mn">전기</div><div class="ms">전기설비 관리</div></div>
-                <div class="gc mc" data-goto="mechanical"><div class="mi" style="background:rgba(29,78,216,.15)">⚙️</div><div class="mn">기계</div><div class="ms">기계설비 관리</div></div>
-                <div class="gc mc" data-goto="construction"><div class="mi" style="background:rgba(245,158,11,.15)">🔨</div><div class="mn">영선</div><div class="ms">건축·인테리어</div></div>
-                <div class="gc mc" data-goto="fire"><div class="mi" style="background:rgba(244,63,94,.15)">🔥</div><div class="mn">소방</div><div class="ms">소방설비 관리</div></div>
-                <div class="gc mc" data-goto="records"><div class="mi" style="background:rgba(16,185,129,.15)">📋</div><div class="mn">작업기록</div><div class="ms">전체 기록 보기</div></div>
-                <div class="gc mc" data-goto="memo"><div class="mi" style="background:rgba(124,58,237,.15)">📒</div><div class="mn">학습메모</div><div class="ms">노트 & 자료</div></div>
-                <div class="gc mc mc-wide" data-goto="roadmap"><div class="mi" style="background:rgba(29,78,216,.15)">📅</div><div style="flex:1"><div class="mn">연간 로드맵</div><div class="ms">2025년 전체 계획</div></div></div>
+                <div class="gc mc" data-goto="electric">
+                  <div class="mi mi--electric">⚡</div>
+                  <div class="mn">전기</div>
+                  <div class="ms">전기설비 관리</div>
+                </div>
+                <div class="gc mc" data-goto="mechanical">
+                  <div class="mi mi--mechanical">⚙️</div>
+                  <div class="mn">기계</div>
+                  <div class="ms">기계설비 관리</div>
+                </div>
+                <div class="gc mc" data-goto="construction">
+                  <div class="mi mi--construction">🔨</div>
+                  <div class="mn">영선</div>
+                  <div class="ms">건축·인테리어</div>
+                </div>
+                <div class="gc mc" data-goto="fire">
+                  <div class="mi mi--fire">🔥</div>
+                  <div class="mn">소방</div>
+                  <div class="ms">소방설비 관리</div>
+                </div>
+                <div class="gc mc" data-goto="records">
+                  <div class="mi mi--records">📋</div>
+                  <div class="mn">작업기록</div>
+                  <div class="ms">전체 기록 보기</div>
+                </div>
+                <div class="gc mc" data-goto="memo">
+                  <div class="mi mi--memo">📒</div>
+                  <div class="mn">학습메모</div>
+                  <div class="ms">노트 & 자료</div>
+                </div>
+                <div class="gc mc mc-wide" data-goto="roadmap">
+                  <div class="mi mi--roadmap">📅</div>
+                  <div class="mc-wide-body">
+                    <div class="mn">연간 로드맵</div>
+                    <div class="ms">2025년 전체 계획</div>
+                  </div>
+                </div>
               </div>
             </div>
 
-          </div>
+          </div><!-- /bento-top -->
         </div>
       </section>
 
-      <!-- ===================== 전기 설비 ===================== -->
+      <!-- ===== 전기 설비 ===== -->
       <section id="page-electric" class="page">
         <div class="pi">
-          <div class="breadcrumb"><span class="bc-ico bc-link" data-goto="home">🏠</span><span class="bc-sep">/</span><span class="bc-cur">전기 설비</span></div>
+          <div class="breadcrumb">
+            <span class="bc-ico bc-link" data-goto="home">🏠</span>
+            <span class="bc-sep">/</span>
+            <span class="bc-cur">전기 설비</span>
+          </div>
           <div class="glass cat-hero">
-            <div class="cat-icon" style="background:rgba(224,92,10,.15)">⚡</div>
-            <div class="cat-info"><div class="cat-name">전기 설비</div><div class="cat-sub">전기설비 점검 및 수리 절차 매뉴얼</div><div class="cat-count" id="electric-count">매뉴얼 0건</div></div>
+            <div class="cat-icon cat-icon--electric">⚡</div>
+            <div class="cat-info">
+              <div class="cat-name">전기 설비</div>
+              <div class="cat-sub">전기설비 점검 및 수리 절차 매뉴얼</div>
+              <div class="cat-count" id="electric-count">매뉴얼 0건</div>
+            </div>
             <button class="btn-o" onclick="openManualModal('electric')">＋ 매뉴얼 추가</button>
           </div>
-          <div class="slbl" style="margin-bottom:10px">매뉴얼 목록</div>
+          <div class="slbl slbl--mb">매뉴얼 목록</div>
           <div class="manual-list" id="manual-list-electric"></div>
         </div>
       </section>
 
-      <!-- ===================== 기계 설비 ===================== -->
+      <!-- ===== 기계 설비 ===== -->
       <section id="page-mechanical" class="page">
         <div class="pi">
-          <div class="breadcrumb"><span class="bc-ico bc-link" data-goto="home">🏠</span><span class="bc-sep">/</span><span class="bc-cur">기계 설비</span></div>
+          <div class="breadcrumb">
+            <span class="bc-ico bc-link" data-goto="home">🏠</span>
+            <span class="bc-sep">/</span>
+            <span class="bc-cur">기계 설비</span>
+          </div>
           <div class="glass cat-hero">
-            <div class="cat-icon" style="background:rgba(29,78,216,.15)">⚙️</div>
-            <div class="cat-info"><div class="cat-name">기계 설비</div><div class="cat-sub">기계설비 유지보수 절차 매뉴얼</div><div class="cat-count" id="mechanical-count">매뉴얼 0건</div></div>
+            <div class="cat-icon cat-icon--mechanical">⚙️</div>
+            <div class="cat-info">
+              <div class="cat-name">기계 설비</div>
+              <div class="cat-sub">기계설비 유지보수 절차 매뉴얼</div>
+              <div class="cat-count" id="mechanical-count">매뉴얼 0건</div>
+            </div>
             <button class="btn-o" onclick="openManualModal('mechanical')">＋ 매뉴얼 추가</button>
           </div>
-          <div class="slbl" style="margin-bottom:10px">매뉴얼 목록</div>
+          <div class="slbl slbl--mb">매뉴얼 목록</div>
           <div class="manual-list" id="manual-list-mechanical"></div>
         </div>
       </section>
 
-      <!-- ===================== 영선 / 보수 ===================== -->
+      <!-- ===== 영선 ===== -->
       <section id="page-construction" class="page">
         <div class="pi">
-          <div class="breadcrumb"><span class="bc-ico bc-link" data-goto="home">🏠</span><span class="bc-sep">/</span><span class="bc-cur">영선 / 보수</span></div>
+          <div class="breadcrumb">
+            <span class="bc-ico bc-link" data-goto="home">🏠</span>
+            <span class="bc-sep">/</span>
+            <span class="bc-cur">영선 / 보수</span>
+          </div>
           <div class="glass cat-hero">
-            <div class="cat-icon" style="background:rgba(245,158,11,.15)">🔨</div>
-            <div class="cat-info"><div class="cat-name">영선 / 보수</div><div class="cat-sub">건축·인테리어 보수 절차 매뉴얼</div><div class="cat-count" id="construction-count">매뉴얼 0건</div></div>
+            <div class="cat-icon cat-icon--construction">🔨</div>
+            <div class="cat-info">
+              <div class="cat-name">영선 / 보수</div>
+              <div class="cat-sub">건축·인테리어 보수 절차 매뉴얼</div>
+              <div class="cat-count" id="construction-count">매뉴얼 0건</div>
+            </div>
             <button class="btn-o" onclick="openManualModal('construction')">＋ 매뉴얼 추가</button>
           </div>
-          <div class="slbl" style="margin-bottom:10px">매뉴얼 목록</div>
+          <div class="slbl slbl--mb">매뉴얼 목록</div>
           <div class="manual-list" id="manual-list-construction"></div>
         </div>
       </section>
 
-      <!-- ===================== 소방 설비 ===================== -->
+      <!-- ===== 소방 ===== -->
       <section id="page-fire" class="page">
         <div class="pi">
-          <div class="breadcrumb"><span class="bc-ico bc-link" data-goto="home">🏠</span><span class="bc-sep">/</span><span class="bc-cur">소방 설비</span></div>
+          <div class="breadcrumb">
+            <span class="bc-ico bc-link" data-goto="home">🏠</span>
+            <span class="bc-sep">/</span>
+            <span class="bc-cur">소방 설비</span>
+          </div>
           <div class="glass cat-hero">
-            <div class="cat-icon" style="background:rgba(244,63,94,.15)">🔥</div>
-            <div class="cat-info"><div class="cat-name">소방 설비</div><div class="cat-sub">소방설비 점검 및 관리 절차 매뉴얼</div><div class="cat-count" id="fire-count">매뉴얼 0건</div></div>
+            <div class="cat-icon cat-icon--fire">🔥</div>
+            <div class="cat-info">
+              <div class="cat-name">소방 설비</div>
+              <div class="cat-sub">소방설비 점검 및 관리 절차 매뉴얼</div>
+              <div class="cat-count" id="fire-count">매뉴얼 0건</div>
+            </div>
             <button class="btn-o" onclick="openManualModal('fire')">＋ 매뉴얼 추가</button>
           </div>
-          <div class="slbl" style="margin-bottom:10px">매뉴얼 목록</div>
+          <div class="slbl slbl--mb">매뉴얼 목록</div>
           <div class="manual-list" id="manual-list-fire"></div>
         </div>
       </section>
 
-      <!-- ===================== 매뉴얼 상세 ===================== -->
+      <!-- ===== 매뉴얼 상세 ===== -->
       <section id="page-manual-detail" class="page">
         <div class="pi">
           <div class="breadcrumb">
-            <span class="bc-ico bc-link" data-goto="home">🏠</span><span class="bc-sep">/</span>
-            <span class="bc-link" id="md-bread-cat">전기</span><span class="bc-sep">/</span>
+            <span class="bc-ico bc-link" data-goto="home">🏠</span>
+            <span class="bc-sep">/</span>
+            <span class="bc-link" id="md-bread-cat">전기</span>
+            <span class="bc-sep">/</span>
             <span class="bc-cur" id="md-bread-title">매뉴얼 상세</span>
           </div>
-          <!-- 헤더 카드 -->
+          <!-- 헤더 -->
           <div class="glass md-header-card">
             <div class="md-cat-badge" id="md-cat-badge"></div>
             <h2 class="md-main-title" id="md-title">-</h2>
@@ -257,95 +370,123 @@
           <div class="glass md-overview" id="md-overview-wrap">
             <p id="md-overview-text"></p>
           </div>
-          <!-- ① 준비물 -->
+          <!-- 준비물 -->
           <div class="glass md-section" id="md-supplies-wrap">
-            <div class="md-sec-title"><span>📦</span> 준비물 / 자재 <span class="md-sec-count" id="md-supplies-count"></span></div>
+            <div class="md-sec-title">
+              <span>📦</span> 준비물 / 자재
+              <span class="md-sec-count" id="md-supplies-count"></span>
+            </div>
             <div class="supply-grid" id="md-supplies-list"></div>
           </div>
-          <!-- ② 안전주의사항 -->
+          <!-- 안전주의사항 -->
           <div class="caution-section" id="md-cautions-wrap">
             <div class="caution-header">⚠️ 안전주의사항 — 작업 전 필독</div>
             <div class="caution-body" id="md-cautions-list"></div>
           </div>
-          <!-- ③ 작업 절차 -->
-          <div class="slbl" style="margin-bottom:12px">상세 작업 절차</div>
+          <!-- 작업 절차 -->
+          <div class="slbl slbl--mb-lg">상세 작업 절차</div>
           <div class="steps-wrap" id="md-steps-list"></div>
-          <!-- ④ 체크리스트 -->
+          <!-- 체크리스트 -->
           <div class="glass md-section" id="md-checklist-wrap">
             <div class="md-sec-title">
               <span>✅</span> 점검 체크리스트
               <span class="md-sec-count" id="md-ck-counter">0/0</span>
               <button class="ck-reset-btn" id="md-ck-reset">초기화</button>
             </div>
-            <div class="ck-progress-wrap"><div class="ck-progress-fill" id="md-ck-bar" style="width:0%"></div></div>
+            <div class="ck-progress-wrap">
+              <div class="ck-progress-fill" id="md-ck-bar"></div>
+            </div>
             <div class="ck-list">
               <div class="ck-header">
-                <span class="ck-h-num">No.</span><span class="ck-h-item">점검 항목</span><span class="ck-h-check">확인</span>
+                <span class="ck-h-num">No.</span>
+                <span class="ck-h-item">점검 항목</span>
+                <span class="ck-h-check">확인</span>
               </div>
               <div id="md-ck-list"></div>
             </div>
           </div>
-          <!-- ⑤ 주의·팁 -->
+          <!-- 주의·팁 -->
           <div class="alert-box alert-caution" id="md-caution-box">
-            <span class="alert-icon">⚠️</span><div id="md-caution-text"></div>
+            <span class="alert-icon">⚠️</span>
+            <div id="md-caution-text"></div>
           </div>
           <div class="alert-box alert-tip" id="md-tip-box">
-            <span class="alert-icon">💡</span><div id="md-tip-text"></div>
+            <span class="alert-icon">💡</span>
+            <div id="md-tip-text"></div>
           </div>
-          <!-- 수정/삭제 버튼 -->
+          <!-- 수정/삭제 -->
           <div class="detail-actions">
-            <button class="btn-o" style="flex:2;justify-content:center" id="md-edit-btn">✏️ 수정하기</button>
-            <button class="btn-gh" style="flex:1;justify-content:center" id="md-del-btn">🗑 삭제</button>
+            <button class="btn-o detail-actions__edit" id="md-edit-btn">✏️ 수정하기</button>
+            <button class="btn-gh detail-actions__del" id="md-del-btn">🗑 삭제</button>
           </div>
-          <!-- 작업 기록하기 -->
-          <div class="glass md-action-bar" style="margin-top:10px">
-            <button class="btn-o" style="width:100%;justify-content:center;padding:13px" onclick="openLogModal()">
-              ＋ 이 작업 기록하기
-            </button>
+          <!-- 작업 기록 -->
+          <div class="glass md-action-bar">
+            <button class="btn-o btn--full" onclick="openLogModal()">＋ 이 작업 기록하기</button>
           </div>
         </div>
       </section>
 
-      <!-- ===================== 작업기록 목록 ===================== -->
+      <!-- ===== 작업기록 목록 ===== -->
       <section id="page-records" class="page">
         <div class="pi">
-          <div class="breadcrumb"><span class="bc-ico bc-link" data-goto="home">🏠</span><span class="bc-sep">/</span><span class="bc-cur">작업기록</span></div>
+          <div class="breadcrumb">
+            <span class="bc-ico bc-link" data-goto="home">🏠</span>
+            <span class="bc-sep">/</span>
+            <span class="bc-cur">작업기록</span>
+          </div>
           <div class="glass log-hero">
             <div class="log-hero-left">
-              <div class="log-hero-icon">📋</div>
-              <div><div style="font-size:18px;font-weight:700;color:var(--t1)">작업기록</div><div style="font-size:13px;color:var(--t3)">시설 작업 이력 관리</div></div>
+              <div class="log-hero-icon log-hero-icon--records">📋</div>
+              <div>
+                <div class="hero-title">작업기록</div>
+                <div class="hero-sub">시설 작업 이력 관리</div>
+              </div>
             </div>
             <button class="btn-o" onclick="openLogModal()">＋ 새 기록</button>
           </div>
           <div class="log-stats-row">
-            <div class="log-stat-box"><div class="log-stat-num" id="log-stat-total" style="color:var(--t1)">0</div><div class="log-stat-lbl">전체</div></div>
-            <div class="log-stat-box"><div class="log-stat-num" id="log-stat-done"  style="color:var(--green)">0</div><div class="log-stat-lbl">완료</div></div>
-            <div class="log-stat-box"><div class="log-stat-num" id="log-stat-prog"  style="color:var(--blue)">0</div><div class="log-stat-lbl">진행중</div></div>
-            <div class="log-stat-box"><div class="log-stat-num" id="log-stat-wait"  style="color:var(--amber)">0</div><div class="log-stat-lbl">대기</div></div>
+            <div class="log-stat-box">
+              <div class="log-stat-num" id="log-stat-total">0</div>
+              <div class="log-stat-lbl">전체</div>
+            </div>
+            <div class="log-stat-box">
+              <div class="log-stat-num log-stat-num--done" id="log-stat-done">0</div>
+              <div class="log-stat-lbl">완료</div>
+            </div>
+            <div class="log-stat-box">
+              <div class="log-stat-num log-stat-num--prog" id="log-stat-prog">0</div>
+              <div class="log-stat-lbl">진행중</div>
+            </div>
+            <div class="log-stat-box">
+              <div class="log-stat-num log-stat-num--wait" id="log-stat-wait">0</div>
+              <div class="log-stat-lbl">대기</div>
+            </div>
           </div>
           <div class="filter-wrap">
             <div class="filter-scroll" id="log-cat-filter"></div>
-            <div class="filter-scroll" id="log-status-filter" style="margin-top:7px"></div>
+            <div class="filter-scroll filter-scroll--mt" id="log-status-filter"></div>
           </div>
-          <div class="slbl" id="log-list-count" style="margin-bottom:10px">0건</div>
+          <div class="slbl slbl--mb" id="log-list-count">0건</div>
           <div class="log-list" id="log-list"></div>
         </div>
       </section>
 
-      <!-- ===================== 작업기록 상세 ===================== -->
+      <!-- ===== 작업기록 상세 ===== -->
       <section id="page-records-detail" class="page">
         <div class="pi">
           <div class="breadcrumb">
-            <span class="bc-ico bc-link" data-goto="home">🏠</span><span class="bc-sep">/</span>
-            <span class="bc-link" data-goto="records">작업기록</span><span class="bc-sep">/</span>
+            <span class="bc-ico bc-link" data-goto="home">🏠</span>
+            <span class="bc-sep">/</span>
+            <span class="bc-link" data-goto="records">작업기록</span>
+            <span class="bc-sep">/</span>
             <span class="bc-cur" id="log-detail-breadcrumb">상세</span>
           </div>
-          <div class="glass" style="padding:22px;margin-bottom:14px">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+          <div class="glass detail-card">
+            <div class="detail-card__top">
               <div id="log-detail-status-badge"></div>
-              <div style="font-size:12px;color:var(--t4)" id="log-detail-updated"></div>
+              <div class="detail-card__updated" id="log-detail-updated"></div>
             </div>
-            <h2 style="font-size:22px;font-weight:800;color:var(--t1);margin-bottom:16px;line-height:1.3" id="log-detail-title"></h2>
+            <h2 class="detail-title" id="log-detail-title"></h2>
             <div class="spg">
               <div class="spi"><div class="spll">작업 유형</div><div class="spvl" id="log-detail-cat"></div></div>
               <div class="spi"><div class="spll">상태</div><div class="spvl" id="log-detail-statusval"></div></div>
@@ -353,117 +494,143 @@
               <div class="spi"><div class="spll">작업일</div><div class="spvl" id="log-detail-date"></div></div>
             </div>
           </div>
-          <!-- 상세 내용 -->
-          <div class="glass" style="padding:20px;margin-bottom:14px" id="log-detail-desc-wrap">
-            <div class="slbl" style="margin-bottom:10px">상세 내용</div>
-            <p style="font-size:16px;color:var(--t2);line-height:1.85;white-space:pre-wrap" id="log-detail-desc"></p>
+          <div class="glass detail-desc-wrap" id="log-detail-desc-wrap">
+            <div class="slbl slbl--mb">상세 내용</div>
+            <p class="detail-desc" id="log-detail-desc"></p>
           </div>
-          <!-- Before / After 사진 비교 섹션 (JS openLogDetail이 innerHTML로 채움) -->
-          <div class="glass" style="padding:20px;margin-bottom:14px;display:none" id="log-detail-photos">
-            <!-- JS가 ba-detail-grid 구조를 주입 -->
+          <div class="glass detail-photos-wrap hidden" id="log-detail-photos">
+            <div class="slbl slbl--mb">📷 현장 사진</div>
+            <div id="log-detail-photos-grid" class="detail-photos-grid"></div>
           </div>
-          <!-- 수정/삭제 버튼 -->
           <div class="detail-actions">
-            <button class="btn-o"  id="btn-log-detail-edit" style="flex:2;justify-content:center">✏️ 수정하기</button>
-            <button class="btn-gh" id="btn-log-detail-del"  style="flex:1;justify-content:center">🗑 삭제</button>
+            <button class="btn-o detail-actions__edit" id="btn-log-detail-edit">✏️ 수정하기</button>
+            <button class="btn-gh detail-actions__del" id="btn-log-detail-del">🗑 삭제</button>
           </div>
         </div>
       </section>
 
-      <!-- ===================== 학습메모 목록 ===================== -->
+      <!-- ===== 학습메모 목록 ===== -->
       <section id="page-memo" class="page">
         <div class="pi">
-          <div class="breadcrumb"><span class="bc-ico bc-link" data-goto="home">🏠</span><span class="bc-sep">/</span><span class="bc-cur">학습메모</span></div>
+          <div class="breadcrumb">
+            <span class="bc-ico bc-link" data-goto="home">🏠</span>
+            <span class="bc-sep">/</span>
+            <span class="bc-cur">학습메모</span>
+          </div>
           <div class="glass memo-hero">
-            <div style="display:flex;align-items:center;gap:14px;flex:1">
-              <div class="log-hero-icon" style="background:rgba(124,58,237,.15)">📒</div>
-              <div><div style="font-size:18px;font-weight:700;color:var(--t1)">학습 메모</div><div style="font-size:13px;color:var(--t3)">기술 노트 & 현장 지식 아카이브</div></div>
+            <div class="memo-hero__left">
+              <div class="log-hero-icon log-hero-icon--memo">📒</div>
+              <div>
+                <div class="hero-title">학습 메모</div>
+                <div class="hero-sub">기술 노트 & 현장 지식 아카이브</div>
+              </div>
             </div>
             <button class="btn-o" onclick="openMemoModal()">＋ 메모 추가</button>
           </div>
-          <div class="filter-wrap"><div class="filter-scroll" id="memo-filter"></div></div>
-          <div class="slbl" id="memo-list-count" style="margin-bottom:10px">0건</div>
+          <div class="filter-wrap">
+            <div class="filter-scroll" id="memo-filter"></div>
+          </div>
+          <div class="slbl slbl--mb" id="memo-list-count">0건</div>
           <div class="memo-grid" id="memo-list"></div>
         </div>
       </section>
 
-      <!-- ===================== 학습메모 상세 ===================== -->
+      <!-- ===== 학습메모 상세 ===== -->
       <section id="page-memo-detail" class="page">
         <div class="pi">
           <div class="breadcrumb">
-            <span class="bc-ico bc-link" data-goto="home">🏠</span><span class="bc-sep">/</span>
-            <span class="bc-link" data-goto="memo">학습메모</span><span class="bc-sep">/</span>
+            <span class="bc-ico bc-link" data-goto="home">🏠</span>
+            <span class="bc-sep">/</span>
+            <span class="bc-link" data-goto="memo">학습메모</span>
+            <span class="bc-sep">/</span>
             <span class="bc-cur" id="memo-detail-breadcrumb">상세</span>
           </div>
-          <div class="glass" style="padding:22px;margin-bottom:14px">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+          <div class="glass detail-card">
+            <div class="detail-card__top">
               <span class="memo-cat-badge" id="memo-detail-cat-badge"></span>
-              <span style="font-size:12px;color:var(--t4)" id="memo-detail-date"></span>
+              <span class="detail-card__date" id="memo-detail-date"></span>
             </div>
-            <h2 style="font-size:22px;font-weight:800;color:var(--t1);margin-bottom:14px" id="memo-detail-title"></h2>
-            <div id="memo-detail-tags" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px"></div>
+            <h2 class="detail-title" id="memo-detail-title"></h2>
+            <div id="memo-detail-tags" class="memo-tags-row"></div>
             <div class="memo-content-box" id="memo-detail-content"></div>
           </div>
-          <!-- 수정/삭제 버튼 -->
           <div class="detail-actions">
-            <button class="btn-o"  id="btn-memo-detail-edit" style="flex:2;justify-content:center">✏️ 수정하기</button>
-            <button class="btn-gh" id="btn-memo-detail-del"  style="flex:1;justify-content:center">🗑 삭제</button>
+            <button class="btn-o detail-actions__edit" id="btn-memo-detail-edit">✏️ 수정하기</button>
+            <button class="btn-gh detail-actions__del" id="btn-memo-detail-del">🗑 삭제</button>
           </div>
         </div>
       </section>
 
-      <!-- ===================== 연간 로드맵 ===================== -->
+      <!-- ===== 연간 로드맵 ===== -->
       <section id="page-roadmap" class="page">
         <div class="pi">
-          <div class="breadcrumb"><span class="bc-ico bc-link" data-goto="home">🏠</span><span class="bc-sep">/</span><span class="bc-cur">연간 로드맵</span></div>
+          <div class="breadcrumb">
+            <span class="bc-ico bc-link" data-goto="home">🏠</span>
+            <span class="bc-sep">/</span>
+            <span class="bc-cur">연간 로드맵</span>
+          </div>
           <div class="glass rm-hero">
-            <div style="display:flex;align-items:center;gap:14px;flex:1">
-              <div class="log-hero-icon" style="background:rgba(29,78,216,.15)">📅</div>
-              <div><div style="font-size:18px;font-weight:700;color:var(--t1)">연간 로드맵</div><div style="font-size:13px;color:var(--t3)">월별 법정·정기·계절 점검 일정</div></div>
+            <div class="rm-hero__left">
+              <div class="log-hero-icon log-hero-icon--roadmap">📅</div>
+              <div>
+                <div class="hero-title">연간 로드맵</div>
+                <div class="hero-sub">월별 법정·정기·계절 점검 일정</div>
+              </div>
             </div>
             <button class="btn-o" onclick="openSchModal()">＋ 일정 추가</button>
           </div>
-          <div class="glass" style="padding:16px;margin-bottom:14px">
-            <div class="slbl" style="margin-bottom:10px">2025년 전체 일정</div>
+          <div class="glass rm-minimap">
+            <div class="slbl slbl--mb">2025년 전체 일정</div>
             <div class="rm-year-grid" id="rm-year-grid"></div>
             <div class="rm-legend">
-              <span class="rm-leg-item"><span class="rm-dot" style="background:var(--red)"></span>법정</span>
-              <span class="rm-leg-item"><span class="rm-dot" style="background:var(--blue)"></span>정기</span>
-              <span class="rm-leg-item"><span class="rm-dot" style="background:var(--green)"></span>계절</span>
+              <span class="rm-leg-item"><span class="rm-dot rm-dot--legal"></span>법정</span>
+              <span class="rm-leg-item"><span class="rm-dot rm-dot--regular"></span>정기</span>
+              <span class="rm-leg-item"><span class="rm-dot rm-dot--season"></span>계절</span>
             </div>
           </div>
           <div class="rm-month-tabs" id="rm-month-tabs"></div>
-          <div class="slbl" id="rm-list-count" style="margin-bottom:10px">0건</div>
+          <div class="slbl slbl--mb" id="rm-list-count">0건</div>
           <div class="rm-list" id="rm-list"></div>
         </div>
       </section>
 
-      <!-- ===================== 검색 ===================== -->
+      <!-- ===== 검색 ===== -->
       <section id="page-search" class="page">
         <div class="pi">
-          <div class="breadcrumb"><span class="bc-ico bc-link" data-goto="home">🏠</span><span class="bc-sep">/</span><span class="bc-cur">검색</span></div>
-          <div class="glass" style="padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;gap:10px">
-            <i class="fa-solid fa-magnifying-glass" style="color:var(--t3)"></i>
-            <input id="search-input" type="search" placeholder="매뉴얼, 작업기록, 메모 검색..."
-              style="border:none;background:transparent;font-family:inherit;font-size:16px;color:var(--t1);outline:none;flex:1"/>
+          <div class="breadcrumb">
+            <span class="bc-ico bc-link" data-goto="home">🏠</span>
+            <span class="bc-sep">/</span>
+            <span class="bc-cur">검색</span>
+          </div>
+          <div class="glass search-bar">
+            <i class="fa-solid fa-magnifying-glass search-bar__icon"></i>
+            <input id="search-input" type="search"
+              placeholder="매뉴얼, 작업기록, 메모 검색..." class="search-bar__input"/>
           </div>
           <div id="search-results">
-            <div style="text-align:center;padding:48px 20px;color:var(--t4)">
-              <div style="font-size:32px;margin-bottom:12px;opacity:.3">🔍</div>
-              <div style="font-size:15px">검색어를 입력하세요</div>
+            <div class="empty-state">
+              <div class="empty-state__icon">🔍</div>
+              <div class="empty-state__text">검색어를 입력하세요</div>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- ===================== 연락처 ===================== -->
+      <!-- ===== 연락처 ===== -->
       <section id="page-contacts" class="page">
         <div class="pi">
-          <div class="breadcrumb"><span class="bc-ico bc-link" data-goto="home">🏠</span><span class="bc-sep">/</span><span class="bc-cur">연락처</span></div>
+          <div class="breadcrumb">
+            <span class="bc-ico bc-link" data-goto="home">🏠</span>
+            <span class="bc-sep">/</span>
+            <span class="bc-cur">연락처</span>
+          </div>
           <div class="glass log-hero">
             <div class="log-hero-left">
-              <div class="log-hero-icon" style="background:rgba(13,148,136,.15)">📇</div>
-              <div><div style="font-size:18px;font-weight:700;color:var(--t1)">연락처</div><div style="font-size:13px;color:var(--t3)">협력업체 및 담당자</div></div>
+              <div class="log-hero-icon log-hero-icon--contacts">📇</div>
+              <div>
+                <div class="hero-title">연락처</div>
+                <div class="hero-sub">협력업체 및 담당자</div>
+              </div>
             </div>
             <button class="btn-o" onclick="openContactModal()">＋ 추가</button>
           </div>
@@ -471,56 +638,91 @@
         </div>
       </section>
 
-      <!-- ===================== 통계 ===================== -->
+      <!-- ===== 통계 ===== -->
       <section id="page-stats" class="page">
         <div class="pi">
-          <div class="breadcrumb"><span class="bc-ico bc-link" data-goto="home">🏠</span><span class="bc-sep">/</span><span class="bc-cur">통계</span></div>
-          <div class="glass log-hero" style="margin-bottom:14px">
+          <div class="breadcrumb">
+            <span class="bc-ico bc-link" data-goto="home">🏠</span>
+            <span class="bc-sep">/</span>
+            <span class="bc-cur">통계</span>
+          </div>
+          <div class="glass log-hero">
             <div class="log-hero-left">
-              <div class="log-hero-icon" style="background:rgba(124,58,237,.15)">📊</div>
-              <div><div style="font-size:18px;font-weight:700;color:var(--t1)">통계</div><div style="font-size:13px;color:var(--t3)">작업 완료율 및 현황</div></div>
+              <div class="log-hero-icon log-hero-icon--stats">📊</div>
+              <div>
+                <div class="hero-title">통계</div>
+                <div class="hero-sub">작업 완료율 및 현황</div>
+              </div>
             </div>
           </div>
-          <div class="log-stats-row" style="margin-bottom:14px">
-            <div class="log-stat-box"><div class="log-stat-num" id="stats-total" style="color:var(--t1)">0</div><div class="log-stat-lbl">전체 작업</div></div>
-            <div class="log-stat-box"><div class="log-stat-num" id="stats-done"  style="color:var(--green)">0</div><div class="log-stat-lbl">완료</div></div>
-            <div class="log-stat-box"><div class="log-stat-num" id="stats-prog"  style="color:var(--blue)">0</div><div class="log-stat-lbl">진행중</div></div>
-            <div class="log-stat-box"><div class="log-stat-num" id="stats-memo"  style="color:var(--purple)">0</div><div class="log-stat-lbl">학습메모</div></div>
+          <div class="log-stats-row">
+            <div class="log-stat-box">
+              <div class="log-stat-num" id="stats-total">0</div>
+              <div class="log-stat-lbl">전체 작업</div>
+            </div>
+            <div class="log-stat-box">
+              <div class="log-stat-num log-stat-num--done" id="stats-done">0</div>
+              <div class="log-stat-lbl">완료</div>
+            </div>
+            <div class="log-stat-box">
+              <div class="log-stat-num log-stat-num--prog" id="stats-prog">0</div>
+              <div class="log-stat-lbl">진행중</div>
+            </div>
+            <div class="log-stat-box">
+              <div class="log-stat-num log-stat-num--memo" id="stats-memo">0</div>
+              <div class="log-stat-lbl">학습메모</div>
+            </div>
           </div>
-          <div class="glass" style="padding:48px;text-align:center;color:var(--t4)">
-            <div style="font-size:32px;margin-bottom:12px;opacity:.3">📊</div>
-            <div style="font-size:15px">차트 기능 준비 중입니다</div>
+          <div class="glass empty-state-card">
+            <div class="empty-state__icon">📊</div>
+            <div class="empty-state__text">차트 기능 준비 중입니다</div>
           </div>
         </div>
       </section>
 
-      <!-- ===================== 설정 ===================== -->
+      <!-- ===== 설정 ===== -->
       <section id="page-settings" class="page">
         <div class="pi">
-          <div class="breadcrumb"><span class="bc-ico bc-link" data-goto="home">🏠</span><span class="bc-sep">/</span><span class="bc-cur">설정</span></div>
-          <div class="glass" style="padding:20px;margin-bottom:14px">
-            <div class="slbl" style="margin-bottom:14px">계정</div>
+          <div class="breadcrumb">
+            <span class="bc-ico bc-link" data-goto="home">🏠</span>
+            <span class="bc-sep">/</span>
+            <span class="bc-cur">설정</span>
+          </div>
+          <div class="glass settings-card">
+            <div class="slbl slbl--mb">계정</div>
             <div class="settings-row">
-              <div><div class="settings-label">로그인 계정</div><div class="settings-desc" id="settings-user-email">-</div></div>
-              <button class="btn-gh" id="btn-logout" style="padding:10px 16px">로그아웃</button>
+              <div>
+                <div class="settings-label">로그인 계정</div>
+                <div class="settings-desc" id="settings-user-email">-</div>
+              </div>
+              <button class="btn-gh" id="btn-logout">로그아웃</button>
             </div>
           </div>
-          <div class="glass" style="padding:20px;margin-bottom:14px">
-            <div class="slbl" style="margin-bottom:14px">앱 설정</div>
+          <div class="glass settings-card">
+            <div class="slbl slbl--mb">앱 설정</div>
             <div class="settings-row">
-              <div><div class="settings-label">Firebase 연결 상태</div><div class="settings-desc" id="fb-status">확인 중...</div></div>
-              <span id="fb-status-badge" style="font-size:11px;background:rgba(255,255,255,.07);padding:4px 12px;border-radius:99px;color:var(--t3)">-</span>
+              <div>
+                <div class="settings-label">Firebase 연결 상태</div>
+                <div class="settings-desc" id="fb-status">확인 중...</div>
+              </div>
+              <span id="fb-status-badge" class="status-badge">-</span>
             </div>
           </div>
-          <div class="glass" style="padding:20px">
-            <div class="slbl" style="margin-bottom:14px">데이터</div>
+          <div class="glass settings-card">
+            <div class="slbl slbl--mb">데이터</div>
             <div class="settings-row">
-              <div><div class="settings-label">데이터 내보내기</div><div class="settings-desc">모든 기록을 JSON으로 저장</div></div>
-              <button class="btn-gh" id="btn-export" style="padding:10px 16px" onclick="exportData()">내보내기</button>
+              <div>
+                <div class="settings-label">데이터 내보내기</div>
+                <div class="settings-desc">모든 기록을 JSON으로 저장</div>
+              </div>
+              <button class="btn-gh" onclick="exportData()">내보내기</button>
             </div>
             <div class="settings-row">
-              <div><div class="settings-label">게스트 데이터 초기화</div><div class="settings-desc">로컬에 임시 저장된 데이터 삭제</div></div>
-              <button class="btn-gh" style="padding:10px 16px;color:var(--red)" onclick="clearLocalData()">초기화</button>
+              <div>
+                <div class="settings-label">게스트 데이터 초기화</div>
+                <div class="settings-desc">로컬에 임시 저장된 데이터 삭제</div>
+              </div>
+              <button class="btn-gh btn-gh--danger" onclick="clearLocalData()">초기화</button>
             </div>
           </div>
         </div>
@@ -530,34 +732,10 @@
   </div><!-- /main -->
 </div><!-- /app -->
 
-<!-- 숨겨진 파일 input (사진 업로드용) -->
-<input type="file" id="photo-input-camera"  accept="image/*" capture="environment" multiple style="display:none"/>
-<input type="file" id="photo-input-gallery" accept="image/*" multiple style="display:none"/>
+<!-- 파일 입력 (사진 업로드) -->
+<input type="file" id="photo-input-camera"  accept="image/*" capture="environment" multiple class="hidden"/>
+<input type="file" id="photo-input-gallery" accept="image/*" multiple class="hidden"/>
 
 <script src="main.js"></script>
-
-<!-- ★ 인증 로딩 스피너 — onAuthStateChanged 완료 전 표시 -->
-<div id="auth-loader" style="
-  position:fixed;inset:0;
-  background:#080c18;
-  display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
-  z-index:99999;
-  transition:opacity .25s ease;">
-  <div style="
-    width:48px;height:48px;border-radius:50%;
-    border:3px solid rgba(255,255,255,.12);
-    border-top-color:#e05c0a;
-    animation:kf-spin .75s linear infinite;">
-  </div>
-  <div style="margin-top:16px;font-size:14px;font-weight:600;
-    color:rgba(255,255,255,.4);letter-spacing:.04em">
-    K-Facility
-  </div>
-</div>
-<style>
-  @keyframes kf-spin { to { transform:rotate(360deg); } }
-</style>
-
 </body>
 </html>
