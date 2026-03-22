@@ -923,6 +923,25 @@ function openManualModal(catKey, id) {
         placeholder="전원 차단 및 잠금|주 차단기를 OFF하고 검전기로 무전압 확인&#10;기존 MCB 제거|전선 분리 후 단자 위치 사진 촬영&#10;신규 MCB 설치|동일 규격 MCB를 딘레일에 고정&#10;투입 테스트|정상 전압 공급 확인">${esc(stepsText)}</textarea>
     </div>
 
+    <!-- 📷 사진 — 섹션 3(작업절차) 바로 아래 -->
+    <div class="modal-section-divider">📷 작업 현장 사진</div>
+    <div class="lf-group">
+      <label class="lf-label">목록 썸네일로 표시됩니다 · 800px 자동 압축 · 최대 3장</label>
+      <div id="mf-photo-preview" class="photo-preview-wrap" style="min-height:44px;margin-bottom:10px"></div>
+      <div style="display:flex;gap:8px">
+        <label class="btn-gh" style="flex:1;justify-content:center;cursor:pointer;min-height:44px">
+          📷 카메라 촬영
+          <input type="file" accept="image/*" capture="environment"
+            style="display:none" onchange="handleManualPhoto(event)"/>
+        </label>
+        <label class="btn-gh" style="flex:1;justify-content:center;cursor:pointer;min-height:44px">
+          🖼 갤러리 선택
+          <input type="file" accept="image/*" multiple
+            style="display:none" onchange="handleManualPhoto(event)"/>
+        </label>
+      </div>
+    </div>
+
     <div class="modal-section-divider">✅ 섹션 4 — 점검 체크리스트</div>
     <div class="lf-group">
       <label class="lf-label">한 줄에 하나씩 입력</label>
@@ -943,25 +962,6 @@ function openManualModal(catKey, id) {
         <input class="lf-input" id="mf-tip" type="text"
           value="${esc(m?.tip||'')}"
           placeholder="교체 후 12시간 모니터링 권장"/>
-      </div>
-    </div>
-
-    <!-- 사진 등록 (file input 모달 내 직접 embed) -->
-    <div class="modal-section-divider">📷 매뉴얼 대표 사진</div>
-    <div class="lf-group">
-      <label class="lf-label">등록된 사진은 목록 썸네일로 표시됩니다 (800px 자동 압축)</label>
-      <div id="mf-photo-preview" class="photo-preview-wrap" style="min-height:44px;margin-bottom:10px"></div>
-      <div style="display:flex;gap:8px">
-        <label class="btn-gh" style="flex:1;justify-content:center;cursor:pointer;min-height:44px">
-          📷 카메라 촬영
-          <input type="file" accept="image/*" capture="environment"
-            style="display:none" onchange="handleManualPhoto(event)"/>
-        </label>
-        <label class="btn-gh" style="flex:1;justify-content:center;cursor:pointer;min-height:44px">
-          🖼 갤러리 선택
-          <input type="file" accept="image/*" multiple
-            style="display:none" onchange="handleManualPhoto(event)"/>
-        </label>
       </div>
     </div>
 
