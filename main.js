@@ -855,17 +855,21 @@ function openManualModal(catKey, id) {
   S.stepItems      = [];
   const m = id ? (manuals[catKey]||[]).find(x=>x.id===id) : null;
 
-  /* 기존 steps → stepItems 버퍼로 변환 (하위 호환) */
+  /* 기존 steps → stepItems 버퍼로 변환 (하위 호환)
+     신형: {text, imgUrls:[url,...], imgPaths:[path,...]}
+     구형: {text, imgUrl, imgPath} → imgUrls 배열로 업그레이드 */
   const existingSteps = (m?.steps||[]).map(s => {
-    if (typeof s === 'string') return { text: s,      imgUrl: '', imgPath: '', file: null, previewUrl: '' };
-    /* 신형 {text, imgUrl} */
-    if (s.text !== undefined)  return { text: s.text, imgUrl: s.imgUrl||'', imgPath: s.imgPath||'', file: null, previewUrl: s.imgUrl||'' };
-    /* 구형 {title, desc} */
-    const t = (s.title||'').trim();
-    const d = (s.desc ||'').trim();
-    return { text: d ? t + ' — ' + d : t, imgUrl: '', imgPath: '', file: null, previewUrl: '' };
+    if (typeof s === 'string') return { text: s, imgUrls:[], imgPaths:[], files:[], previewUrls:[] };
+    const t = typeof s.title === 'string' ? ((s.title||'').trim() + (s.desc ? ' — '+(s.desc||'').trim() : '')) : '';
+    const text = s.text !== undefined ? s.text : t;
+    /* 구형 단일 imgUrl → 배열로 변환 */
+    const imgUrls  = s.imgUrls  || (s.imgUrl  ? [s.imgUrl]  : []);
+    const imgPaths = s.imgPaths || (s.imgPath ? [s.imgPath] : []);
+    return { text, imgUrls, imgPaths, files:[], previewUrls:[] };
   }).filter(si => si.text);
-  S.stepItems = existingSteps.length ? existingSteps : [{ text:'', imgUrl:'', imgPath:'', file:null, previewUrl:'' }];
+  S.stepItems = existingSteps.length
+    ? existingSteps
+    : [{ text:'', imgUrls:[], imgPaths:[], files:[], previewUrls:[] }];
 
   /* checklist → 줄바꿈 텍스트 */
   const ckText = (m?.checklist||[]).join('\n');
@@ -979,7 +983,20 @@ function renderStepItems() {
   const container = document.getElementById('mf-steps-container');
   if (!container) return;
 
-  container.innerHTML = S.stepItems.map((item, i) => `
+  container.innerHTML = S.stepItems.map((item, i) => {
+    /* 미리보기: 기존 저장 URL + 새로 선택한 파일 base64 합산 */
+    const allPreviews = [
+      ...(item.imgUrls   || []).map(url  => ({ src: url,  isNew: false })),
+      ...(item.previewUrls || []).map(url => ({ src: url,  isNew: true  })),
+    ];
+    const thumbsHtml = allPreviews.map((p, pi) => `
+      <div class="step-thumb-wrap">
+        <img class="step-thumb" src="${p.src}" onclick="previewPhoto('${p.src}')">
+        <button type="button" class="step-thumb-del"
+          onclick="removeStepPhoto(${i},${pi})">×</button>
+      </div>`).join('');
+
+    return `
     <div class="step-item-block" id="step-block-${i}">
       <div class="step-item-block__header">
         <span class="step-item-block__num">${i + 1}</span>
@@ -995,31 +1012,29 @@ function renderStepItems() {
         >${esc(item.text)}</textarea>
       </div>
       <div class="step-item-block__photo">
-        ${item.previewUrl
-          ? `<div class="step-item-block__photo-thumb">
-               <img src="${item.previewUrl}">
-               <button type="button" class="step-item-block__photo-del" onclick="removeStepPhoto(${i})">×</button>
-             </div>`
-          : ''}
+        <!-- 가로 스크롤 썸네일 행 -->
+        ${allPreviews.length ? `<div class="step-thumbs-row">${thumbsHtml}</div>` : ''}
+        <!-- 사진 추가 버튼 -->
         <div class="step-item-block__btns">
           <label class="step-item-block__btn">
-            📷
-            <input type="file" accept="image/*" capture="environment"
+            📷 카메라
+            <input type="file" accept="image/*" capture="environment" multiple
               class="hidden" onchange="handleStepPhoto(event,${i})"/>
           </label>
           <label class="step-item-block__btn">
-            🖼
-            <input type="file" accept="image/*"
+            🖼 갤러리
+            <input type="file" accept="image/*" multiple
               class="hidden" onchange="handleStepPhoto(event,${i})"/>
           </label>
         </div>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 /** 절차 항목 추가 */
 function addStepItem() {
-  S.stepItems.push({ text: '', imgUrl: '', imgPath: '', file: null, previewUrl: '' });
+  S.stepItems.push({ text:'', imgUrls:[], imgPaths:[], files:[], previewUrls:[] });
   renderStepItems();
   /* 새 항목으로 스크롤 */
   const container = document.getElementById('mf-steps-container');
@@ -1030,31 +1045,48 @@ function addStepItem() {
 function removeStepItem(i) {
   S.stepItems.splice(i, 1);
   if (S.stepItems.length === 0)
-    S.stepItems.push({ text: '', imgUrl: '', imgPath: '', file: null, previewUrl: '' });
+    S.stepItems.push({ text:'', imgUrls:[], imgPaths:[], files:[], previewUrls:[] });
   renderStepItems();
 }
 
 /** 절차 항목 사진 선택 */
 function handleStepPhoto(e, idx) {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    S.stepItems[idx].file       = file;
-    S.stepItems[idx].previewUrl = ev.target.result;
-    /* imgUrl은 저장 시 Storage 업로드 후 채워짐 */
-    renderStepItems();
-  };
-  reader.readAsDataURL(file);
+  const files = [...e.target.files];
+  if (!files.length) return;
+  const MAX_PER_STEP = 5;
+  const item = S.stepItems[idx];
+  if (!item.files)       item.files       = [];
+  if (!item.previewUrls) item.previewUrls = [];
+
+  files.forEach(file => {
+    const total = (item.imgUrls||[]).length + item.files.length;
+    if (total >= MAX_PER_STEP) { toast('절차당 최대 ' + MAX_PER_STEP + '장까지 등록 가능합니다'); return; }
+    const reader = new FileReader();
+    reader.onload = ev => {
+      item.files.push(file);
+      item.previewUrls.push(ev.target.result);
+      renderStepItems();
+    };
+    reader.readAsDataURL(file);
+  });
   e.target.value = '';
 }
 
-/** 절차 항목 사진 제거 */
-function removeStepPhoto(idx) {
-  S.stepItems[idx].file       = null;
-  S.stepItems[idx].previewUrl = '';
-  S.stepItems[idx].imgUrl     = '';
-  S.stepItems[idx].imgPath    = '';
+/** 절차 항목 사진 개별 제거 (stepIdx, photoIdx)
+ *  photoIdx < imgUrls.length → 기존 저장 사진 제거
+ *  else → 새로 선택한 파일 제거 */
+function removeStepPhoto(stepIdx, photoIdx) {
+  const item = S.stepItems[stepIdx];
+  if (!item) return;
+  const existingCount = (item.imgUrls || []).length;
+  if (photoIdx < existingCount) {
+    item.imgUrls  = item.imgUrls.filter((_,i) => i !== photoIdx);
+    item.imgPaths = (item.imgPaths||[]).filter((_,i) => i !== photoIdx);
+  } else {
+    const newIdx = photoIdx - existingCount;
+    item.files       = (item.files||[]).filter((_,i) => i !== newIdx);
+    item.previewUrls = (item.previewUrls||[]).filter((_,i) => i !== newIdx);
+  }
   renderStepItems();
 }
 
@@ -1125,35 +1157,40 @@ async function saveManual() {
   /* 섹션2: 안전주의사항 */
   const cautions = ($('mf-safety')?.value||'').split('\n').map(s=>s.trim()).filter(Boolean);
 
-  /* ★ 섹션3: S.stepItems에서 읽고, 신규 사진은 Storage 업로드 */
-  const uid_step = S.user?.uid || 'guest';
+  /* ★ 섹션3: S.stepItems → imgUrls 배열로 Storage 업로드 */
+  const uid_step  = S.user?.uid || 'guest';
   const docIdStep = S.editManualId || (db ? db.collection('manuals').doc().id : 'local_'+genId());
   const steps = [];
   for (let si = 0; si < S.stepItems.length; si++) {
     const item = S.stepItems[si];
     const text = (document.getElementById('step-text-'+si)?.value || item.text || '').trim();
-    if (!text) continue;                        /* 빈 항목 제외 */
+    if (!text) continue;  /* 빈 항목 제외 */
 
-    let imgUrl  = item.imgUrl  || '';
-    let imgPath = item.imgPath || '';
+    /* 기존 저장된 URL 유지 */
+    const imgUrls  = [...(item.imgUrls  || [])];
+    const imgPaths = [...(item.imgPaths || [])];
 
-    /* 새로 선택한 사진 → Storage 업로드 */
-    if (item.file && S.fbReady && !S.isGuest && storage) {
-      try {
-        const fname = 'step' + si + '_' + Date.now() + '.jpg';
-        const spath = 'manuals/' + uid_step + '/' + docIdStep + '/' + fname;
-        const res   = await uploadPhoto(item.file, spath);
-        imgUrl  = res.url;
-        imgPath = res.storagePath;
-      } catch(se) {
-        console.warn('[절차 사진 업로드 실패]', se.message);
+    /* 새로 선택한 파일들 → Storage 업로드 */
+    const newFiles = item.files || [];
+    for (let fi = 0; fi < newFiles.length; fi++) {
+      const file = newFiles[fi];
+      if (S.fbReady && !S.isGuest && storage) {
+        try {
+          const fname = 'step' + si + '_f' + fi + '_' + Date.now() + '.jpg';
+          const spath = 'manuals/' + uid_step + '/' + docIdStep + '/' + fname;
+          const res   = await uploadPhoto(file, spath);
+          imgUrls.push(res.url);
+          imgPaths.push(res.storagePath);
+        } catch(se) {
+          console.warn('[절차 사진 업로드 실패]', se.message);
+        }
+      } else {
+        /* 게스트: base64 그대로 */
+        imgUrls.push((item.previewUrls||[])[fi] || '');
+        imgPaths.push('');
       }
-    } else if (item.file && S.isGuest) {
-      /* 게스트: base64 그대로 */
-      imgUrl = item.previewUrl || '';
     }
-
-    steps.push({ text, imgUrl, imgPath });
+    steps.push({ text, imgUrls, imgPaths });
   }
 
   /* 섹션4: 체크리스트 */
@@ -2029,13 +2066,14 @@ function renderSteps(steps, containerId) {
   const el = $(containerId || 'step-container') || $('md-steps-list');
   if (!el) return;
 
-  /* 데이터 정규화: 문자열 / {title,desc} 구형 / {text,imgUrl} 신형 모두 처리 */
+  /* 데이터 정규화: 문자열 / {title,desc} 구형 / {text,imgUrl(s)} 모두 처리 */
   const list = (steps || []).map(s => {
-    if (typeof s === 'string')  return { text: s,      imgUrl: '' };
-    if (s.text !== undefined)   return { text: s.text, imgUrl: s.imgUrl || '' };
-    const t = (s.title || '').trim();
-    const d = (s.desc  || '').trim();
-    return { text: d ? t + ' — ' + d : t, imgUrl: '' };
+    if (typeof s === 'string') return { text: s, imgUrls: [] };
+    const text = s.text !== undefined ? s.text
+      : ((s.title||'').trim() + (s.desc ? ' — '+(s.desc||'').trim() : ''));
+    /* 구형 단일 imgUrl → 배열로 */
+    const imgUrls = s.imgUrls || (s.imgUrl ? [s.imgUrl] : []);
+    return { text, imgUrls };
   }).filter(s => s.text.trim());
 
   if (!list.length) {
@@ -2043,7 +2081,6 @@ function renderSteps(steps, containerId) {
     return;
   }
 
-  /* 글 → 사진 순서로 flex-column 구조 출력 */
   el.innerHTML = list.map((s, i) => `
     <div class="step-row">
       <div class="step-left">
@@ -2053,9 +2090,13 @@ function renderSteps(steps, containerId) {
       <div class="glass step-card">
         <div class="step-card-head">
           <div class="step-title">${esc(s.text)}</div>
-          ${s.imgUrl
-            ? `<img class="step-photo" src="${s.imgUrl}" onclick="previewPhoto('${s.imgUrl}')" alt="절차 ${i+1} 사진">`
-            : ''}
+          ${s.imgUrls.length ? `
+            <div class="step-photos-row">
+              ${s.imgUrls.map(url => `
+                <img class="step-photo-thumb" src="${url}"
+                  onclick="previewPhoto('${url}')" alt="절차 ${i+1} 사진">`
+              ).join('')}
+            </div>` : ''}
         </div>
       </div>
     </div>`).join('');
