@@ -1801,8 +1801,15 @@ function renderMemo() {
   const ll=$('memo-list');       if(!ll) return;
 
   ll.innerHTML = list.length ? list.map(m => {
-    const bg=MEMO_COLORS[m.cat]||'rgba(255,255,255,.1)';
-    const preview=(m.content||'').slice(0,100)+((m.content||'').length>100?'…':'');
+    const bg      = MEMO_COLORS[m.cat] || 'rgba(255,255,255,.1)';
+    const preview = (m.content||'').slice(0,100) + ((m.content||'').length > 100 ? '…' : '');
+    /* 대표 이미지: imgUrls 배열 첫 번째 */
+    const thumbUrl = Array.isArray(m.imgUrls) && m.imgUrls[0] ? m.imgUrls[0] : '';
+    const thumbHtml = thumbUrl
+      ? `<img class="memo-card-thumb" src="${thumbUrl}"
+           onclick="event.stopPropagation();previewPhoto('${thumbUrl}')"
+           alt="참고 사진" onerror="this.style.display='none'">`
+      : '';
     return `
     <div class="gc memo-card" onclick="openMemoDetail('${m.id}')">
       <div class="memo-card-head">
@@ -1812,6 +1819,7 @@ function renderMemo() {
       <div class="memo-card-title">${esc(m.title)}</div>
       <div class="memo-card-preview">${esc(preview)}</div>
       <div class="memo-tags">${(m.tags||[]).map(t=>`<span class="m-tag">${esc(t)}</span>`).join('')}</div>
+      ${thumbHtml}
     </div>`;
   }).join('') :
   `<div class="gc" style="padding:48px;text-align:center;color:var(--t4);grid-column:1/-1">
