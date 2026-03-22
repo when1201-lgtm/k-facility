@@ -770,25 +770,28 @@ function renderManualDetail() {
       <div class="caution-row"><div class="caution-num">${i+1}</div><div class="caution-txt">${esc(c)}</div></div>`).join('');
   }
 
-  /* ③ 절차 타임라인 */
+  /* ③ 절차 타임라인 — 문자열/객체 둘 다 처리, 번호 + 제목 + 설명 */
   const stEl = $('md-steps-list');
-  if (stEl) stEl.innerHTML = (m.steps||[]).map((s,i)=>`
-    <div class="step-row">
-      <div class="step-left">
-        <div class="step-num-circle">${i+1}</div>
-        ${i<(m.steps.length-1)?'<div class="step-connector"></div>':''}
-      </div>
-      <div class="glass step-card">
-        <div class="step-card-head">
-          <div class="step-title">${esc(s.title)}</div>
-          <div class="step-desc">${esc(s.desc)}</div>
-          ${s.youtube?`<a href="${esc(s.youtube)}" target="_blank" class="step-yt-link">▶ YouTube 영상 보기</a>`:''}
+  if (stEl) {
+    const stepList = (m.steps||[]).map(s =>
+      typeof s === 'string' ? { title: s, desc: '', youtube: '' } : s
+    ).filter(s => s.title);
+    stEl.innerHTML = stepList.length ? stepList.map((s, i) => `
+      <div class="step-row">
+        <div class="step-left">
+          <div class="step-num-circle">${i + 1}</div>
+          ${i < stepList.length - 1 ? '<div class="step-connector"></div>' : ''}
         </div>
-        <div class="step-photo-zone">
-          <div class="step-photo-ph">📷 <span>사진 추가 (Firebase 연동 후)</span></div>
+        <div class="glass step-card">
+          <div class="step-card-head">
+            <div class="step-title">${esc(s.title)}</div>
+            ${s.desc ? `<div class="step-desc">${esc(s.desc)}</div>` : ''}
+            ${s.youtube ? `<a href="${esc(s.youtube)}" target="_blank" class="step-yt-link">▶ YouTube 영상 보기</a>` : ''}
+          </div>
         </div>
-      </div>
-    </div>`).join('');
+      </div>`).join('')
+    : '<div style="padding:16px;font-size:14px;color:var(--t4)">등록된 절차가 없습니다</div>';
+  }
 
   /* ④ 체크리스트 */
   const ckW = $('md-checklist-wrap');
@@ -862,7 +865,13 @@ function openManualModal(catKey, id) {
   const m = id ? (manuals[catKey]||[]).find(x=>x.id===id) : null;
 
   /* steps → 편집용 텍스트 변환: "제목|설명" 줄바꿈 */
-  const stepsText = (m?.steps||[]).map(s=>s.title+'|'+s.desc).join('\n');
+  /* steps → 편집용 텍스트: desc 있으면 "제목|설명", 없으면 "제목"만 */
+  const stepsText = (m?.steps||[]).map(s => {
+    if (typeof s === 'string') return s;          /* 문자열 형태 하위 호환 */
+    const t = (s.title||'').trim();
+    const d = (s.desc ||'').trim();
+    return d ? t + '|' + d : t;
+  }).filter(Boolean).join('\n');
   /* checklist → 줄바꿈 텍스트 */
   const ckText = (m?.checklist||[]).join('\n');
 
@@ -918,9 +927,14 @@ function openManualModal(catKey, id) {
 
     <div class="modal-section-divider">🔧 섹션 3 — 상세 작업 절차</div>
     <div class="lf-group">
-      <label class="lf-label">형식: <code style="background:rgba(255,255,255,.1);padding:1px 6px;border-radius:4px">제목|설명</code> — 한 줄에 하나씩</label>
+      <label class="lf-label">
+        한 줄에 하나씩 입력 &nbsp;·&nbsp;
+        <span style="color:var(--t4);font-weight:400">
+          설명 추가: <code style="background:rgba(255,255,255,.08);padding:1px 5px;border-radius:3px;font-size:11px">절차명|세부 설명</code> (선택)
+        </span>
+      </label>
       <textarea class="lf-textarea" id="mf-steps-raw" rows="6"
-        placeholder="전원 차단 및 잠금|주 차단기를 OFF하고 검전기로 무전압 확인&#10;기존 MCB 제거|전선 분리 후 단자 위치 사진 촬영&#10;신규 MCB 설치|동일 규격 MCB를 딘레일에 고정&#10;투입 테스트|정상 전압 공급 확인">${esc(stepsText)}</textarea>
+        placeholder="전원 차단 및 잠금&#10;기존 MCB 제거&#10;신규 MCB 설치&#10;투입 테스트">${esc(stepsText)}</textarea>
     </div>
 
     <!-- 📷 사진 — 섹션 3(작업절차) 바로 아래 -->
@@ -1044,13 +1058,21 @@ async function saveManual() {
   /* 섹션2: 안전주의사항 */
   const cautions = ($('mf-safety')?.value||'').split('\n').map(s=>s.trim()).filter(Boolean);
 
-  /* 섹션3: 절차 — "제목|설명" 형식 파싱 */
-  const steps = ($('mf-steps-raw')?.value||'').split('\n')
-    .map(line => line.trim()).filter(Boolean)
+  /* 섹션3: 절차 파싱 — 한 줄 = 하나의 절차 (빈 줄 자동 제거)
+     형식 A: "절차명"          → { title:"절차명", desc:"" }
+     형식 B: "절차명|세부 설명" → { title:"절차명", desc:"세부 설명" } */
+  const steps = ($('mf-steps-raw')?.value||'')
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => line.length > 0)          /* ★ 빈 줄 완전 제거 */
     .map(line => {
       const sep = line.indexOf('|');
       if (sep === -1) return { title: line, desc: '', youtube: '' };
-      return { title: line.slice(0, sep).trim(), desc: line.slice(sep+1).trim(), youtube: '' };
+      return {
+        title:   line.slice(0, sep).trim(),
+        desc:    line.slice(sep + 1).trim(),
+        youtube: '',
+      };
     });
 
   /* 섹션4: 체크리스트 */
