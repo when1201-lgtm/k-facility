@@ -232,8 +232,11 @@ function toast(msg, dur = 2500) {
 function hideAuthLoader() {
   const loader = document.getElementById('auth-loader');
   const app    = document.getElementById('app');
-  /* ★ loader 유무와 관계없이 반드시 #app 표시 */
-  if (app) app.style.display = '';
+  /* ★ class="hidden" 제거 + style 초기화 모두 적용 */
+  if (app) {
+    app.classList.remove('hidden');
+    app.style.display = '';
+  }
   if (!loader || loader.style.display === 'none') return;
   loader.style.opacity = '0';
   setTimeout(() => { loader.style.display = 'none'; }, 260);
@@ -241,7 +244,10 @@ function hideAuthLoader() {
 
 function showLoginScreen() {
   const lov = document.getElementById('lov');
-  if (lov) lov.style.display = 'flex'; /* 로그인 화면 표시 */
+  if (lov) {
+    lov.classList.remove('hidden');
+    lov.style.display = 'flex';
+  }
 }
 
 /* 라이트박스 */
@@ -337,9 +343,9 @@ function doLogin(user, isGuest) {
   const ava  = $('ava');   if (ava)  { ava.textContent = init; if (isGuest) ava.style.background = 'linear-gradient(135deg,#64748b,#475569)'; }
   const un   = $('uname'); if (un)   un.textContent = user.displayName || '사용자';
   const em   = $('settings-user-email'); if (em) em.textContent = user.email || (isGuest ? '게스트 모드' : '');
-  /* 로그인 오버레이 닫기 (display:none 방식) */
+  /* 로그인 오버레이 닫기 */
   const _lov = document.getElementById('lov');
-  if (_lov) _lov.style.display = 'none';
+  if (_lov) { _lov.classList.add('hidden'); _lov.style.display = ''; }
 
   if (S.fbReady && !isGuest) {
     subscribeFirestore();
@@ -1973,7 +1979,7 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ★ 안전망: 3초 안에 onAuthStateChanged 응답 없으면 강제로 로그인 화면 표시 */
   const _safetyTimer = setTimeout(() => {
     const app = document.getElementById('app');
-    if (app && app.style.display === 'none') {
+    if (app && (app.classList.contains('hidden') || app.style.display === 'none')) {
       console.warn('[K-Facility] ⚠️ 인증 타임아웃 — 로그인 화면으로 강제 전환');
       hideAuthLoader();
       showLoginScreen();
