@@ -772,40 +772,9 @@ function renderManualDetail() {
 
   /* ③ 절차 타임라인 — {text, imgUrl} 신형 / {title, desc} 구형 / 문자열 모두 지원
        출력: 번호 → 설명 → 사진 순서로 1:1 매칭 */
-  const stEl = $('md-steps-list');
-  if (stEl) {
-    const stepList = (m.steps||[]).map(s => {
-      if (typeof s === 'string')  return { text: s,      imgUrl: '' };
-      if (s.text !== undefined)   return { text: s.text, imgUrl: s.imgUrl||'' };
-      /* 구형 {title, desc} */
-      const t = (s.title||'').trim();
-      const d = (s.desc ||'').trim();
-      return { text: d ? t + ' — ' + d : t, imgUrl: '' };
-    }).filter(s => s.text);
-
-    stEl.innerHTML = stepList.length ? stepList.map((s, i) => `
-      <div class="step-row">
-        <div class="step-left">
-          <div class="step-num-circle">${i + 1}</div>
-          ${i < stepList.length - 1 ? '<div class="step-connector"></div>' : ''}
-        </div>
-        <div class="glass step-card" style="overflow:hidden">
-          <div class="step-card-head">
-            <!-- 설명 -->
-            <div class="step-title">${esc(s.text)}</div>
-            <!-- ★ 사진 — 설명 바로 아래 1:1 매칭 -->
-            ${s.imgUrl
-              ? `<img src="${s.imgUrl}" onclick="previewPhoto('${s.imgUrl}')"
-                   style="max-width:100%;max-height:200px;object-fit:contain;
-                          border-radius:10px;margin-top:12px;cursor:zoom-in;
-                          border:1px solid rgba(255,255,255,.12);display:block;
-                          background:rgba(0,0,0,.2)">`
-              : ''}
-          </div>
-        </div>
-      </div>`).join('')
-    : '<div style="padding:20px;font-size:14px;color:var(--t4)">등록된 절차가 없습니다</div>';
-  }
+  /* step-container = #step-container (index.html), fallback: md-steps-list */
+  /* ③ 절차 — renderSteps()에 위임 */
+  renderSteps(m.steps, 'step-container');
 
   /* ④ 체크리스트 */
   const ckW = $('md-checklist-wrap');
@@ -2044,6 +2013,48 @@ document.addEventListener('DOMContentLoaded', () => {
   initFirebase();
 });
 
+/* ═══════════════════════════════════════════════
+   renderSteps(steps, containerId)
+   역할: [{text, imgUrl}] 배열을 받아 step-container에 렌더링
+   - 페이지 로드 시 renderManualDetail()이 내부 호출
+   - 외부에서도 renderSteps(steps) 로 직접 호출 가능
+═══════════════════════════════════════════════ */
+function renderSteps(steps, containerId) {
+  const el = $(containerId || 'step-container') || $('md-steps-list');
+  if (!el) return;
+
+  /* 데이터 정규화: 문자열 / {title,desc} 구형 / {text,imgUrl} 신형 모두 처리 */
+  const list = (steps || []).map(s => {
+    if (typeof s === 'string')  return { text: s,      imgUrl: '' };
+    if (s.text !== undefined)   return { text: s.text, imgUrl: s.imgUrl || '' };
+    const t = (s.title || '').trim();
+    const d = (s.desc  || '').trim();
+    return { text: d ? t + ' — ' + d : t, imgUrl: '' };
+  }).filter(s => s.text.trim());
+
+  if (!list.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-state__icon">📋</div><div class="empty-state__text">등록된 절차가 없습니다</div></div>';
+    return;
+  }
+
+  /* 글 → 사진 순서로 flex-column 구조 출력 */
+  el.innerHTML = list.map((s, i) => `
+    <div class="step-row">
+      <div class="step-left">
+        <div class="step-num-circle">${i + 1}</div>
+        ${i < list.length - 1 ? '<div class="step-connector"></div>' : ''}
+      </div>
+      <div class="glass step-card">
+        <div class="step-card-head">
+          <div class="step-title">${esc(s.text)}</div>
+          ${s.imgUrl
+            ? `<img class="step-photo" src="${s.imgUrl}" onclick="previewPhoto('${s.imgUrl}')" alt="절차 ${i+1} 사진">`
+            : ''}
+        </div>
+      </div>
+    </div>`).join('');
+}
+
 /* 전역 노출 */
 window.goto             = goto;
 window.loginGoogle      = loginGoogle;
@@ -2064,6 +2075,7 @@ window.deleteMemo       = deleteMemo;
 window.saveMemo         = saveMemo;
 window.openManualModal  = openManualModal;
 window.renderStepItems  = renderStepItems;
+window.renderSteps      = renderSteps;
 window.addStepItem      = addStepItem;
 window.removeStepItem   = removeStepItem;
 window.handleStepPhoto  = handleStepPhoto;
