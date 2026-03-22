@@ -256,7 +256,16 @@ function initFirebase() {
 
     /* 이미 로그인된 사용자 감지 */
     auth.onAuthStateChanged(user => {
-      if (user) doLogin(user, false);
+      /* ── 디버그 로그 (문제 해결 후 삭제해도 됨) ── */
+      if (user) {
+        console.log('%c[K-Facility] ✅ 로그인 감지', 'color:#10b981;font-weight:bold');
+        console.log('  사용자:', user.displayName, '(' + user.email + ')');
+        console.log('  UID:', user.uid);
+        console.log('  Firestore 구독 시작...');
+        doLogin(user, false);
+      } else {
+        console.log('%c[K-Facility] 👤 미로그인 상태 (onAuthStateChanged null)', 'color:#f59e0b;font-weight:bold');
+      }
     });
 
     /* 설정 페이지 상태 표시 */
@@ -295,6 +304,8 @@ function loginGuest() {
 }
 
 function doLogin(user, isGuest) {
+  console.log('%c[K-Facility] doLogin 진입', 'color:#1d4ed8;font-weight:bold',
+    { name: user.displayName, guest: isGuest, fbReady: S.fbReady });
   S.user    = user;
   S.isGuest = isGuest;
   const init = (user.displayName || 'U')[0].toUpperCase();
@@ -337,6 +348,7 @@ function loadGuestData() {
      schedules → month 오름차순
 ===================================================== */
 function subscribeFirestore() {
+  console.log('%c[K-Facility] Firestore 실시간 구독 시작 ✨', 'color:#7c3aed;font-weight:bold');
   /* 작업기록 */
   _unsubLogs = db.collection('logs').orderBy('date', 'desc')
     .onSnapshot(snap => {
