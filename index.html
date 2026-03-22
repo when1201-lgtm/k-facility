@@ -25,7 +25,7 @@
 <!-- =====================================================
   LOGIN OVERLAY
 ===================================================== -->
-<div id="lov">
+<div id="lov" style="display:none">
   <div class="lcard">
     <div class="ll">K-<em>Facility</em></div>
     <p class="ls">시설관리 통합 대시보드에<br>오신 걸 환영합니다</p>
@@ -56,7 +56,7 @@
 <!-- =====================================================
   APP SHELL
 ===================================================== -->
-<div id="app">
+<div id="app" style="display:none">
 
   <!-- SIDEBAR -->
   <nav id="sidebar">
@@ -535,5 +535,29 @@
 <input type="file" id="photo-input-gallery" accept="image/*" multiple style="display:none"/>
 
 <script src="main.js"></script>
+
+<!-- ★ 인증 로딩 스피너 — onAuthStateChanged 완료 전 표시 -->
+<div id="auth-loader" style="
+  position:fixed;inset:0;
+  background:#080c18;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  z-index:99999;
+  transition:opacity .25s ease;">
+  <div style="
+    width:48px;height:48px;border-radius:50%;
+    border:3px solid rgba(255,255,255,.12);
+    border-top-color:#e05c0a;
+    animation:kf-spin .75s linear infinite;">
+  </div>
+  <div style="margin-top:16px;font-size:14px;font-weight:600;
+    color:rgba(255,255,255,.4);letter-spacing:.04em">
+    K-Facility
+  </div>
+</div>
+<style>
+  @keyframes kf-spin { to { transform:rotate(360deg); } }
+</style>
+
 </body>
 </html>
