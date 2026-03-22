@@ -594,7 +594,7 @@ textarea { caret-color: var(--orange); }
 .caution-row:last-child { border-bottom: none; }
 .caution-num { width: 26px; height: 26px; border-radius: 50%; background: var(--amber); color: #7c2d00; font-size: 12px; font-weight: 900; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .caution-txt { font-size: 14px; color: rgba(254,243,199,.95); font-weight: 600; line-height: 1.7; }
-.steps-wrap { display: flex; flex-direction: column; margin-bottom: 16px; }
+
 .step-row { display: flex; gap: 14px; padding-bottom: 14px; }
 .step-left { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; width: 40px; }
 .step-num-circle { width: 40px; height: 40px; border-radius: 50%; background: var(--orange); color: #fff; font-size: 16px; font-weight: 900; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px var(--orange-g); }
@@ -603,17 +603,102 @@ textarea { caret-color: var(--orange); }
 .step-card-head { padding: 16px 18px; }
 .step-title { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 7px; text-shadow: 0 1px 3px rgba(0,0,0,.5); }
 .step-desc  { font-size: 15px; color: rgba(255,255,255,.82); line-height: 1.78; }
-/* 절차 사진 크기 제한 */
-.step-card-head img {
+/* ═══════════════════════════════════════════════
+   상세 작업 절차 — #step-container 렌더링
+   데이터: steps: [{text, imgUrl}]
+   구조: 글 바로 아래 사진 (flex column)
+═══════════════════════════════════════════════ */
+
+/* 컨테이너 */
+#step-container,
+.steps-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-bottom: 16px;
+}
+
+/* 타임라인 행 */
+.step-row {
+  display: flex;
+  gap: 14px;
+  padding-bottom: 14px;
+}
+.step-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  width: 40px;
+}
+.step-num-circle {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: var(--orange);
+  color: #fff;
+  font-size: 16px; font-weight: 900;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 12px var(--orange-g);
+  flex-shrink: 0;
+}
+.step-connector {
+  width: 2px; flex: 1;
+  background: rgba(255,255,255,.12);
+  margin-top: 6px;
+  min-height: 16px;
+  border-radius: 1px;
+}
+
+/* 카드: flex column → 글 바로 아래 사진 */
+.step-card {
+  flex: 1;
+  overflow: hidden;
+}
+.step-card-head {
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;  /* ★ 글 → 사진 세로 배치 */
+  gap: 0;
+}
+.step-title {
+  font-size: 16px; font-weight: 700;
+  color: #fff;
+  margin-bottom: 7px;
+  text-shadow: 0 1px 3px rgba(0,0,0,.5);
+}
+.step-desc {
+  font-size: 15px;
+  color: rgba(255,255,255,.82);
+  line-height: 1.78;
+}
+
+/* ★ 절차 사진 — 글 바로 아래, 화면 밖 방지 */
+.step-photo {
+  display: block;
+  max-width: 100%;        /* 카드 너비 초과 방지 */
+  max-height: 200px;      /* 너무 커서 화면 가리는 것 방지 */
+  width: auto;            /* 비율 유지 */
+  height: auto;
+  object-fit: contain;    /* 찌그러짐 없이 비율 유지 */
+  border-radius: 10px;
+  margin-top: 12px;
+  cursor: zoom-in;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.2);
+}
+.step-card-head img { /* step-photo 미적용 구형 데이터 호환 */
   max-width: 100%;
   max-height: 200px;
   object-fit: contain;
   border-radius: 10px;
   margin-top: 12px;
   cursor: zoom-in;
-  border: 1px solid rgba(255,255,255,.12);
   display: block;
   background: rgba(0,0,0,.2);
+}
+.step-yt-link {
+  display: inline-flex; align-items: center; gap: 5px;
+  margin-top: 9px; font-size: 13px; font-weight: 700; color: #ff6b6b;
 }
 .step-yt-link { display: inline-flex; align-items: center; gap: 5px; margin-top: 9px; font-size: 13px; font-weight: 700; color: #ff6b6b; }
 .ck-progress-wrap { background: rgba(255,255,255,.08); border-radius: 99px; height: 5px; margin-bottom: 16px; overflow: hidden; }
