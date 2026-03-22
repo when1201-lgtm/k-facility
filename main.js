@@ -349,41 +349,56 @@ function loadGuestData() {
 ===================================================== */
 function subscribeFirestore() {
   console.log('%c[K-Facility] Firestore 실시간 구독 시작 ✨', 'color:#7c3aed;font-weight:bold');
-  /* 작업기록 */
-  _unsubLogs = db.collection('logs').orderBy('date', 'desc')
-    .onSnapshot(snap => {
-      logs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      if (S.currentPage === 'home')            renderHome();
-      if (S.currentPage === 'records')         renderRecords();
-    }, e => console.error('[logs]', e));
 
-  /* 학습메모 */
-  _unsubMemos = db.collection('memos').orderBy('date', 'desc')
+  /* ★ 작업기록 — orderBy 없이 전체 구독 (색인 불필요)
+     JS 레벨에서 date 내림차순 정렬 */
+  _unsubLogs = db.collection('logs')
     .onSnapshot(snap => {
-      memos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      logs = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+      console.log('[K-Facility] logs 수신:', logs.length + '건');
+      renderHome();
+      if (S.currentPage === 'records') renderRecords();
+    }, e => console.error('[logs 구독 오류]', e));
+
+  /* ★ 학습메모 — 동일하게 JS 정렬 */
+  _unsubMemos = db.collection('memos')
+    .onSnapshot(snap => {
+      memos = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+      console.log('[K-Facility] memos 수신:', memos.length + '건');
       if (S.currentPage === 'memo') renderMemo();
-    }, e => console.error('[memos]', e));
+    }, e => console.error('[memos 구독 오류]', e));
 
-  /* 연간 로드맵 */
-  _unsubSch = db.collection('schedules').orderBy('month')
+  /* ★ 연간 로드맵 — orderBy('month') 제거 → JS 정렬 */
+  _unsubSch = db.collection('schedules')
     .onSnapshot(snap => {
+      console.log('[K-Facility] schedules 수신:', snap.size + '건');
       if (snap.empty) {
-        /* 첫 실행: 기본 일정 저장 */
         const b = db.batch();
         SAMPLE_SCHEDULES.forEach(s => b.set(db.collection('schedules').doc(s.id), s));
         b.commit();
         schedules = [...SAMPLE_SCHEDULES];
       } else {
-        schedules = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        schedules = snap.docs
+          .map(d => ({ id: d.id, ...d.data() }))
+          .sort((a, b) => (a.month || 0) - (b.month || 0));
       }
+      /* 이번 달 일정 디버그 */
+      const thisMonth = new Date().getMonth() + 1;
+      const thisMonthList = schedules.filter(s => s.month === thisMonth);
+      console.log('[K-Facility] 이번 달(' + thisMonth + '월) 일정:', thisMonthList.length + '건');
+      renderHome();
       if (S.currentPage === 'roadmap') renderRoadmap();
-    }, e => console.error('[schedules]', e));
+    }, e => console.error('[schedules 구독 오류]', e));
 
-  /* 매뉴얼 */
+  /* ★ 매뉴얼 — 그대로 (orderBy 없음, 정상) */
   _unsubManuals = db.collection('manuals')
     .onSnapshot(snap => {
+      console.log('[K-Facility] manuals 수신:', snap.size + '건');
       if (snap.empty) {
-        /* 첫 실행: 기본 매뉴얼 저장 */
         const b = db.batch();
         Object.entries(SAMPLE_MANUALS).forEach(([cat, list]) =>
           list.forEach(m => b.set(db.collection('manuals').doc(m.id), { ...m, cat }))
@@ -398,14 +413,14 @@ function subscribeFirestore() {
           if (manuals[cat]) manuals[cat].push({ id: d.id, ...data });
         });
       }
-      /* 현재 보고 있는 카테고리 갱신 */
       ['electric','mechanical','construction','fire'].forEach(c => {
         if (S.currentPage === c) renderManualCat(c);
       });
-    }, e => console.error('[manuals]', e));
+    }, e => console.error('[manuals 구독 오류]', e));
 
-  /* 연락처 (1회 조회) */
+  /* ★ 연락처 */
   db.collection('contacts').get().then(snap => {
+    console.log('[K-Facility] contacts 수신:', snap.size + '건');
     if (snap.empty) {
       const b = db.batch();
       SAMPLE_CONTACTS.forEach(c => b.set(db.collection('contacts').doc(c.id), c));
