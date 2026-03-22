@@ -755,12 +755,20 @@ function renderManualDetail() {
 
   /* 개요 */
   const ow = $('md-overview-wrap');
-  if (ow) { ow.style.display = m.overview ? '' : 'none'; const p=$('md-overview-text'); if(p) p.textContent=m.overview||''; }
+  if (ow) {
+    const p = $('md-overview-text');
+    if (m.overview) {
+      ow.classList.remove('hidden');
+      if (p) p.textContent = m.overview;
+    } else {
+      ow.classList.add('hidden');
+    }
+  }
 
   /* ① 준비물 */
   const sw = $('md-supplies-wrap');
   if (sw) {
-    sw.style.display = (m.supplies||[]).length ? '' : 'none';
+    (m.supplies||[]).length ? sw.classList.remove('hidden') : sw.classList.add('hidden');
     const sc=$('md-supplies-count'); if(sc) sc.textContent=(m.supplies||[]).length+'개';
     const sl=$('md-supplies-list');
     if (sl) sl.innerHTML = (m.supplies||[]).map((s,i)=>`
@@ -770,7 +778,7 @@ function renderManualDetail() {
   /* ② 안전주의사항 */
   const cauW = $('md-cautions-wrap');
   if (cauW) {
-    cauW.style.display = (m.cautions||[]).length ? '' : 'none';
+    (m.cautions||[]).length ? cauW.classList.remove('hidden') : cauW.classList.add('hidden');
     const cl=$('md-cautions-list');
     if (cl) cl.innerHTML = (m.cautions||[]).map((c,i)=>`
       <div class="caution-row"><div class="caution-num">${i+1}</div><div class="caution-txt">${esc(c)}</div></div>`).join('');
@@ -785,7 +793,7 @@ function renderManualDetail() {
   /* ④ 체크리스트 */
   const ckW = $('md-checklist-wrap');
   if (ckW) {
-    ckW.style.display = (m.checklist||[]).length ? '' : 'none';
+    (m.checklist||[]).length ? ckW.classList.remove('hidden') : ckW.classList.add('hidden');
     updateCkUI(ckKey, m.checklist||[]);
     const rst = $('md-ck-reset');
     if (rst) rst.onclick = () => { S.checklistState[ckKey]=[]; updateCkUI(ckKey,m.checklist||[]); renderCkRows(ckKey,m.checklist||[]); };
@@ -793,8 +801,18 @@ function renderManualDetail() {
   }
 
   /* ⑤ 주의/팁 */
-  const cb=$('md-caution-box'); if(cb){cb.style.display=m.caution?'':'none';const t=$('md-caution-text');if(t)t.innerHTML='<strong>주의:</strong> '+esc(m.caution||'');}
-  const tb=$('md-tip-box');     if(tb){tb.style.display=m.tip?'':'none';    const t=$('md-tip-text');    if(t)t.innerHTML='<strong>Tip:</strong> '+esc(m.tip||'');}
+  const cb = $('md-caution-box');
+  if (cb) {
+    m.caution ? cb.classList.remove('hidden') : cb.classList.add('hidden');
+    const ct = $('md-caution-text');
+    if (ct) ct.innerHTML = '<strong>주의:</strong> ' + esc(m.caution||'');
+  }
+  const tb = $('md-tip-box');
+  if (tb) {
+    m.tip ? tb.classList.remove('hidden') : tb.classList.add('hidden');
+    const tt = $('md-tip-text');
+    if (tt) tt.innerHTML = '<strong>Tip:</strong> ' + esc(m.tip||'');
+  }
 
   /* 수정/삭제 버튼 */
   const editBtn = $('md-edit-btn');
@@ -1359,58 +1377,112 @@ function setLogStatus(f) { S.logStatusFilter=f; renderRecords(); }
 
 /* 작업기록 상세 */
 function openLogDetail(id) {
-  const l = logs.find(x=>x.id===id); if(!l) return;
+  const l = logs.find(x => x.id === id);
+  if (!l) return;
   S.editLogId = id;
-  const sc = STATUS_COLOR[l.status]||'var(--t3)';
-  const sv = (el,v) => { const e=$(el); if(e) e.textContent=v; };
-  sv('log-detail-breadcrumb', l.title);
-  sv('log-detail-title',      l.title);
-  sv('log-detail-cat',        l.cat||'-');
-  sv('log-detail-worker',     l.worker||'-');
-  sv('log-detail-date',       l.date||'-');
-  sv('log-detail-updated',    l.updatedAt ? '수정: '+l.updatedAt.slice(0,10) : '');
-  const sb=$('log-detail-status-badge');
-  if(sb) sb.innerHTML=`<span style="background:${sc}22;color:${sc};border:1px solid ${sc}44;font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px">${esc(l.status)}</span>`;
-  const sv2=$('log-detail-statusval'); if(sv2) sv2.innerHTML=`<span style="color:${sc};font-weight:700">${esc(l.status)}</span>`;
 
-  /* 상세 내용 */
-  const dw=$('log-detail-desc-wrap'); const de=$('log-detail-desc');
-  if(dw&&de){ if(l.desc){dw.style.display='';de.textContent=l.desc;}else{dw.style.display='none';} }
+  /* ── 텍스트 필드 ── */
+  const sc  = STATUS_COLOR[l.status] || 'var(--t3)';
+  const set = (elId, val) => { const e = $(elId); if (e) e.textContent = val; };
+  set('log-detail-breadcrumb', l.title);
+  set('log-detail-title',      l.title);
+  set('log-detail-cat',        l.cat    || '-');
+  set('log-detail-worker',     l.worker || '-');
+  set('log-detail-date',       l.date   || '-');
+  set('log-detail-updated',    l.updatedAt ? '수정: ' + l.updatedAt.slice(0, 10) : '');
 
-  /* Before / After 사진 그리드 */
-  const pw=$('log-detail-photos');
-  if(pw){
-    const before = l.beforePhotos || (l.photos||[]).slice(0,1);
-    const after  = l.afterPhotos  || (l.photos||[]).slice(1);
-    if(before.length || after.length){
-      pw.style.display='';
-      pw.innerHTML = `
-        <div class="slbl" style="margin-bottom:14px">📷 작업 전/후 사진 비교</div>
-        <div class="ba-detail-grid">
-          <!-- BEFORE -->
-          <div class="ba-detail-col">
-            <div class="ba-col-header ba-col-before">🔴 BEFORE</div>
-            <div class="ba-col-body">
-              ${before.length
-                ? before.map(u=>`<img src="${u}" onclick="previewPhoto('${u}')" class="ba-detail-img">`).join('')
-                : '<div class="ba-no-photo">사진 없음</div>'}
-            </div>
-          </div>
-          <!-- AFTER -->
-          <div class="ba-detail-col">
-            <div class="ba-col-header ba-col-after">🟢 AFTER</div>
-            <div class="ba-col-body">
-              ${after.length
-                ? after.map(u=>`<img src="${u}" onclick="previewPhoto('${u}')" class="ba-detail-img">`).join('')
-                : '<div class="ba-no-photo">사진 없음</div>'}
-            </div>
-          </div>
-        </div>`;
-    }else{pw.style.display='none';}
+  const sb = $('log-detail-status-badge');
+  if (sb) sb.innerHTML = `<span class="lc-badge"
+    style="background:${sc}22;color:${sc};border:1px solid ${sc}44;
+           font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px">
+    ${esc(l.status)}</span>`;
+
+  const sv2 = $('log-detail-statusval');
+  if (sv2) sv2.innerHTML = `<span style="color:${sc};font-weight:700">${esc(l.status)}</span>`;
+
+  /* ── 상세 내용 ── */
+  const dw = $('log-detail-desc-wrap');
+  const de = $('log-detail-desc');
+  if (dw && de) {
+    if (l.desc && l.desc.trim()) {
+      dw.classList.remove('hidden');
+      de.textContent = l.desc;
+    } else {
+      dw.classList.add('hidden');
+    }
   }
 
-  const eb=$('btn-log-detail-edit'); if(eb) eb.onclick=()=>openLogModal(id);
-  const db2=$('btn-log-detail-del'); if(db2) db2.onclick=()=>deleteLog(id);
+  /* ── Before / After 사진 ──────────────────────────────
+     ★ 빈 배열 [] 은 truthy → length 로 존재 확인 (|| 사용 금지)
+  ─────────────────────────────────────────────────────── */
+  const pw = $('log-detail-photos');
+  if (pw) {
+    /* beforePhotos/afterPhotos 우선, 없으면 photos 전체를 반씩 분할 */
+    let before = Array.isArray(l.beforePhotos) && l.beforePhotos.length
+      ? l.beforePhotos.filter(u => u && u.trim())
+      : [];
+    let after  = Array.isArray(l.afterPhotos)  && l.afterPhotos.length
+      ? l.afterPhotos.filter(u => u && u.trim())
+      : [];
+
+    /* fallback: photos 배열 분할 */
+    if (!before.length && !after.length) {
+      const all = (l.photos || []).filter(u => u && u.trim());
+      const mid = Math.ceil(all.length / 2);
+      before = all.slice(0, mid);
+      after  = all.slice(mid);
+    }
+
+    /* imageUrl 단독인 경우 after에 배치 */
+    if (!before.length && !after.length && l.imageUrl) {
+      after = [l.imageUrl];
+    }
+
+    /* 사진이 하나라도 있으면 표시 */
+    if (before.length || after.length) {
+      pw.classList.remove('hidden');
+      pw.innerHTML = `
+        <div class="slbl slbl--mb">📷 작업 전/후 사진 비교</div>
+        <div class="ba-detail-grid">
+
+          <!-- BEFORE -->
+          <div class="ba-detail-col">
+            <div class="ba-col-header ba-col-before">🔴 BEFORE — 작업 전</div>
+            <div class="ba-col-body">
+              ${before.length
+                ? before.map(u => `
+                    <img src="${u}" class="ba-detail-img detail-img"
+                      onclick="previewPhoto('${u}')" alt="Before 사진"
+                      onerror="this.style.display='none'">`).join('')
+                : '<div class="ba-no-photo">사진 없음</div>'}
+            </div>
+          </div>
+
+          <!-- AFTER -->
+          <div class="ba-detail-col">
+            <div class="ba-col-header ba-col-after">🟢 AFTER — 작업 후</div>
+            <div class="ba-col-body">
+              ${after.length
+                ? after.map(u => `
+                    <img src="${u}" class="ba-detail-img detail-img"
+                      onclick="previewPhoto('${u}')" alt="After 사진"
+                      onerror="this.style.display='none'">`).join('')
+                : '<div class="ba-no-photo">사진 없음</div>'}
+            </div>
+          </div>
+
+        </div>`;
+    } else {
+      pw.classList.add('hidden');
+    }
+  }
+
+  /* ── 버튼 ── */
+  const eb  = $('btn-log-detail-edit');
+  const db2 = $('btn-log-detail-del');
+  if (eb)  eb.onclick  = () => openLogModal(id);
+  if (db2) db2.onclick = () => deleteLog(id);
+
   goto('records-detail');
 }
 
