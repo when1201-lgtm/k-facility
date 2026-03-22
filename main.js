@@ -232,13 +232,11 @@ function toast(msg, dur = 2500) {
 function hideAuthLoader() {
   const loader = document.getElementById('auth-loader');
   const app    = document.getElementById('app');
-  if (!loader) return;
-  /* 페이드아웃 후 완전 제거 */
+  /* ★ loader 유무와 관계없이 반드시 #app 표시 */
+  if (app) app.style.display = '';
+  if (!loader || loader.style.display === 'none') return;
   loader.style.opacity = '0';
-  setTimeout(() => {
-    loader.style.display = 'none';
-    if (app) app.style.display = '';   /* #app 표시 */
-  }, 260);
+  setTimeout(() => { loader.style.display = 'none'; }, 260);
 }
 
 function showLoginScreen() {
@@ -261,6 +259,8 @@ function previewPhoto(url) {
 function initFirebase() {
   if (typeof firebase === 'undefined') {
     console.info('[K-Facility] Firebase SDK 없음 → 게스트 모드로 동작');
+    hideAuthLoader();          /* SDK 없어도 스피너 반드시 해제 */
+    showLoginScreen();
     loadGuestData();
     return;
   }
@@ -295,6 +295,8 @@ function initFirebase() {
 
   } catch (e) {
     console.error('[K-Facility] Firebase 초기화 실패:', e);
+    hideAuthLoader();          /* 실패해도 스피너 반드시 해제 */
+    showLoginScreen();         /* 로그인 화면 표시 */
     loadGuestData();
     updateFbStatusUI(false, e.message);
   }
@@ -1871,6 +1873,17 @@ function initMobileInputFix() {
    ㉒ BOOT
 ===================================================== */
 document.addEventListener('DOMContentLoaded', () => {
+  /* ★ 안전망: 3초 안에 onAuthStateChanged 응답 없으면 강제로 로그인 화면 표시 */
+  const _safetyTimer = setTimeout(() => {
+    const app = document.getElementById('app');
+    if (app && app.style.display === 'none') {
+      console.warn('[K-Facility] ⚠️ 인증 타임아웃 — 로그인 화면으로 강제 전환');
+      hideAuthLoader();
+      showLoginScreen();
+    }
+  }, 3000);
+  /* onAuthStateChanged가 정상 응답하면 타이머 의미 없어짐 (이미 표시됨) */
+
   /* 로그인 */
   $('btn-google')?.addEventListener('click', loginGoogle);
   $('btn-guest')?.addEventListener('click',  loginGuest);
