@@ -862,25 +862,20 @@ function updateCkUI(ckKey, checklist) {
   const b=$('md-ck-bar');     if(b) b.style.width=pct+'%';
 }
 
-/* ── 매뉴얼 추가/수정 모달 (5섹션 + 사진 업로드) ── */
+/* ── 매뉴얼 추가/수정 — 풀페이지 ── */
 function openManualModal(catKey, id) {
   S.editManualCat  = catKey;
   S.editManualId   = id || null;
   S.uploadPhotos   = [];
   S.photoTarget    = 'mf-photo-preview';
   S.photoSide      = 'main';
-  /* ★ 절차 항목 버퍼: [{text, imgUrl, imgPath, file, previewUrl}] */
   S.stepItems      = [];
   const m = id ? (manuals[catKey]||[]).find(x=>x.id===id) : null;
 
-  /* 기존 steps → stepItems 버퍼로 변환 (하위 호환)
-     신형: {text, imgUrls:[url,...], imgPaths:[path,...]}
-     구형: {text, imgUrl, imgPath} → imgUrls 배열로 업그레이드 */
   const existingSteps = (m?.steps||[]).map(s => {
     if (typeof s === 'string') return { text: s, imgUrls:[], imgPaths:[], files:[], previewUrls:[] };
     const t = typeof s.title === 'string' ? ((s.title||'').trim() + (s.desc ? ' — '+(s.desc||'').trim() : '')) : '';
     const text = s.text !== undefined ? s.text : t;
-    /* 구형 단일 imgUrl → 배열로 변환 */
     const imgUrls  = s.imgUrls  || (s.imgUrl  ? [s.imgUrl]  : []);
     const imgPaths = s.imgPaths || (s.imgPath ? [s.imgPath] : []);
     return { text, imgUrls, imgPaths, files:[], previewUrls:[] };
@@ -889,106 +884,39 @@ function openManualModal(catKey, id) {
     ? existingSteps
     : [{ text:'', imgUrls:[], imgPaths:[], files:[], previewUrls:[] }];
 
-  /* checklist → 줄바꿈 텍스트 */
   const ckText = (m?.checklist||[]).join('\n');
 
-  openModal(`
-    <div class="modal-title">
-      ${m?'매뉴얼 수정':'매뉴얼 추가'}
-      <button class="modal-close" onclick="closeModal()">✕</button>
-    </div>
+  /* 폼 페이지 제목 */
+  const titleEl = document.getElementById('form-manual-title');
+  if (titleEl) titleEl.textContent = m ? '매뉴얼 수정' : '매뉴얼 추가';
 
-    <!-- 기본 정보 -->
-    <div class="lf-row">
-      <div class="lf-group" style="margin:0">
-        <label class="lf-label">🗂 카테고리</label>
-        <select class="lf-select" id="mf-cat">
-          <option value="electric"${catKey==='electric'?' selected':''}>⚡ 전기 설비</option>
-          <option value="mechanical"${catKey==='mechanical'?' selected':''}>⚙️ 기계 설비</option>
-          <option value="construction"${catKey==='construction'?' selected':''}>🔨 영선 / 보수</option>
-          <option value="fire"${catKey==='fire'?' selected':''}>🔥 소방 설비</option>
-        </select>
-      </div>
-      <div class="lf-group" style="margin:0">
-        <label class="lf-label">📌 제목 *</label>
-        <input class="lf-input" id="mf-title" type="text"
-          value="${esc(m?.title||'')}" placeholder="예: 분전반 MCB 교체"/>
-      </div>
-    </div>
-    <div class="lf-row">
-      <div class="lf-group" style="margin:0">
-        <label class="lf-label">개요</label>
-        <textarea class="lf-textarea" id="mf-overview" rows="2"
-          placeholder="이 매뉴얼의 목적 요약">${esc(m?.overview||'')}</textarea>
-      </div>
-      <div class="lf-group" style="margin:0">
-        <label class="lf-label">태그 (쉼표 구분)</label>
-        <textarea class="lf-textarea" id="mf-tags" rows="2"
-          placeholder="MCB, 차단기, 전기">${esc((m?.tags||[]).join(', '))}</textarea>
-      </div>
-    </div>
+  /* 카테고리 select 세팅 */
+  const catSel = document.getElementById('mf-cat');
+  if (catSel) catSel.value = catKey;
 
-    <div class="modal-section-divider">📦 섹션 1 — 준비물 / 자재</div>
-    <div class="lf-group">
-      <label class="lf-label">한 줄에 하나씩 입력</label>
-      <textarea class="lf-textarea" id="mf-supplies" rows="4"
-        placeholder="드라이버(+/-)&#10;절연 장갑&#10;검전기&#10;교체용 MCB (동일 규격)">${esc((m?.supplies||[]).join('\n'))}</textarea>
-    </div>
+  /* 필드 값 채우기 */
+  const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+  setVal('mf-title',      m?.title   || '');
+  setVal('mf-overview',   m?.overview|| '');
+  setVal('mf-tags',       (m?.tags||[]).join(', '));
+  setVal('mf-supplies',   (m?.supplies||[]).join('\n'));
+  setVal('mf-safety',     (m?.cautions||[]).join('\n'));
+  setVal('mf-check',      ckText);
+  setVal('mf-tip-caution',m?.caution || '');
+  setVal('mf-tip',        m?.tip     || '');
 
-    <div class="modal-section-divider">⚠️ 섹션 2 — 안전주의사항</div>
-    <div class="lf-group">
-      <label class="lf-label">한 줄에 하나씩 입력</label>
-      <textarea class="lf-textarea" id="mf-safety" rows="4"
-        placeholder="주 차단기 OFF 후 작업&#10;검전기로 무전압 확인&#10;동일 용량 MCB만 사용">${esc((m?.cautions||[]).join('\n'))}</textarea>
-    </div>
-
-    <!-- ★ 섹션3: 절차 항목 (설명+사진 1:1 세트) -->
-    <div class="modal-section-divider">
-      🔧 섹션 3 — 상세 작업 절차
-      <button type="button" onclick="addStepItem()"
-        style="margin-left:auto;background:var(--orange);color:#fff;border:none;
-               border-radius:8px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer">
-        ＋ 절차 추가
-      </button>
-    </div>
-    <div id="mf-steps-container" style="display:flex;flex-direction:column;gap:12px;margin-bottom:4px">
-      <!-- JS renderStepItems()가 채움 -->
-    </div>
-
-    <div class="modal-section-divider">✅ 섹션 4 — 점검 체크리스트</div>
-    <div class="lf-group">
-      <label class="lf-label">한 줄에 하나씩 입력</label>
-      <textarea class="lf-textarea" id="mf-check" rows="5"
-        placeholder="주 차단기 OFF 확인&#10;검전기 무전압 확인&#10;MCB 사양 메모&#10;결선 사진 촬영&#10;투입 후 전압 측정">${esc(ckText)}</textarea>
-    </div>
-
-    <div class="modal-section-divider">💡 섹션 5 — 주의사항 / Tip</div>
-    <div class="lf-row">
-      <div class="lf-group" style="margin:0">
-        <label class="lf-label">⚠️ 최종 주의사항</label>
-        <input class="lf-input" id="mf-tip-caution" type="text"
-          value="${esc(m?.caution||'')}"
-          placeholder="활선 작업 절대 금지"/>
-      </div>
-      <div class="lf-group" style="margin:0">
-        <label class="lf-label">💡 Tip</label>
-        <input class="lf-input" id="mf-tip" type="text"
-          value="${esc(m?.tip||'')}"
-          placeholder="교체 후 12시간 모니터링 권장"/>
-      </div>
-    </div>
-
-    <div class="modal-actions">
-      <button class="btn-gh" onclick="closeModal()">취소</button>
-      <button class="btn-o" id="btn-save-manual" onclick="saveManual()">💾 저장</button>
-    </div>`);
-
-  /* 기존 대표 사진 미리보기 (대표 이미지 필드 유지) */
+  /* 대표 사진 미리보기 초기화 */
+  const prevEl = document.getElementById('mf-photo-preview');
+  if (prevEl) prevEl.innerHTML = '';
   if (m?.imageUrl) {
     S.uploadPhotos = [{ url: m.imageUrl, existing: true, side: 'main', storagePath: m.imageStoragePath||'', file: null }];
+    _refreshManualPhotoPreview();
   }
-  /* ★ 절차 항목 렌더링 */
+
+  /* 절차 항목 렌더링 */
   renderStepItems();
+
+  goto('form-manual');
 }
 
 /* ═══════════════════════════════════════════════════
@@ -1296,7 +1224,6 @@ async function saveManual() {
     }
     S.uploadPhotos = [];
     toast('✅ 저장됐습니다');
-    closeModal();
     goto(catKey);           /* ★ 저장 후 해당 카테고리 목록으로 이동 */
   } catch(e) {
     console.error('[saveManual]', e);
@@ -1494,92 +1421,39 @@ function openLogDetail(id) {
   goto('records-detail');
 }
 
-/* 작업기록 추가/수정 모달 */
+/* 작업기록 추가/수정 — 풀페이지 */
 function openLogModal(id) {
   S.editLogId   = id || null;
   S.uploadPhotos = [];
   const l = id ? logs.find(x=>x.id===id) : null;
 
-  openModal(`
-    <div class="modal-title">
-      ${l ? '작업기록 수정' : '새 작업기록'}
-      <button class="modal-close" onclick="closeModal()">✕</button>
-    </div>
-    <div class="lf-row">
-      <div class="lf-group" style="margin:0">
-        <label class="lf-label">작업 유형</label>
-        <select class="lf-select" id="lm-cat">
-          ${['전기','기계','영선','소방','기타'].map(c=>`<option${l?.cat===c?' selected':''}>${c}</option>`).join('')}
-        </select>
-      </div>
-      <div class="lf-group" style="margin:0">
-        <label class="lf-label">처리 상태</label>
-        <select class="lf-select" id="lm-status">
-          ${['완료','진행중','대기'].map(s=>`<option${l?.status===s?' selected':''}>${s}</option>`).join('')}
-        </select>
-      </div>
-    </div>
-    <div class="lf-group">
-      <label class="lf-label">작업 제목 *</label>
-      <input class="lf-input" id="lm-title" type="text" value="${esc(l?.title||'')}" placeholder="예: 3층 분전반 MCB 교체"/>
-    </div>
-    <div class="lf-row">
-      <div class="lf-group" style="margin:0">
-        <label class="lf-label">작업자</label>
-        <input class="lf-input" id="lm-worker" type="text" value="${esc(l?.worker||'')}" placeholder="이름"/>
-      </div>
-      <div class="lf-group" style="margin:0">
-        <label class="lf-label">작업일</label>
-        <input class="lf-input" id="lm-date" type="date" value="${l?.date||today()}"/>
-      </div>
-    </div>
-    <div class="lf-group">
-      <label class="lf-label">상세 내용</label>
-      <textarea class="lf-textarea" id="lm-desc" rows="4" placeholder="작업 내용, 특이사항, 교체 부품...">${esc(l?.desc||'')}</textarea>
-    </div>
-    <!-- ★ Before / After 사진 업로드 -->
-    <div class="lf-group">
-      <label class="lf-label">📷 현장 사진 (Before / After, 각 최대 3장)</label>
-      <div class="ba-upload-section">
-        <div class="ba-upload-header ba-upload-before">🔴 BEFORE — 작업 전</div>
-        <div id="lm-before-preview" class="photo-preview-wrap"></div>
-        <div class="photo-btn-row">
-          <label class="photo-add-btn">
-            📷 카메라
-            <input type="file" accept="image/*" capture="environment" multiple
-              class="hidden" onchange="handleFormPhoto(event,'before','lm-before-preview')"/>
-          </label>
-          <label class="photo-add-btn">
-            🖼 갤러리
-            <input type="file" accept="image/*" multiple
-              class="hidden" onchange="handleFormPhoto(event,'before','lm-before-preview')"/>
-          </label>
-        </div>
-      </div>
-      <div class="ba-upload-section" style="margin-top:10px">
-        <div class="ba-upload-header ba-upload-after">🟢 AFTER — 작업 후</div>
-        <div id="lm-after-preview" class="photo-preview-wrap"></div>
-        <div class="photo-btn-row">
-          <label class="photo-add-btn">
-            📷 카메라
-            <input type="file" accept="image/*" capture="environment" multiple
-              class="hidden" onchange="handleFormPhoto(event,'after','lm-after-preview')"/>
-          </label>
-          <label class="photo-add-btn">
-            🖼 갤러리
-            <input type="file" accept="image/*" multiple
-              class="hidden" onchange="handleFormPhoto(event,'after','lm-after-preview')"/>
-          </label>
-        </div>
-      </div>
-      <p class="photo-hint">800px 자동 압축 · Firebase Storage 저장</p>
-    </div>
-    <div class="modal-actions">
-      <button class="btn-gh" onclick="closeModal()">취소</button>
-      <button class="btn-o" id="btn-save-log" onclick="saveLog()">💾 저장</button>
-    </div>`);
+  /* 제목 */
+  const titleEl = document.getElementById('form-log-title');
+  if (titleEl) titleEl.textContent = l ? '작업기록 수정' : '새 작업기록';
 
-  /* 기존 사진 미리보기 — Before / After 분리 */
+  /* 필드 세팅 */
+  const catSel = document.getElementById('lm-cat');
+  if (catSel) {
+    catSel.innerHTML = ['전기','기계','영선','소방','기타']
+      .map(c=>`<option${l?.cat===c?' selected':''}>${c}</option>`).join('');
+  }
+  const stSel = document.getElementById('lm-status');
+  if (stSel) {
+    stSel.innerHTML = ['완료','진행중','대기']
+      .map(s=>`<option${l?.status===s?' selected':''}>${s}</option>`).join('');
+  }
+  const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+  setVal('lm-title',  l?.title  || '');
+  setVal('lm-worker', l?.worker || '');
+  setVal('lm-date',   l?.date   || today());
+  setVal('lm-desc',   l?.desc   || '');
+
+  /* 사진 미리보기 초기화 */
+  const bPrev = document.getElementById('lm-before-preview');
+  const aPrev = document.getElementById('lm-after-preview');
+  if (bPrev) bPrev.innerHTML = '';
+  if (aPrev) aPrev.innerHTML = '';
+
   if (l) {
     const before = Array.isArray(l.beforePhotos) && l.beforePhotos.length
       ? l.beforePhotos.filter(Boolean)
@@ -1594,6 +1468,8 @@ function openLogModal(id) {
     renderFormPhotoPreview('lm-before-preview', 'before');
     renderFormPhotoPreview('lm-after-preview',  'after');
   }
+
+  goto('form-log');
 }
 
 /* 사진 input 트리거 (type, side, wrapperId 모두 지원) */
@@ -1765,8 +1641,7 @@ async function saveLog() {
 
     S.editLogId = null;
     toast('✅ 저장됐습니다');
-    closeModal();           /* 모달 닫기 */
-    goto('records');        /* ★ 무조건 목록으로 이동 (무한 루프 방지) */
+    goto('records');        /* ★ 무조건 목록으로 이동 */
 
   } catch(e) {
     console.error('[saveLog]', e);
@@ -1879,63 +1754,34 @@ function openMemoDetail(id) {
   goto('memo-detail');
 }
 
+/* 메모 추가/수정 — 풀페이지 */
 function openMemoModal(id) {
   S.editMemoId  = id || null;
-  S.uploadPhotos = [];          /* 사진 버퍼 초기화 */
+  S.uploadPhotos = [];
   const m = id ? memos.find(x=>x.id===id) : null;
-  openModal(`
-    <div class="modal-title">
-      ${m ? '메모 수정' : '새 메모 작성'}
-      <button class="modal-close" onclick="closeModal()">✕</button>
-    </div>
-    <div class="lf-row">
-      <div class="lf-group" style="margin:0">
-        <label class="lf-label">카테고리</label>
-        <select class="lf-select" id="mm-cat">
-          ${['전기','기계','영선','소방','일반'].map(c=>`<option${m?.cat===c?' selected':''}>${c}</option>`).join('')}
-        </select>
-      </div>
-      <div class="lf-group" style="margin:0">
-        <label class="lf-label">작성일</label>
-        <input class="lf-input" id="mm-date" type="date" value="${m?.date||today()}"/>
-      </div>
-    </div>
-    <div class="lf-group">
-      <label class="lf-label">제목 *</label>
-      <input class="lf-input" id="mm-title" type="text" value="${esc(m?.title||'')}" placeholder="메모 제목"/>
-    </div>
-    <div class="lf-group">
-      <label class="lf-label">태그 (쉼표 구분)</label>
-      <input class="lf-input" id="mm-tags" type="text" value="${esc((m?.tags||[]).join(', '))}" placeholder="예: MCB, 전기기초"/>
-    </div>
-    <div class="lf-group">
-      <label class="lf-label">내용 *</label>
-      <textarea class="lf-textarea" id="mm-content" rows="8" placeholder="학습 내용, 현장 메모, 규정 기준...">${esc(m?.content||'')}</textarea>
-    </div>
-    <!-- ★ 참고 사진 (최대 3장) -->
-    <div class="lf-group">
-      <label class="lf-label">📷 참고 사진 (최대 3장)</label>
-      <div id="mm-photo-preview" class="photo-preview-wrap"></div>
-      <div class="photo-btn-row">
-        <label class="photo-add-btn">
-          📷 카메라
-          <input type="file" accept="image/*" capture="environment" multiple
-            class="hidden" onchange="handleFormPhoto(event,'memo','mm-photo-preview')"/>
-        </label>
-        <label class="photo-add-btn">
-          🖼 갤러리
-          <input type="file" accept="image/*" multiple
-            class="hidden" onchange="handleFormPhoto(event,'memo','mm-photo-preview')"/>
-        </label>
-      </div>
-      <p class="photo-hint">800px 자동 압축 · Firebase Storage 저장</p>
-    </div>
-    <div class="modal-actions">
-      <button class="btn-gh" onclick="closeModal()">취소</button>
-      <button class="btn-o" id="btn-save-memo" onclick="saveMemo()">💾 저장</button>
-    </div>`);
 
-  /* 기존 사진 미리보기 */
+  /* 페이지 제목 */
+  const titleEl = document.getElementById('form-memo-title');
+  if (titleEl) titleEl.textContent = m ? '메모 수정' : '새 메모 작성';
+
+  /* 카테고리 select */
+  const catSel = document.getElementById('mm-cat');
+  if (catSel) {
+    catSel.innerHTML = ['전기','기계','영선','소방','일반']
+      .map(c=>`<option${m?.cat===c?' selected':''}>${c}</option>`).join('');
+  }
+
+  /* 필드 값 채우기 */
+  const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+  setVal('mm-date',    m?.date    || today());
+  setVal('mm-title',   m?.title   || '');
+  setVal('mm-tags',    (m?.tags||[]).join(', '));
+  setVal('mm-content', m?.content || '');
+
+  /* 사진 미리보기 초기화 */
+  const prevEl = document.getElementById('mm-photo-preview');
+  if (prevEl) prevEl.innerHTML = '';
+
   if (m && Array.isArray(m.imgUrls) && m.imgUrls.length) {
     S.uploadPhotos = m.imgUrls.filter(Boolean).map((url, i) => ({
       url, existing: true, side: 'memo',
@@ -1943,6 +1789,8 @@ function openMemoModal(id) {
     }));
     renderFormPhotoPreview('mm-photo-preview', 'memo');
   }
+
+  goto('form-memo');
 }
 
 async function saveMemo() {
@@ -2009,8 +1857,7 @@ async function saveMemo() {
     S.editMemoId  = null;
     S.uploadPhotos = [];
     toast('✅ 저장됐습니다');
-    closeModal();
-    if (S.currentPage === 'memo') renderMemo();
+    goto('memo');
   } catch(e) {
     toast('⚠️ 저장 실패: ' + e.message);
     if (btn) { btn.disabled=false; btn.textContent='💾 저장'; }
@@ -2374,8 +2221,17 @@ function renderSteps(steps, containerId) {
     </div>`).join('');
 }
 
+/* ── 풀페이지 폼 뒤로 가기 ── */
+function formBack(type) {
+  if (type === 'log')    goto('records');
+  else if (type === 'memo')   goto('memo');
+  else if (type === 'manual') goto(S.editManualCat || 'electric');
+  else goto('home');
+}
+
 /* 전역 노출 */
 window.goto             = goto;
+window.formBack         = formBack;
 window.loginGoogle      = loginGoogle;
 window.loginGuest       = loginGuest;
 window.logout           = logout;
