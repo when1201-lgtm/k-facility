@@ -2294,16 +2294,19 @@ document.addEventListener('DOMContentLoaded', () => {
   const sInp = $('search-input');
   if (sInp) sInp.addEventListener('input', e => doSearch(e.target.value));
 
- /* =====================================================
-   ★ 테마 토글 (다크 ↔ 라이트) + 자동 저장
+/* =====================================================
+   ★ 테마 토글 완전 수정판 (클래스 강제 적용 + 저장)
 ===================================================== */
 function initTheme() {
-  const saved = localStorage.getItem('kfacility-theme') || 'dark';
-  if (saved === 'light') {
+  let theme = localStorage.getItem('kfacility-theme') || 'light';   // 기본을 light로 변경
+  if (theme === 'light') {
     document.body.classList.add('light-mode');
     const knob = document.getElementById('tsk');
     if (knob) knob.style.left = '3px';
+  } else {
+    document.body.classList.remove('light-mode');
   }
+  console.log('✅ 현재 테마:', theme);   // 디버그용
 }
 
 const tsw = document.getElementById('tsw');
@@ -2314,12 +2317,14 @@ if (tsw) {
     if (knob) knob.style.left = isLight ? '3px' : '22px';
     
     localStorage.setItem('kfacility-theme', isLight ? 'light' : 'dark');
-    toast(isLight ? '☀️ 라이트 모드 ON (한글2022 스타일)' : '🌙 다크 모드');
+    toast(isLight ? '☀️ 라이트 모드 ON' : '🌙 다크 모드');
+    console.log('테마 전환 →', isLight ? 'light' : 'dark');   // 디버그용
   });
 }
 
   initMobileInputFix();
   initTheme();
+  initFirebase();
   initFirebase();
 });
 
