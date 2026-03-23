@@ -1276,11 +1276,3 @@ textarea { caret-color: var(--orange); }
   .form-page-title { font-size: 20px; }
   .form-textarea { font-size: 16px; }
 }
-
-/* 카드 수정/삭제 버튼 */
-.card-actions {
-  display: flex;
-  gap: 6px;
-  margin-top: 10px;
-  justify-content: flex-end;
-}
