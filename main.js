@@ -711,10 +711,7 @@ function renderManualCat(catKey) {
         </div>
         <div class="mc-tags">${(m.tags||[]).map(t=>`<span class="m-tag">${esc(t)}</span>`).join('')}</div>
       </div>
-      <div class="card-actions" onclick="event.stopPropagation()">
-        <button class="lc-btn lc-btn-edit" onclick="openManualModal('${catKey}','${m.id}')">✏️</button>
-        <button class="lc-btn lc-btn-del"  onclick="deleteManual('${catKey}','${m.id}')">🗑</button>
-      </div>
+      <div class="mc-arrow">›</div>
     </div>`;
   }).join('') :
   `<div class="gc" style="padding:48px;text-align:center;color:var(--t4)">
@@ -895,41 +892,103 @@ function openManualModal(catKey, id) {
   /* checklist → 줄바꿈 텍스트 */
   const ckText = (m?.checklist||[]).join('\n');
 
-  /* 제목 표시 */
-  const _mt = $('form-manual-title');
-  if (_mt) _mt.textContent = m ? '매뉴얼 수정' : '매뉴얼 추가';
-  /* 카테고리 select 선택 */
-  const _mc = $('mf-cat');
-  if (_mc) [..._mc.options].forEach(o => { o.selected = o.value === catKey; });
+  openModal(`
+    <div class="modal-title">
+      ${m?'매뉴얼 수정':'매뉴얼 추가'}
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
 
-  /* 기본 텍스트 필드 채우기 */
-  const _sv = (id, v) => { const e=$(id); if(e) e.value=v; };
-  _sv('mf-title',       m?.title   || '');
-  _sv('mf-overview',    m?.overview|| '');
-  _sv('mf-tags',        (m?.tags||[]).join(', '));
-  _sv('mf-supplies',    (m?.supplies||[]).join('\n'));
-  _sv('mf-safety',      (m?.cautions||[]).join('\n'));
-  _sv('mf-check',       ckText);
-  _sv('mf-tip-caution', m?.caution || '');
-  _sv('mf-tip',         m?.tip     || '');
+    <!-- 기본 정보 -->
+    <div class="lf-row">
+      <div class="lf-group" style="margin:0">
+        <label class="lf-label">🗂 카테고리</label>
+        <select class="lf-select" id="mf-cat">
+          <option value="electric"${catKey==='electric'?' selected':''}>⚡ 전기 설비</option>
+          <option value="mechanical"${catKey==='mechanical'?' selected':''}>⚙️ 기계 설비</option>
+          <option value="construction"${catKey==='construction'?' selected':''}>🔨 영선 / 보수</option>
+          <option value="fire"${catKey==='fire'?' selected':''}>🔥 소방 설비</option>
+        </select>
+      </div>
+      <div class="lf-group" style="margin:0">
+        <label class="lf-label">📌 제목 *</label>
+        <input class="lf-input" id="mf-title" type="text"
+          value="${esc(m?.title||'')}" placeholder="예: 분전반 MCB 교체"/>
+      </div>
+    </div>
+    <div class="lf-row">
+      <div class="lf-group" style="margin:0">
+        <label class="lf-label">개요</label>
+        <textarea class="lf-textarea" id="mf-overview" rows="2"
+          placeholder="이 매뉴얼의 목적 요약">${esc(m?.overview||'')}</textarea>
+      </div>
+      <div class="lf-group" style="margin:0">
+        <label class="lf-label">태그 (쉼표 구분)</label>
+        <textarea class="lf-textarea" id="mf-tags" rows="2"
+          placeholder="MCB, 차단기, 전기">${esc((m?.tags||[]).join(', '))}</textarea>
+      </div>
+    </div>
 
-  /* 기존 대표 사진 */
+    <div class="modal-section-divider">📦 섹션 1 — 준비물 / 자재</div>
+    <div class="lf-group">
+      <label class="lf-label">한 줄에 하나씩 입력</label>
+      <textarea class="lf-textarea" id="mf-supplies" rows="4"
+        placeholder="드라이버(+/-)&#10;절연 장갑&#10;검전기&#10;교체용 MCB (동일 규격)">${esc((m?.supplies||[]).join('\n'))}</textarea>
+    </div>
+
+    <div class="modal-section-divider">⚠️ 섹션 2 — 안전주의사항</div>
+    <div class="lf-group">
+      <label class="lf-label">한 줄에 하나씩 입력</label>
+      <textarea class="lf-textarea" id="mf-safety" rows="4"
+        placeholder="주 차단기 OFF 후 작업&#10;검전기로 무전압 확인&#10;동일 용량 MCB만 사용">${esc((m?.cautions||[]).join('\n'))}</textarea>
+    </div>
+
+    <!-- ★ 섹션3: 절차 항목 (설명+사진 1:1 세트) -->
+    <div class="modal-section-divider">
+      🔧 섹션 3 — 상세 작업 절차
+      <button type="button" onclick="addStepItem()"
+        style="margin-left:auto;background:var(--orange);color:#fff;border:none;
+               border-radius:8px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer">
+        ＋ 절차 추가
+      </button>
+    </div>
+    <div id="mf-steps-container" style="display:flex;flex-direction:column;gap:12px;margin-bottom:4px">
+      <!-- JS renderStepItems()가 채움 -->
+    </div>
+
+    <div class="modal-section-divider">✅ 섹션 4 — 점검 체크리스트</div>
+    <div class="lf-group">
+      <label class="lf-label">한 줄에 하나씩 입력</label>
+      <textarea class="lf-textarea" id="mf-check" rows="5"
+        placeholder="주 차단기 OFF 확인&#10;검전기 무전압 확인&#10;MCB 사양 메모&#10;결선 사진 촬영&#10;투입 후 전압 측정">${esc(ckText)}</textarea>
+    </div>
+
+    <div class="modal-section-divider">💡 섹션 5 — 주의사항 / Tip</div>
+    <div class="lf-row">
+      <div class="lf-group" style="margin:0">
+        <label class="lf-label">⚠️ 최종 주의사항</label>
+        <input class="lf-input" id="mf-tip-caution" type="text"
+          value="${esc(m?.caution||'')}"
+          placeholder="활선 작업 절대 금지"/>
+      </div>
+      <div class="lf-group" style="margin:0">
+        <label class="lf-label">💡 Tip</label>
+        <input class="lf-input" id="mf-tip" type="text"
+          value="${esc(m?.tip||'')}"
+          placeholder="교체 후 12시간 모니터링 권장"/>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-gh" onclick="closeModal()">취소</button>
+      <button class="btn-o" id="btn-save-manual" onclick="saveManual()">💾 저장</button>
+    </div>`);
+
+  /* 기존 대표 사진 미리보기 (대표 이미지 필드 유지) */
   if (m?.imageUrl) {
     S.uploadPhotos = [{ url: m.imageUrl, existing: true, side: 'main', storagePath: m.imageStoragePath||'', file: null }];
   }
-  const _pp = $('mf-photo-preview');
-  if (_pp) _pp.innerHTML = '';
-  if (m?.imageUrl) renderFormPhotoPreview('mf-photo-preview', 'main');
-
-  /* 풀페이지로 이동 */
-  goto('form-manual');
-
-  /* steps 렌더는 goto 직후 (DOM 준비 후) */
-  setTimeout(() => { renderStepItems(); }, 0);
-
-  /* ── 아래는 사용 안 함 (구 openModal 대체) ── */
-    /* 구 openModal 코드 제거 — 풀페이지로 대체됨*/
-  /* ← openManualModal 끝 (풀페이지 방식으로 위에서 처리됨) */
+  /* ★ 절차 항목 렌더링 */
+  renderStepItems();
 }
 
 /* ═══════════════════════════════════════════════════
@@ -1435,51 +1494,106 @@ function openLogDetail(id) {
   goto('records-detail');
 }
 
-/* 작업기록 추가/수정 — 풀페이지 */
+/* 작업기록 추가/수정 모달 */
 function openLogModal(id) {
-  S.editLogId    = id || null;
+  S.editLogId   = id || null;
   S.uploadPhotos = [];
-  S._formLogBack = S.currentPage;  /* 뒤로 갈 페이지 기억 */
   const l = id ? logs.find(x=>x.id===id) : null;
 
-  /* 제목 */
-  const titleEl = $('form-log-title');
-  if (titleEl) titleEl.textContent = l ? '작업기록 수정' : '새 작업기록';
+  openModal(`
+    <div class="modal-title">
+      ${l ? '작업기록 수정' : '새 작업기록'}
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="lf-row">
+      <div class="lf-group" style="margin:0">
+        <label class="lf-label">작업 유형</label>
+        <select class="lf-select" id="lm-cat">
+          ${['전기','기계','영선','소방','기타'].map(c=>`<option${l?.cat===c?' selected':''}>${c}</option>`).join('')}
+        </select>
+      </div>
+      <div class="lf-group" style="margin:0">
+        <label class="lf-label">처리 상태</label>
+        <select class="lf-select" id="lm-status">
+          ${['완료','진행중','대기'].map(s=>`<option${l?.status===s?' selected':''}>${s}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="lf-group">
+      <label class="lf-label">작업 제목 *</label>
+      <input class="lf-input" id="lm-title" type="text" value="${esc(l?.title||'')}" placeholder="예: 3층 분전반 MCB 교체"/>
+    </div>
+    <div class="lf-row">
+      <div class="lf-group" style="margin:0">
+        <label class="lf-label">작업자</label>
+        <input class="lf-input" id="lm-worker" type="text" value="${esc(l?.worker||'')}" placeholder="이름"/>
+      </div>
+      <div class="lf-group" style="margin:0">
+        <label class="lf-label">작업일</label>
+        <input class="lf-input" id="lm-date" type="date" value="${l?.date||today()}"/>
+      </div>
+    </div>
+    <div class="lf-group">
+      <label class="lf-label">상세 내용</label>
+      <textarea class="lf-textarea" id="lm-desc" rows="4" placeholder="작업 내용, 특이사항, 교체 부품...">${esc(l?.desc||'')}</textarea>
+    </div>
+    <!-- ★ Before / After 사진 업로드 -->
+    <div class="lf-group">
+      <label class="lf-label">📷 현장 사진 (Before / After, 각 최대 3장)</label>
+      <div class="ba-upload-section">
+        <div class="ba-upload-header ba-upload-before">🔴 BEFORE — 작업 전</div>
+        <div id="lm-before-preview" class="photo-preview-wrap"></div>
+        <div class="photo-btn-row">
+          <label class="photo-add-btn">
+            📷 카메라
+            <input type="file" accept="image/*" capture="environment" multiple
+              class="hidden" onchange="handleFormPhoto(event,'before','lm-before-preview')"/>
+          </label>
+          <label class="photo-add-btn">
+            🖼 갤러리
+            <input type="file" accept="image/*" multiple
+              class="hidden" onchange="handleFormPhoto(event,'before','lm-before-preview')"/>
+          </label>
+        </div>
+      </div>
+      <div class="ba-upload-section" style="margin-top:10px">
+        <div class="ba-upload-header ba-upload-after">🟢 AFTER — 작업 후</div>
+        <div id="lm-after-preview" class="photo-preview-wrap"></div>
+        <div class="photo-btn-row">
+          <label class="photo-add-btn">
+            📷 카메라
+            <input type="file" accept="image/*" capture="environment" multiple
+              class="hidden" onchange="handleFormPhoto(event,'after','lm-after-preview')"/>
+          </label>
+          <label class="photo-add-btn">
+            🖼 갤러리
+            <input type="file" accept="image/*" multiple
+              class="hidden" onchange="handleFormPhoto(event,'after','lm-after-preview')"/>
+          </label>
+        </div>
+      </div>
+      <p class="photo-hint">800px 자동 압축 · Firebase Storage 저장</p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-gh" onclick="closeModal()">취소</button>
+      <button class="btn-o" id="btn-save-log" onclick="saveLog()">💾 저장</button>
+    </div>`);
 
-  /* 카테고리 select */
-  const catSel = $('lm-cat');
-  if (catSel) {
-    catSel.innerHTML = ['전기','기계','영선','소방','기타']
-      .map(c=>`<option${l?.cat===c?' selected':''}>${c}</option>`).join('');
+  /* 기존 사진 미리보기 — Before / After 분리 */
+  if (l) {
+    const before = Array.isArray(l.beforePhotos) && l.beforePhotos.length
+      ? l.beforePhotos.filter(Boolean)
+      : (l.photos||[]).slice(0, 1);
+    const after  = Array.isArray(l.afterPhotos)  && l.afterPhotos.length
+      ? l.afterPhotos.filter(Boolean)
+      : (l.photos||[]).slice(1);
+    S.uploadPhotos = [
+      ...before.map((url, i) => ({ url, existing:true, side:'before', storagePath:(l.storagePaths||[])[i]||'', file:null })),
+      ...after.map((url, i)  => ({ url, existing:true, side:'after',  storagePath:(l.storagePaths||[])[before.length+i]||'', file:null })),
+    ];
+    renderFormPhotoPreview('lm-before-preview', 'before');
+    renderFormPhotoPreview('lm-after-preview',  'after');
   }
-  /* 상태 select */
-  const stSel = $('lm-status');
-  if (stSel) {
-    stSel.innerHTML = ['완료','진행중','대기']
-      .map(s=>`<option${l?.status===s?' selected':''}>${s}</option>`).join('');
-  }
-  /* 필드 채우기 */
-  const setV = (id, v) => { const e=$(id); if(e) e.value=v; };
-  setV('lm-title',  l?.title  || '');
-  setV('lm-worker', l?.worker || '');
-  setV('lm-date',   l?.date   || today());
-  const desc = $('lm-desc'); if(desc) desc.value = l?.desc || '';
-
-  /* 기존 사진 */
-  const before = Array.isArray(l?.beforePhotos) && l.beforePhotos.length
-    ? l.beforePhotos.filter(Boolean)
-    : (l?.photos||[]).slice(0,1);
-  const after  = Array.isArray(l?.afterPhotos)  && l.afterPhotos.length
-    ? l.afterPhotos.filter(Boolean)
-    : (l?.photos||[]).slice(1);
-  S.uploadPhotos = [
-    ...before.map((url,i) => ({ url, existing:true, side:'before', storagePath:(l?.storagePaths||[])[i]||'', file:null })),
-    ...after.map((url,i)  => ({ url, existing:true, side:'after',  storagePath:(l?.storagePaths||[])[before.length+i]||'', file:null })),
-  ];
-  renderFormPhotoPreview('lm-before-preview', 'before');
-  renderFormPhotoPreview('lm-after-preview',  'after');
-
-  goto('form-log');
 }
 
 /* 사진 input 트리거 (type, side, wrapperId 모두 지원) */
@@ -1715,10 +1829,6 @@ function renderMemo() {
       <div class="memo-card-preview">${esc(preview)}</div>
       <div class="memo-tags">${(m.tags||[]).map(t=>`<span class="m-tag">${esc(t)}</span>`).join('')}</div>
       ${thumbHtml}
-      <div class="card-actions" onclick="event.stopPropagation()">
-        <button class="lc-btn lc-btn-edit" onclick="openMemoModal('${m.id}')">✏️ 수정</button>
-        <button class="lc-btn lc-btn-del"  onclick="deleteMemo('${m.id}')">🗑 삭제</button>
-      </div>
     </div>`;
   }).join('') :
   `<div class="gc" style="padding:48px;text-align:center;color:var(--t4);grid-column:1/-1">
@@ -1770,37 +1880,69 @@ function openMemoDetail(id) {
 }
 
 function openMemoModal(id) {
-  S.editMemoId   = id || null;
-  S.uploadPhotos = [];
-  S._formMemoBack = S.currentPage;
+  S.editMemoId  = id || null;
+  S.uploadPhotos = [];          /* 사진 버퍼 초기화 */
   const m = id ? memos.find(x=>x.id===id) : null;
+  openModal(`
+    <div class="modal-title">
+      ${m ? '메모 수정' : '새 메모 작성'}
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="lf-row">
+      <div class="lf-group" style="margin:0">
+        <label class="lf-label">카테고리</label>
+        <select class="lf-select" id="mm-cat">
+          ${['전기','기계','영선','소방','일반'].map(c=>`<option${m?.cat===c?' selected':''}>${c}</option>`).join('')}
+        </select>
+      </div>
+      <div class="lf-group" style="margin:0">
+        <label class="lf-label">작성일</label>
+        <input class="lf-input" id="mm-date" type="date" value="${m?.date||today()}"/>
+      </div>
+    </div>
+    <div class="lf-group">
+      <label class="lf-label">제목 *</label>
+      <input class="lf-input" id="mm-title" type="text" value="${esc(m?.title||'')}" placeholder="메모 제목"/>
+    </div>
+    <div class="lf-group">
+      <label class="lf-label">태그 (쉼표 구분)</label>
+      <input class="lf-input" id="mm-tags" type="text" value="${esc((m?.tags||[]).join(', '))}" placeholder="예: MCB, 전기기초"/>
+    </div>
+    <div class="lf-group">
+      <label class="lf-label">내용 *</label>
+      <textarea class="lf-textarea" id="mm-content" rows="8" placeholder="학습 내용, 현장 메모, 규정 기준...">${esc(m?.content||'')}</textarea>
+    </div>
+    <!-- ★ 참고 사진 (최대 3장) -->
+    <div class="lf-group">
+      <label class="lf-label">📷 참고 사진 (최대 3장)</label>
+      <div id="mm-photo-preview" class="photo-preview-wrap"></div>
+      <div class="photo-btn-row">
+        <label class="photo-add-btn">
+          📷 카메라
+          <input type="file" accept="image/*" capture="environment" multiple
+            class="hidden" onchange="handleFormPhoto(event,'memo','mm-photo-preview')"/>
+        </label>
+        <label class="photo-add-btn">
+          🖼 갤러리
+          <input type="file" accept="image/*" multiple
+            class="hidden" onchange="handleFormPhoto(event,'memo','mm-photo-preview')"/>
+        </label>
+      </div>
+      <p class="photo-hint">800px 자동 압축 · Firebase Storage 저장</p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-gh" onclick="closeModal()">취소</button>
+      <button class="btn-o" id="btn-save-memo" onclick="saveMemo()">💾 저장</button>
+    </div>`);
 
-  const titleEl = $('form-memo-title');
-  if (titleEl) titleEl.textContent = m ? '메모 수정' : '새 메모 작성';
-
-  /* 카테고리 */
-  const catSel = $('mm-cat');
-  if (catSel) {
-    [...catSel.options].forEach(o => { o.selected = o.value === (m?.cat||'일반'); });
-  }
-  const setV = (id, v) => { const e=$(id); if(e) e.value=v; };
-  setV('mm-date',    m?.date  || today());
-  setV('mm-title',   m?.title || '');
-  setV('mm-tags',    (m?.tags||[]).join(', '));
-  const co = $('mm-content'); if(co) co.value = m?.content || '';
-
-  /* 기존 사진 */
+  /* 기존 사진 미리보기 */
   if (m && Array.isArray(m.imgUrls) && m.imgUrls.length) {
     S.uploadPhotos = m.imgUrls.filter(Boolean).map((url, i) => ({
       url, existing: true, side: 'memo',
       storagePath: (m.imgPaths||[])[i] || '', file: null,
     }));
     renderFormPhotoPreview('mm-photo-preview', 'memo');
-  } else {
-    const pw = $('mm-photo-preview'); if (pw) pw.innerHTML = '';
   }
-
-  goto('form-memo');
 }
 
 async function saveMemo() {
@@ -1867,7 +2009,8 @@ async function saveMemo() {
     S.editMemoId  = null;
     S.uploadPhotos = [];
     toast('✅ 저장됐습니다');
-    goto('memo');   /* 저장 후 메모 목록으로 */
+    closeModal();
+    if (S.currentPage === 'memo') renderMemo();
   } catch(e) {
     toast('⚠️ 저장 실패: ' + e.message);
     if (btn) { btn.disabled=false; btn.textContent='💾 저장'; }
@@ -2151,9 +2294,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const sInp = $('search-input');
   if (sInp) sInp.addEventListener('input', e => doSearch(e.target.value));
 
-  /* 테마 토글 — toggleTheme()은 파일 하단 ㉓ 섹션에 정의 */
-  const _tsw = document.getElementById('tsw');
-  if (_tsw) _tsw.addEventListener('click', toggleTheme);
+  /* 테마 토글 */
+  const tsw = $('tsw');
+  if (tsw) tsw.addEventListener('click', () => {
+    const k = $('tsk'); if(k) k.style.left = k.style.left === '22px' ? '3px' : '22px';
+  });
 
   initMobileInputFix();
   initFirebase();
@@ -2205,21 +2350,8 @@ function renderSteps(steps, containerId) {
     </div>`).join('');
 }
 
-
-/* ──────────────────────────────────────────
-   풀페이지 폼 — 뒤로 가기
-   저장 안 하고 이전 페이지로 복귀
-────────────────────────────────────────── */
-function formBack(type) {
-  S.uploadPhotos = [];
-  if (type === 'log')    goto(S._formLogBack    || 'records');
-  if (type === 'memo')   goto(S._formMemoBack   || 'memo');
-  if (type === 'manual') goto(S.editManualCat   || 'electric');
-}
-
 /* 전역 노출 */
 window.goto             = goto;
-window.formBack           = formBack;
 window.loginGoogle      = loginGoogle;
 window.loginGuest       = loginGuest;
 window.logout           = logout;
@@ -2264,44 +2396,3 @@ window.openContactModal = openContactModal;
 window.exportData       = exportData;
 window.clearLocalData   = clearLocalData;
 window.doSearch         = doSearch;
-
-/* =====================================================
-   ㉓ Aetheris 테마 토글 (original ↔ aetheris-mode)
-   기본: 'dark' (original 스타일 그대로)
-   토글 ON: body.aetheris-mode 추가 → Aetheris 스타일
-===================================================== */
-// ==================== Aetheris 테마 토글 ====================
-const tsw = document.getElementById('tsw');
-const tsk = document.getElementById('tsk');
-
-function toggleTheme() {
-  const isAetheris = document.body.classList.toggle('aetheris-mode');
-  localStorage.setItem('theme', isAetheris ? 'aetheris' : 'dark');
-
-  if (tsk) {
-    tsk.style.transform = isAetheris ? 'translateX(20px)' : 'translateX(0)';
-  }
-
-  console.log('테마 변경:', isAetheris ? 'AETHERIS (light)' : 'DARK (original)');
-}
-
-if (tsw) {
-  tsw.addEventListener('click', toggleTheme);
-}
-
-function initTheme() {
-  const saved = localStorage.getItem('theme') || 'dark';
-  if (saved === 'aetheris') {
-    document.body.classList.add('aetheris-mode');
-    if (tsk) tsk.style.transform = 'translateX(20px)';
-  } else {
-    document.body.classList.remove('aetheris-mode');
-    if (tsk) tsk.style.transform = 'translateX(0)';
-  }
-  localStorage.setItem('theme', saved);
-}
-
-window.addEventListener('load', initTheme);
-
-window.toggleTheme = toggleTheme;
-window.initTheme   = initTheme;
