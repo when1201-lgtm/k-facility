@@ -2294,13 +2294,32 @@ document.addEventListener('DOMContentLoaded', () => {
   const sInp = $('search-input');
   if (sInp) sInp.addEventListener('input', e => doSearch(e.target.value));
 
-  /* 테마 토글 */
-  const tsw = $('tsw');
-  if (tsw) tsw.addEventListener('click', () => {
-    const k = $('tsk'); if(k) k.style.left = k.style.left === '22px' ? '3px' : '22px';
+ /* =====================================================
+   ★ 테마 토글 (다크 ↔ 라이트) + 자동 저장
+===================================================== */
+function initTheme() {
+  const saved = localStorage.getItem('kfacility-theme') || 'dark';
+  if (saved === 'light') {
+    document.body.classList.add('light-mode');
+    const knob = document.getElementById('tsk');
+    if (knob) knob.style.left = '3px';
+  }
+}
+
+const tsw = document.getElementById('tsw');
+if (tsw) {
+  tsw.addEventListener('click', () => {
+    const isLight = document.body.classList.toggle('light-mode');
+    const knob = document.getElementById('tsk');
+    if (knob) knob.style.left = isLight ? '3px' : '22px';
+    
+    localStorage.setItem('kfacility-theme', isLight ? 'light' : 'dark');
+    toast(isLight ? '☀️ 라이트 모드 ON (한글2022 스타일)' : '🌙 다크 모드');
   });
+}
 
   initMobileInputFix();
+  initTheme();
   initFirebase();
 });
 
