@@ -734,6 +734,199 @@
         </div>
       </section>
 
+
+      <!-- ===== 작업기록 폼 (추가/수정) — 풀페이지 ===== -->
+      <section id="page-form-log" class="page">
+        <div class="pi form-page-pi">
+          <div class="form-page-header">
+            <button class="form-back-btn" onclick="formBack('log')">← 뒤로</button>
+            <h1 class="form-page-title" id="form-log-title">새 작업기록</h1>
+          </div>
+          <div class="glass form-card">
+            <div class="lf-row">
+              <div class="lf-group">
+                <label class="lf-label">작업 유형</label>
+                <select class="lf-select" id="lm-cat"></select>
+              </div>
+              <div class="lf-group">
+                <label class="lf-label">처리 상태</label>
+                <select class="lf-select" id="lm-status"></select>
+              </div>
+            </div>
+            <div class="lf-group">
+              <label class="lf-label">작업 제목 *</label>
+              <input class="lf-input" id="lm-title" type="text" placeholder="예: 3층 분전반 MCB 교체"/>
+            </div>
+            <div class="lf-row">
+              <div class="lf-group">
+                <label class="lf-label">작업자</label>
+                <input class="lf-input" id="lm-worker" type="text" placeholder="이름"/>
+              </div>
+              <div class="lf-group">
+                <label class="lf-label">작업일</label>
+                <input class="lf-input" id="lm-date" type="date"/>
+              </div>
+            </div>
+            <div class="lf-group">
+              <label class="lf-label">상세 내용</label>
+              <textarea class="lf-textarea form-textarea" id="lm-desc" rows="6" placeholder="작업 내용, 특이사항, 교체 부품..."></textarea>
+            </div>
+            <!-- Before / After 사진 -->
+            <div class="lf-group">
+              <label class="lf-label">📷 현장 사진 (Before / After, 각 최대 3장)</label>
+              <div class="ba-upload-section">
+                <div class="ba-upload-header ba-upload-before">🔴 BEFORE — 작업 전</div>
+                <div id="lm-before-preview" class="photo-preview-wrap"></div>
+                <div class="photo-btn-row">
+                  <label class="photo-add-btn">📷 카메라<input type="file" accept="image/*" capture="environment" multiple class="hidden" onchange="handleFormPhoto(event,'before','lm-before-preview')"/></label>
+                  <label class="photo-add-btn">🖼 갤러리<input type="file" accept="image/*" multiple class="hidden" onchange="handleFormPhoto(event,'before','lm-before-preview')"/></label>
+                </div>
+              </div>
+              <div class="ba-upload-section" style="margin-top:10px">
+                <div class="ba-upload-header ba-upload-after">🟢 AFTER — 작업 후</div>
+                <div id="lm-after-preview" class="photo-preview-wrap"></div>
+                <div class="photo-btn-row">
+                  <label class="photo-add-btn">📷 카메라<input type="file" accept="image/*" capture="environment" multiple class="hidden" onchange="handleFormPhoto(event,'after','lm-after-preview')"/></label>
+                  <label class="photo-add-btn">🖼 갤러리<input type="file" accept="image/*" multiple class="hidden" onchange="handleFormPhoto(event,'after','lm-after-preview')"/></label>
+                </div>
+              </div>
+              <p class="photo-hint">800px 자동 압축 · Firebase Storage 저장</p>
+            </div>
+          </div>
+          <div class="form-page-actions">
+            <button class="btn-gh form-cancel-btn" onclick="formBack('log')">취소</button>
+            <button class="btn-o  form-save-btn"   id="btn-save-log" onclick="saveLog()">💾 저장</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== 학습메모 폼 (추가/수정) — 풀페이지 ===== -->
+      <section id="page-form-memo" class="page">
+        <div class="pi form-page-pi">
+          <div class="form-page-header">
+            <button class="form-back-btn" onclick="formBack('memo')">← 뒤로</button>
+            <h1 class="form-page-title" id="form-memo-title">새 메모 작성</h1>
+          </div>
+          <div class="glass form-card">
+            <div class="lf-row">
+              <div class="lf-group">
+                <label class="lf-label">카테고리</label>
+                <select class="lf-select" id="mm-cat">
+                  <option>전기</option><option>기계</option><option>영선</option><option>소방</option><option>일반</option>
+                </select>
+              </div>
+              <div class="lf-group">
+                <label class="lf-label">작성일</label>
+                <input class="lf-input" id="mm-date" type="date"/>
+              </div>
+            </div>
+            <div class="lf-group">
+              <label class="lf-label">제목 *</label>
+              <input class="lf-input" id="mm-title" type="text" placeholder="메모 제목"/>
+            </div>
+            <div class="lf-group">
+              <label class="lf-label">태그 (쉼표 구분)</label>
+              <input class="lf-input" id="mm-tags" type="text" placeholder="예: MCB, 전기기초"/>
+            </div>
+            <div class="lf-group">
+              <label class="lf-label">내용 *</label>
+              <textarea class="lf-textarea form-textarea" id="mm-content" rows="12" placeholder="학습 내용, 현장 메모, 규정 기준..."></textarea>
+            </div>
+            <div class="lf-group">
+              <label class="lf-label">📷 참고 사진 (최대 3장)</label>
+              <div id="mm-photo-preview" class="photo-preview-wrap"></div>
+              <div class="photo-btn-row">
+                <label class="photo-add-btn">📷 카메라<input type="file" accept="image/*" capture="environment" multiple class="hidden" onchange="handleFormPhoto(event,'memo','mm-photo-preview')"/></label>
+                <label class="photo-add-btn">🖼 갤러리<input type="file" accept="image/*" multiple class="hidden" onchange="handleFormPhoto(event,'memo','mm-photo-preview')"/></label>
+              </div>
+              <p class="photo-hint">800px 자동 압축 · Firebase Storage 저장</p>
+            </div>
+          </div>
+          <div class="form-page-actions">
+            <button class="btn-gh form-cancel-btn" onclick="formBack('memo')">취소</button>
+            <button class="btn-o  form-save-btn"   id="btn-save-memo" onclick="saveMemo()">💾 저장</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== 매뉴얼 폼 (추가/수정) — 풀페이지 ===== -->
+      <section id="page-form-manual" class="page">
+        <div class="pi form-page-pi">
+          <div class="form-page-header">
+            <button class="form-back-btn" id="form-manual-back-btn" onclick="formBack('manual')">← 뒤로</button>
+            <h1 class="form-page-title" id="form-manual-title">매뉴얼 추가</h1>
+          </div>
+          <div class="glass form-card">
+            <div class="lf-row">
+              <div class="lf-group">
+                <label class="lf-label">🗂 카테고리</label>
+                <select class="lf-select" id="mf-cat">
+                  <option value="electric">⚡ 전기 설비</option>
+                  <option value="mechanical">⚙️ 기계 설비</option>
+                  <option value="construction">🔨 영선 / 보수</option>
+                  <option value="fire">🔥 소방 설비</option>
+                </select>
+              </div>
+              <div class="lf-group">
+                <label class="lf-label">📌 제목 *</label>
+                <input class="lf-input" id="mf-title" type="text" placeholder="예: 분전반 MCB 교체"/>
+              </div>
+            </div>
+            <div class="lf-row">
+              <div class="lf-group">
+                <label class="lf-label">개요</label>
+                <textarea class="lf-textarea" id="mf-overview" rows="3" placeholder="이 매뉴얼의 목적 요약"></textarea>
+              </div>
+              <div class="lf-group">
+                <label class="lf-label">태그 (쉼표 구분)</label>
+                <textarea class="lf-textarea" id="mf-tags" rows="3" placeholder="MCB, 차단기, 전기"></textarea>
+              </div>
+            </div>
+            <div class="modal-section-divider">📦 섹션 1 — 준비물 / 자재</div>
+            <div class="lf-group">
+              <textarea class="lf-textarea form-textarea" id="mf-supplies" rows="5" placeholder="드라이버(+/-)&#10;절연 장갑&#10;검전기&#10;교체용 MCB (동일 규격)"></textarea>
+            </div>
+            <div class="modal-section-divider">⚠️ 섹션 2 — 안전주의사항</div>
+            <div class="lf-group">
+              <textarea class="lf-textarea form-textarea" id="mf-safety" rows="5" placeholder="주 차단기 OFF 후 작업&#10;검전기로 무전압 확인&#10;동일 용량 MCB만 사용"></textarea>
+            </div>
+            <div class="modal-section-divider">
+              🔧 섹션 3 — 상세 작업 절차
+              <button type="button" class="form-add-step-btn" onclick="addStepItem()">＋ 절차 추가</button>
+            </div>
+            <div id="mf-steps-container" class="steps-form-container"></div>
+            <div class="modal-section-divider">✅ 섹션 4 — 점검 체크리스트</div>
+            <div class="lf-group">
+              <textarea class="lf-textarea form-textarea" id="mf-check" rows="6" placeholder="주 차단기 OFF 확인&#10;검전기 무전압 확인&#10;MCB 사양 메모&#10;결선 사진 촬영&#10;투입 후 전압 측정"></textarea>
+            </div>
+            <div class="modal-section-divider">💡 섹션 5 — 주의사항 / Tip</div>
+            <div class="lf-row">
+              <div class="lf-group">
+                <label class="lf-label">⚠️ 최종 주의사항</label>
+                <input class="lf-input" id="mf-tip-caution" type="text" placeholder="활선 작업 절대 금지"/>
+              </div>
+              <div class="lf-group">
+                <label class="lf-label">💡 Tip</label>
+                <input class="lf-input" id="mf-tip" type="text" placeholder="교체 후 12시간 모니터링 권장"/>
+              </div>
+            </div>
+            <div class="modal-section-divider">📷 매뉴얼 대표 사진</div>
+            <div class="lf-group">
+              <div id="mf-photo-preview" class="photo-preview-wrap"></div>
+              <div class="photo-btn-row">
+                <label class="photo-add-btn">📷 카메라<input type="file" accept="image/*" capture="environment" class="hidden" onchange="handleManualPhoto(event)"/></label>
+                <label class="photo-add-btn">🖼 갤러리<input type="file" accept="image/*" multiple class="hidden" onchange="handleManualPhoto(event)"/></label>
+              </div>
+              <p class="photo-hint">800px 자동 압축 · Firebase Storage 저장</p>
+            </div>
+          </div>
+          <div class="form-page-actions">
+            <button class="btn-gh form-cancel-btn" id="form-manual-cancel-btn" onclick="formBack('manual')">취소</button>
+            <button class="btn-o  form-save-btn"   id="btn-save-manual" onclick="saveManual()">💾 저장</button>
+          </div>
+        </div>
+      </section>
+
     </div><!-- /pages -->
   </div><!-- /main -->
 </div><!-- /app -->
