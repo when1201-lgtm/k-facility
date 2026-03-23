@@ -1211,6 +1211,14 @@ async function saveManual() {
     steps.push({ text, imgUrls, imgPaths });
   }
 
+  /* ★ 중복 step 제거: text가 완전히 동일한 항목 제거 */
+  const seen = new Set();
+  const stepsDeduped = steps.filter(s => {
+    if (seen.has(s.text)) return false;
+    seen.add(s.text);
+    return true;
+  });
+
   /* 섹션4: 체크리스트 */
   const checklist = ($('mf-check')?.value||'').split('\n').map(s=>s.trim()).filter(Boolean);
 
@@ -1256,7 +1264,7 @@ async function saveManual() {
     /* ★ 5섹션 데이터 */
     supplies,          /* 준비물 배열 */
     cautions,          /* 안전주의사항 배열 */
-    steps,             /* ★ 절차 [{text, imgUrl, imgPath}] */
+    steps: stepsDeduped,  /* ★ 중복 제거된 절차 배열 */
     checklist,         /* 체크리스트 배열 */
     caution,           /* 최종 주의 (한 줄) */
     tip,               /* Tip (한 줄) */
