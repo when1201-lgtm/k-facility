@@ -1,33 +1,29 @@
 /* =====================================================
-   K-Facility — style.css  (light-mode block)
-   ★ AETHERIS LIGHT v4 — 최고 가독성, 강한 대비
+   K-Facility — style.css  (light-mode block v5)
+   ★ 가독성 최우선 | 카드 선명 | 상세페이지 입체감
 ===================================================== */
 
 /* ══════════════════════════════════════════════════
-   ① 공통 변수 + 배경
+   ① 기본 배경 & 변수
 ══════════════════════════════════════════════════ */
 body.light-mode {
-  /* ─ 배경: Aetheris 보라-청색 진한 메쉬 ─ */
   background:
-    radial-gradient(ellipse 80% 60% at 15% 10%,  #8b91f7 0%, transparent 55%),
-    radial-gradient(ellipse 70% 50% at 85% 5%,   #b8a8fb 0%, transparent 55%),
-    radial-gradient(ellipse 90% 70% at 70% 90%,  #93b8fb 0%, transparent 60%),
-    radial-gradient(ellipse 60% 40% at 5%  85%,  #c5b8fd 0%, transparent 50%),
-    linear-gradient(160deg, #aab4ff 0%, #b8aafc 35%, #9ab6f8 70%, #b4c2ff 100%) !important;
+    radial-gradient(ellipse 80% 55% at 10% 8%,   #8e97f5 0%, transparent 52%),
+    radial-gradient(ellipse 65% 45% at 88% 6%,   #b8a9fb 0%, transparent 52%),
+    radial-gradient(ellipse 85% 65% at 72% 92%,  #91b8f9 0%, transparent 58%),
+    radial-gradient(ellipse 55% 38% at 4%  88%,  #c4b8fd 0%, transparent 48%),
+    linear-gradient(155deg, #a8b2ff 0%, #b5a9fc 35%, #96b5f8 70%, #b2c0ff 100%) !important;
   background-attachment: fixed !important;
-  color: #0d0d1f !important;
+  color: #1a1a1a !important;
 
-  /* ─ 텍스트 4단계 ─ */
-  --t1: #0d0d1f;
-  --t2: #1e1e3a;
-  --t3: #4a4a6a;
-  --t4: #7878a0;
+  --t1: #1a1a1a;
+  --t2: #212529;
+  --t3: #495057;
+  --t4: #868e96;
 
-  /* ─ 글래스 토큰 ─ */
-  --gb:      rgba(255,255,255,.15);
-  --gborder: rgba(255,255,255,.65);
+  --gb:       rgba(255,255,255,.18);
+  --gborder:  rgba(255,255,255,.70);
 
-  /* ─ 브랜드 ─ */
   --orange:   #5558e3;
   --orange-g: rgba(85,88,227,.30);
   --blue:     #4f6ef7;
@@ -38,198 +34,247 @@ body.light-mode {
 }
 
 /* ══════════════════════════════════════════════════
-   ② 배경 오브 (레이어 위에 올려 심도 강조)
+   ② 오브 레이어
 ══════════════════════════════════════════════════ */
 body.light-mode .bg-layer { display: block !important; opacity: 1 !important; }
-body.light-mode .o1 {
-  background: radial-gradient(circle, rgba(100,110,255,.50) 0%, transparent 68%) !important;
-}
-body.light-mode .o2 {
-  background: radial-gradient(circle, rgba(180,160,255,.45) 0%, transparent 68%) !important;
-}
-body.light-mode .o3 {
-  background: radial-gradient(circle, rgba(130,180,255,.40) 0%, transparent 68%) !important;
-}
-body.light-mode .o4 {
-  background: radial-gradient(circle, rgba(200,185,255,.35) 0%, transparent 68%) !important;
-}
+body.light-mode .o1 { background: radial-gradient(circle, rgba(95,105,250,.48) 0%, transparent 68%) !important; }
+body.light-mode .o2 { background: radial-gradient(circle, rgba(175,155,252,.42) 0%, transparent 68%) !important; }
+body.light-mode .o3 { background: radial-gradient(circle, rgba(120,175,252,.38) 0%, transparent 68%) !important; }
+body.light-mode .o4 { background: radial-gradient(circle, rgba(195,182,252,.34) 0%, transparent 68%) !important; }
 
 /* ══════════════════════════════════════════════════
-   ③ 카드 — 순백 불투명 + 진한 그림자로 배경에서 분리
+   ③ 카드 — 순백 + 뚜렷한 테두리 + 강한 그림자
 ══════════════════════════════════════════════════ */
 body.light-mode .glass {
-  background: rgba(255,255,255,.97) !important;
-  border: 1px solid rgba(255,255,255,1) !important;
+  background: #ffffff !important;
+  border: 1.5px solid rgba(200,210,255,.55) !important;
   box-shadow:
-    0 0 0 1px rgba(130,130,220,.12),
-    0 4px 6px  rgba(80,80,180,.08),
-    0 12px 40px rgba(70,70,160,.16) !important;
-  backdrop-filter: blur(20px) !important;
-  -webkit-backdrop-filter: blur(20px) !important;
-}
-body.light-mode .glass-s {
-  background: rgba(255,255,255,.95) !important;
-  border: 1px solid rgba(255,255,255,.98) !important;
-  box-shadow:
-    0 0 0 1px rgba(130,130,220,.10),
-    0 8px 28px rgba(70,70,160,.14) !important;
-  backdrop-filter: blur(20px) !important;
-  -webkit-backdrop-filter: blur(20px) !important;
-}
-body.light-mode .gc {
-  background: rgba(255,255,255,.96) !important;
-  border: 1px solid rgba(255,255,255,.99) !important;
-  box-shadow:
-    0 0 0 1px rgba(130,130,220,.10),
-    0 4px 6px  rgba(80,80,180,.07),
-    0 10px 30px rgba(70,70,160,.13) !important;
+    0 1px 3px  rgba(80,80,180,.10),
+    0 6px 20px rgba(80,80,180,.18),
+    0 20px 50px rgba(60,60,160,.12) !important;
   backdrop-filter: blur(16px) !important;
   -webkit-backdrop-filter: blur(16px) !important;
 }
-body.light-mode .gc:hover {
+body.light-mode .glass-s {
   background: #ffffff !important;
+  border: 1.5px solid rgba(200,210,255,.50) !important;
   box-shadow:
-    0 0 0 1px rgba(85,88,227,.18),
-    0 6px 8px  rgba(80,80,180,.10),
-    0 16px 48px rgba(70,70,160,.20) !important;
+    0 1px 3px  rgba(80,80,180,.08),
+    0 6px 18px rgba(80,80,180,.15) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+}
+body.light-mode .gc {
+  background: #ffffff !important;
+  border: 1.5px solid rgba(200,210,255,.50) !important;
+  box-shadow:
+    0 1px 3px  rgba(80,80,180,.08),
+    0 4px 14px rgba(80,80,180,.14) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+}
+body.light-mode .gc:hover {
+  background: #fafbff !important;
+  border-color: rgba(85,88,227,.45) !important;
+  box-shadow:
+    0 2px 4px  rgba(80,80,180,.12),
+    0 8px 24px rgba(80,80,180,.22),
+    0 0 0 3px  rgba(85,88,227,.08) !important;
   transform: translateY(-2px) !important;
 }
+/* 상세 페이지 */
 body.light-mode #page-manual-detail .glass,
 body.light-mode #page-manual-detail .gc,
 body.light-mode #page-records-detail .glass,
 body.light-mode #page-memo-detail .glass {
   background: #ffffff !important;
-  box-shadow:
-    0 0 0 1px rgba(130,130,220,.10),
-    0 12px 40px rgba(70,70,160,.14) !important;
+  border: 1.5px solid rgba(200,210,255,.45) !important;
+  box-shadow: 0 4px 20px rgba(80,80,180,.12) !important;
 }
 
 /* ══════════════════════════════════════════════════
-   ④ 사이드바
+   ④ 상세 페이지 배경 — 연한 회색 바탕
+══════════════════════════════════════════════════ */
+body.light-mode #page-manual-detail #pages,
+body.light-mode #page-records-detail #pages,
+body.light-mode #page-memo-detail #pages { background: transparent !important; }
+
+/* 상세 페이지 전체 영역 배경을 연한 회색으로 */
+body.light-mode #page-manual-detail  { background: rgba(243,244,246,.60) !important; }
+body.light-mode #page-records-detail { background: rgba(243,244,246,.60) !important; }
+body.light-mode #page-memo-detail    { background: rgba(243,244,246,.60) !important; }
+body.light-mode #page-manual-detail  .pi,
+body.light-mode #page-records-detail .pi,
+body.light-mode #page-memo-detail    .pi { background: transparent !important; }
+
+/* ══════════════════════════════════════════════════
+   ⑤ 구분선 — 상세 페이지 카드 사이
+══════════════════════════════════════════════════ */
+body.light-mode .detail-desc-wrap   { border-top: 2px solid #e9ecef !important; }
+body.light-mode .detail-photos-wrap { border-top: 2px solid #e9ecef !important; }
+body.light-mode .md-overview        { border-top: 2px solid #e9ecef !important; }
+body.light-mode .md-section         { border-top: 2px solid #e9ecef !important; }
+body.light-mode .sdiv               { background: #dee2e6 !important; height: 1.5px !important; }
+body.light-mode .ri                 { border-bottom: 1.5px solid #f1f3f5 !important; }
+body.light-mode .ci                 { border-bottom: 1.5px solid #f1f3f5 !important; }
+body.light-mode .settings-row       { border-bottom: 1.5px solid #e9ecef !important; }
+body.light-mode .ck-row             { border-top: 1px solid #f1f3f5 !important; }
+
+/* ══════════════════════════════════════════════════
+   ⑥ 텍스트 — #1A1A1A 기준, 계층별 명확히
+══════════════════════════════════════════════════ */
+/* 제목류 */
+body.light-mode .hero-title,
+body.light-mode .detail-title,
+body.light-mode .ctitle,
+body.light-mode .md-main-title,
+body.light-mode .mc-title,
+body.light-mode .cat-name,
+body.light-mode .lc-title,
+body.light-mode .memo-card-title,
+body.light-mode .rm-sch-title,
+body.light-mode .contact-name,
+body.light-mode .settings-label,
+body.light-mode .mn,
+body.light-mode .mv,
+body.light-mode .spvl,
+body.light-mode .form-page-title,
+body.light-mode .modal-title          { color: #1a1a1a !important; font-weight: 700 !important; text-shadow: none !important; }
+
+/* 본문 */
+body.light-mode .detail-desc,
+body.light-mode .step-title,
+body.light-mode .step-desc,
+body.light-mode .ck-txt,
+body.light-mode .rtxt,
+body.light-mode .ct,
+body.light-mode .memo-content-box,
+body.light-mode .md-overview p,
+body.light-mode .supply-name          { color: #212529 !important; font-weight: 500 !important; text-shadow: none !important; }
+
+/* 서브 텍스트 */
+body.light-mode .hero-sub,
+body.light-mode .slbl,
+body.light-mode .cat-sub,
+body.light-mode .cat-count,
+body.light-mode .ms,
+body.light-mode .mc-meta,
+body.light-mode .lc-desc,
+body.light-mode .memo-card-preview,
+body.light-mode .rm-sch-desc,
+body.light-mode .contact-role,
+body.light-mode .settings-desc,
+body.light-mode .ml,
+body.light-mode .spll,
+body.light-mode .lf-label              { color: #495057 !important; font-weight: 600 !important; }
+
+/* 날짜·메타 */
+body.light-mode .rdt,
+body.light-mode .md,
+body.light-mode .lc-meta span,
+body.light-mode .mc-meta,
+body.light-mode .bc-date,
+body.light-mode .detail-card__date,
+body.light-mode .detail-card__updated,
+body.light-mode .slb2,
+body.light-mode .ck-num               { color: #868e96 !important; }
+
+/* 브레드크럼 */
+body.light-mode .bc-link              { color: #495057 !important; font-weight: 600 !important; }
+body.light-mode .bc-link:hover        { color: #5558e3 !important; }
+body.light-mode .bc-sep               { color: #adb5bd !important; }
+body.light-mode .bc-cur               { color: #1a1a1a !important; font-weight: 700 !important; }
+
+/* 빈 상태 */
+body.light-mode .empty-state,
+body.light-mode .empty-state-card     { color: #adb5bd !important; }
+
+/* ══════════════════════════════════════════════════
+   ⑦ 사이드바
 ══════════════════════════════════════════════════ */
 body.light-mode #sidebar {
-  background: rgba(255,255,255,.72) !important;
-  border-right: 1px solid rgba(255,255,255,.88) !important;
+  background: rgba(255,255,255,.75) !important;
+  border-right: 1.5px solid rgba(200,210,255,.55) !important;
   backdrop-filter: blur(32px) saturate(180%) !important;
   -webkit-backdrop-filter: blur(32px) saturate(180%) !important;
-  box-shadow: 2px 0 20px rgba(70,70,160,.10) !important;
+  box-shadow: 2px 0 20px rgba(80,80,180,.10) !important;
 }
-body.light-mode .s-logo        { color: #0d0d1f !important; font-weight: 800 !important; }
-body.light-mode .s-logo em     { color: #5558e3 !important; }
-body.light-mode .s-div         { background: rgba(0,0,0,.12) !important; }
-body.light-mode .nb            { color: rgba(13,13,31,.40) !important; }
-body.light-mode .nb:hover      { background: rgba(85,88,227,.10) !important; color: #5558e3 !important; }
-body.light-mode .nb.active     {
-  background: #5558e3 !important;
-  color: #fff !important;
+body.light-mode .s-logo           { color: #1a1a1a !important; font-weight: 800 !important; }
+body.light-mode .s-logo em        { color: #5558e3 !important; }
+body.light-mode .s-div            { background: #dee2e6 !important; }
+body.light-mode .nb               { color: #868e96 !important; }
+body.light-mode .nb:hover         { background: rgba(85,88,227,.10) !important; color: #5558e3 !important; }
+body.light-mode .nb.active        {
+  background: #5558e3 !important; color: #fff !important;
   box-shadow: 0 4px 16px rgba(85,88,227,.40) !important;
 }
 body.light-mode .tip {
   background: #ffffff !important;
-  border: 1px solid rgba(200,205,255,.45) !important;
-  color: #0d0d1f !important;
-  box-shadow: 0 8px 24px rgba(70,70,160,.16) !important;
+  border: 1.5px solid rgba(200,210,255,.55) !important;
+  color: #1a1a1a !important;
+  box-shadow: 0 8px 24px rgba(80,80,180,.16) !important;
 }
 
 /* ══════════════════════════════════════════════════
-   ⑤ 헤더
+   ⑧ 헤더
 ══════════════════════════════════════════════════ */
 body.light-mode #hdr {
-  background: rgba(255,255,255,.75) !important;
-  border-bottom: 1px solid rgba(255,255,255,.90) !important;
-  backdrop-filter: blur(32px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(32px) saturate(180%) !important;
-  box-shadow: 0 2px 16px rgba(70,70,160,.08) !important;
+  background: rgba(255,255,255,.80) !important;
+  border-bottom: 1.5px solid rgba(200,210,255,.55) !important;
+  backdrop-filter: blur(28px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
+  box-shadow: 0 2px 12px rgba(80,80,180,.10) !important;
 }
-body.light-mode .h-logo        { color: #0d0d1f !important; font-weight: 800 !important; }
-body.light-mode .h-logo em     { color: #5558e3 !important; }
+body.light-mode .h-logo           { color: #1a1a1a !important; font-weight: 800 !important; }
+body.light-mode .h-logo em        { color: #5558e3 !important; }
 body.light-mode .srch input {
-  background: rgba(255,255,255,.88) !important;
-  border: 1.5px solid rgba(200,205,255,.50) !important;
-  color: #0d0d1f !important;
+  background: rgba(255,255,255,.90) !important;
+  border: 1.5px solid rgba(200,210,255,.55) !important;
+  color: #1a1a1a !important;
 }
-body.light-mode .srch input::placeholder { color: rgba(13,13,31,.38) !important; }
+body.light-mode .srch input::placeholder { color: #adb5bd !important; }
 body.light-mode .srch input:focus {
-  border-color: rgba(85,88,227,.55) !important;
+  border-color: #5558e3 !important;
   background: #ffffff !important;
   box-shadow: 0 0 0 3px rgba(85,88,227,.12) !important;
 }
-body.light-mode .srch i        { color: rgba(13,13,31,.40) !important; }
+body.light-mode .srch i           { color: #adb5bd !important; }
 body.light-mode .ibtn {
-  background: rgba(255,255,255,.80) !important;
-  border: 1.5px solid rgba(200,205,255,.45) !important;
-  color: rgba(13,13,31,.60) !important;
+  background: rgba(255,255,255,.85) !important;
+  border: 1.5px solid rgba(200,210,255,.50) !important;
+  color: #495057 !important;
 }
-body.light-mode .ibtn:hover    { background: #ffffff !important; }
-body.light-mode .ibtn--dot::after { border-color: rgba(245,246,255,.95) !important; }
-body.light-mode .uname         { color: #1e1e3a !important; font-weight: 600 !important; }
+body.light-mode .ibtn:hover       { background: #ffffff !important; }
+body.light-mode .ibtn--dot::after { border-color: #f0f2ff !important; }
+body.light-mode .uname            { color: #212529 !important; font-weight: 700 !important; }
 
 /* ══════════════════════════════════════════════════
-   ⑥ 테마 토글
+   ⑨ 토글 / 스크롤바
 ══════════════════════════════════════════════════ */
-body.light-mode .tsw { background: rgba(85,88,227,.22) !important; }
-body.light-mode .tsk {
-  background: #5558e3 !important;
-  box-shadow: 0 1px 6px rgba(85,88,227,.50) !important;
-}
-
-/* ══════════════════════════════════════════════════
-   ⑦ 스크롤바
-══════════════════════════════════════════════════ */
-body.light-mode #pages             { scrollbar-color: rgba(0,0,0,.15) transparent !important; }
+body.light-mode .tsw              { background: rgba(85,88,227,.22) !important; }
+body.light-mode .tsk              { background: #5558e3 !important; box-shadow: 0 2px 6px rgba(85,88,227,.50) !important; }
+body.light-mode #pages            { scrollbar-color: rgba(0,0,0,.15) transparent !important; }
 body.light-mode #pages::-webkit-scrollbar-thumb { background: rgba(0,0,0,.15) !important; }
-
-/* ══════════════════════════════════════════════════
-   ⑧ 브레드크럼
-══════════════════════════════════════════════════ */
-body.light-mode .bc-link           { color: #4a4a6a !important; }
-body.light-mode .bc-link:hover     { color: #5558e3 !important; }
-body.light-mode .bc-sep            { color: #7878a0 !important; }
-body.light-mode .bc-cur            { color: #0d0d1f !important; font-weight: 700 !important; }
-body.light-mode .bc-date           { color: #4a4a6a !important; }
-
-/* ══════════════════════════════════════════════════
-   ⑨ 타이포그래피 — 전 영역 강한 대비
-══════════════════════════════════════════════════ */
-body.light-mode .slbl              { color: #4a4a6a !important; font-weight: 700 !important; letter-spacing: .08em !important; }
-body.light-mode .ctitle            { color: #0d0d1f !important; font-weight: 700 !important; }
-body.light-mode .hero-title        { color: #0d0d1f !important; font-weight: 800 !important; }
-body.light-mode .hero-sub          { color: #4a4a6a !important; }
-body.light-mode .detail-title      { color: #0d0d1f !important; text-shadow: none !important; font-weight: 800 !important; }
-body.light-mode .detail-desc       { color: #1e1e3a !important; line-height: 2.0 !important; }
-body.light-mode .empty-state,
-body.light-mode .empty-state-card  { color: #7878a0 !important; }
-body.light-mode .ml                { color: #4a4a6a !important; font-weight: 500 !important; }
-body.light-mode .mv                { color: #0d0d1f !important; font-weight: 700 !important; }
-body.light-mode .md                { color: #7878a0 !important; }
-body.light-mode .mn                { color: #0d0d1f !important; font-weight: 700 !important; }
-body.light-mode .ms                { color: #4a4a6a !important; }
-body.light-mode .rtxt              { color: #1e1e3a !important; font-weight: 500 !important; }
-body.light-mode .rdt               { color: #7878a0 !important; }
-body.light-mode .lf-label          { color: #4a4a6a !important; font-weight: 700 !important; }
 
 /* ══════════════════════════════════════════════════
    ⑩ 버튼
 ══════════════════════════════════════════════════ */
 body.light-mode .btn-o {
-  background: #5558e3 !important;
-  color: #ffffff !important;
+  background: #5558e3 !important; color: #fff !important;
   box-shadow: 0 4px 16px rgba(85,88,227,.38) !important;
 }
-body.light-mode .btn-o:hover       { opacity: .88 !important; }
+body.light-mode .btn-o:hover      { opacity: .88 !important; }
 body.light-mode .btn-b {
-  background: rgba(85,88,227,.10) !important;
-  color: #5558e3 !important;
-  border: 1.5px solid rgba(85,88,227,.28) !important;
+  background: rgba(85,88,227,.10) !important; color: #5558e3 !important;
+  border: 1.5px solid rgba(85,88,227,.30) !important;
 }
-body.light-mode .btn-b:hover       { background: rgba(85,88,227,.18) !important; }
+body.light-mode .btn-b:hover      { background: rgba(85,88,227,.18) !important; }
 body.light-mode .btn-gh {
-  background: rgba(255,255,255,.88) !important;
-  color: #1e1e3a !important;
-  border: 1.5px solid rgba(200,205,255,.50) !important;
+  background: rgba(255,255,255,.90) !important; color: #212529 !important;
+  border: 1.5px solid rgba(200,210,255,.55) !important;
 }
-body.light-mode .btn-gh:hover      { background: #ffffff !important; }
-body.light-mode .btn-gh--danger    { color: #e11d48 !important; }
+body.light-mode .btn-gh:hover     { background: #ffffff !important; }
+body.light-mode .btn-gh--danger   { color: #e11d48 !important; }
 
 /* ══════════════════════════════════════════════════
    ⑪ 폼 요소
@@ -237,272 +282,224 @@ body.light-mode .btn-gh--danger    { color: #e11d48 !important; }
 body.light-mode .lf-input,
 body.light-mode .lf-select,
 body.light-mode .lf-textarea {
-  background: rgba(255,255,255,.96) !important;
-  border: 1.5px solid rgba(200,205,255,.55) !important;
-  color: #0d0d1f !important;
+  background: #ffffff !important;
+  border: 1.5px solid rgba(200,210,255,.60) !important;
+  color: #1a1a1a !important;
 }
 body.light-mode .lf-input:focus,
 body.light-mode .lf-select:focus,
 body.light-mode .lf-textarea:focus {
-  border-color: rgba(85,88,227,.60) !important;
-  background: #ffffff !important;
+  border-color: #5558e3 !important;
   box-shadow: 0 0 0 3px rgba(85,88,227,.12) !important;
 }
 body.light-mode .lf-input::placeholder,
-body.light-mode .lf-textarea::placeholder { color: rgba(13,13,31,.36) !important; }
-body.light-mode .lf-select option         { background: #fff !important; color: #0d0d1f !important; }
-body.light-mode textarea                  { caret-color: #5558e3 !important; }
-body.light-mode textarea::selection       { background: rgba(85,88,227,.18) !important; }
+body.light-mode .lf-textarea::placeholder { color: #adb5bd !important; }
+body.light-mode .lf-select option  { background: #fff !important; color: #1a1a1a !important; }
+body.light-mode textarea           { caret-color: #5558e3 !important; }
 
 /* ══════════════════════════════════════════════════
-   ⑫ 사진 테두리
+   ⑫ 홈 대시보드 세부
 ══════════════════════════════════════════════════ */
-body.light-mode .photo-preview-item img { border: 1px solid rgba(200,205,255,.45) !important; }
-body.light-mode .step-thumb             { border: 1px solid rgba(200,205,255,.42) !important; }
-body.light-mode .step-photo-thumb       { border: 1px solid rgba(200,205,255,.42) !important; }
-body.light-mode .detail-img             { border: 1px solid rgba(200,205,255,.40) !important; }
-body.light-mode .memo-card-thumb        { border: 1px solid rgba(200,205,255,.40) !important; }
-body.light-mode .memo-detail-img        { border: 1px solid rgba(200,205,255,.40) !important; }
-body.light-mode .ba-detail-img          { border: 1px solid rgba(200,205,255,.35) !important; }
-body.light-mode .mc-thumb               { border: 1px solid rgba(200,205,255,.40) !important; }
-body.light-mode .step-photo             { border: 1px solid rgba(200,205,255,.40) !important; background: rgba(255,255,255,.55) !important; }
-body.light-mode .step-card-head img     { background: rgba(255,255,255,.55) !important; }
+body.light-mode .mini   { background: #ffffff !important; border: 1.5px solid rgba(200,210,255,.45) !important; box-shadow: 0 2px 8px rgba(80,80,180,.10) !important; }
+body.light-mode .pw     { background: #e9ecef !important; }
+body.light-mode .chk    { border: 2px solid #ced4da !important; }
+body.light-mode .chk.on { background: #5558e3 !important; border-color: #5558e3 !important; }
+body.light-mode .sbox   { background: #ffffff !important; border: 1.5px solid rgba(200,210,255,.45) !important; box-shadow: 0 2px 8px rgba(80,80,180,.08) !important; }
 
 /* ══════════════════════════════════════════════════
-   ⑬ 로그인 오버레이
+   ⑬ 메뉴 그리드 카드 (버튼처럼 뚜렷하게)
 ══════════════════════════════════════════════════ */
-body.light-mode #lov {
-  background: rgba(140,150,220,.50) !important;
-  backdrop-filter: blur(22px) !important;
+body.light-mode .mgrid .gc {
+  background: #ffffff !important;
+  border: 1.5px solid rgba(200,210,255,.55) !important;
+  box-shadow:
+    0 1px 3px  rgba(80,80,180,.08),
+    0 4px 16px rgba(80,80,180,.14) !important;
 }
-body.light-mode .lcard {
-  background: rgba(255,255,255,.98) !important;
-  border: 1px solid rgba(255,255,255,1) !important;
-  box-shadow: 0 24px 72px rgba(60,60,160,.28) !important;
+body.light-mode .mgrid .gc:hover {
+  border-color: rgba(85,88,227,.45) !important;
+  box-shadow:
+    0 2px 4px  rgba(80,80,180,.12),
+    0 8px 24px rgba(80,80,180,.22),
+    0 0 0 3px  rgba(85,88,227,.08) !important;
 }
-body.light-mode .ll            { color: #0d0d1f !important; font-weight: 800 !important; }
-body.light-mode .ll em         { color: #5558e3 !important; }
-body.light-mode .ls            { color: #4a4a6a !important; }
-body.light-mode .btn-google {
-  background: rgba(0,0,0,.04) !important;
-  border: 1.5px solid rgba(200,205,255,.55) !important;
-  color: #0d0d1f !important;
-}
-body.light-mode .btn-google:hover  { background: rgba(0,0,0,.08) !important; }
-body.light-mode .ldv           { color: #7878a0 !important; }
-body.light-mode .ldv::before,
-body.light-mode .ldv::after    { background: rgba(0,0,0,.10) !important; }
-body.light-mode .btn-guest     { background: #5558e3 !important; box-shadow: 0 4px 16px rgba(85,88,227,.35) !important; }
-body.light-mode .ln            { color: #7878a0 !important; }
-body.light-mode #auth-loader   { background: linear-gradient(160deg, #aab4ff, #b8aafc) !important; }
-body.light-mode .auth-spinner  { border-color: rgba(0,0,0,.08) !important; border-top-color: #5558e3 !important; }
-body.light-mode .auth-label    { color: rgba(13,13,31,.45) !important; }
 
 /* ══════════════════════════════════════════════════
-   ⑭ 모달
+   ⑭ 매뉴얼 카드 & 상세 (서브페이지)
 ══════════════════════════════════════════════════ */
-body.light-mode #modal-overlay {
-  background: rgba(110,120,200,.45) !important;
-  backdrop-filter: blur(10px) !important;
-}
-body.light-mode #modal-box {
-  background: rgba(255,255,255,.99) !important;
-  border: 1px solid rgba(255,255,255,1) !important;
-  box-shadow: 0 24px 72px rgba(60,60,160,.28) !important;
-}
-body.light-mode .modal-title           { color: #0d0d1f !important; font-weight: 800 !important; }
-body.light-mode .modal-close           { background: rgba(0,0,0,.05) !important; color: #4a4a6a !important; }
-body.light-mode .modal-close:hover     { background: rgba(85,88,227,.10) !important; color: #5558e3 !important; }
-body.light-mode .modal-section-divider { color: #4a4a6a !important; border-top-color: rgba(0,0,0,.07) !important; }
+body.light-mode .mc-num-badge   { background: rgba(85,88,227,.10) !important; border-color: rgba(85,88,227,.26) !important; color: #5558e3 !important; }
+body.light-mode .md-cat-badge   { color: #5558e3 !important; font-weight: 700 !important; }
+body.light-mode .md-stat        { background: #f8f9fa !important; border: 1px solid #e9ecef !important; color: #495057 !important; }
+body.light-mode .md-sec-count   { background: #f8f9fa !important; border: 1px solid #e9ecef !important; color: #495057 !important; }
+body.light-mode .supply-item    { background: #f8f9fa !important; border: 1px solid #e9ecef !important; }
+body.light-mode .supply-num     { background: rgba(85,88,227,.12) !important; color: #5558e3 !important; }
 
 /* ══════════════════════════════════════════════════
-   ⑮ 상태 배지
+   ⑮ Steps 절차
 ══════════════════════════════════════════════════ */
-body.light-mode .rb-done     { background: rgba(16,185,129,.10) !important; color: #047857 !important; border-color: rgba(16,185,129,.26) !important; }
-body.light-mode .rb-prog     { background: rgba(85,88,227,.10) !important; color: #5558e3 !important; border-color: rgba(85,88,227,.26) !important; }
-body.light-mode .rb-todo     { background: rgba(0,0,0,.06) !important; color: #4a4a6a !important; border-color: rgba(0,0,0,.12) !important; }
-body.light-mode .m-tag       { background: rgba(85,88,227,.08) !important; border-color: rgba(85,88,227,.22) !important; color: #5558e3 !important; }
-body.light-mode .status-badge { background: rgba(0,0,0,.06) !important; color: #4a4a6a !important; }
-body.light-mode .spill       { background: rgba(16,185,129,.08) !important; border-color: rgba(16,185,129,.24) !important; }
+body.light-mode .step-num-circle  { background: #5558e3 !important; box-shadow: 0 4px 14px rgba(85,88,227,.38) !important; }
+body.light-mode .step-connector   { background: #ced4da !important; }
+body.light-mode .step-photo       { border: 1.5px solid #dee2e6 !important; background: #f8f9fa !important; }
+body.light-mode .step-card-head img { background: #f8f9fa !important; }
 
 /* ══════════════════════════════════════════════════
-   ⑯ 홈 대시보드 세부 요소
+   ⑯ 체크리스트
 ══════════════════════════════════════════════════ */
-body.light-mode .ri          { border-bottom: 1px solid rgba(0,0,0,.07) !important; }
-body.light-mode .mini        { background: rgba(255,255,255,.92) !important; border: 1px solid rgba(255,255,255,.98) !important; }
-body.light-mode .pw          { background: rgba(0,0,0,.09) !important; }
-body.light-mode .ci          { border-bottom: 1px solid rgba(0,0,0,.06) !important; color: #1e1e3a !important; font-weight: 500 !important; }
-body.light-mode .chk         { border: 2px solid rgba(0,0,0,.22) !important; }
-body.light-mode .chk.on      { background: #5558e3 !important; border-color: #5558e3 !important; }
-body.light-mode .ct          { color: #1e1e3a !important; }
-body.light-mode .ct.done     { color: #7878a0 !important; }
-body.light-mode .sdiv        { background: rgba(0,0,0,.08) !important; }
-body.light-mode .sbox        { background: rgba(255,255,255,.88) !important; border: 1px solid rgba(255,255,255,.96) !important; }
-body.light-mode .slb2        { color: #4a4a6a !important; font-weight: 600 !important; }
-body.light-mode .ck-prog-row { color: #1e1e3a !important; font-weight: 600 !important; }
-body.light-mode .rdot--todo,
-body.light-mode .rdot.todo   { background: rgba(0,0,0,.20) !important; }
-
-/* ══════════════════════════════════════════════════
-   ⑰ 메뉴 그리드
-══════════════════════════════════════════════════ */
-body.light-mode .mgrid .gc   { background: rgba(255,255,255,.96) !important; }
-
-/* ══════════════════════════════════════════════════
-   ⑱ 매뉴얼 카드 & 상세 (서브페이지)
-══════════════════════════════════════════════════ */
-body.light-mode .cat-name    { color: #0d0d1f !important; font-weight: 800 !important; }
-body.light-mode .cat-sub     { color: #4a4a6a !important; }
-body.light-mode .cat-count   { color: #7878a0 !important; }
-body.light-mode .mc-title    { color: #0d0d1f !important; font-weight: 700 !important; }
-body.light-mode .mc-meta     { color: #7878a0 !important; }
-body.light-mode .mc-arrow    { color: #7878a0 !important; }
-body.light-mode .mc-num-badge { background: rgba(85,88,227,.10) !important; border-color: rgba(85,88,227,.24) !important; color: #5558e3 !important; }
-body.light-mode .md-main-title { color: #0d0d1f !important; text-shadow: none !important; font-weight: 800 !important; }
-body.light-mode .md-cat-badge  { color: #5558e3 !important; font-weight: 700 !important; }
-body.light-mode .md-stat { background: rgba(255,255,255,.85) !important; border-color: rgba(200,205,255,.40) !important; color: #4a4a6a !important; }
-body.light-mode .md-sec-title { color: #0d0d1f !important; font-weight: 700 !important; }
-body.light-mode .md-sec-count { background: rgba(255,255,255,.80) !important; border-color: rgba(200,205,255,.35) !important; color: #4a4a6a !important; }
-body.light-mode .md-overview p { color: #1e1e3a !important; font-weight: 500 !important; }
-body.light-mode .supply-item   { background: rgba(255,255,255,.88) !important; border-color: rgba(200,205,255,.36) !important; }
-body.light-mode .supply-name   { color: #1e1e3a !important; font-weight: 600 !important; }
-body.light-mode .supply-num    { background: rgba(85,88,227,.12) !important; color: #5558e3 !important; }
-
-/* ══════════════════════════════════════════════════
-   ⑲ 절차 Steps
-══════════════════════════════════════════════════ */
-body.light-mode .step-num-circle  { background: #5558e3 !important; box-shadow: 0 4px 14px rgba(85,88,227,.35) !important; }
-body.light-mode .step-title       { color: #0d0d1f !important; text-shadow: none !important; font-weight: 700 !important; }
-body.light-mode .step-desc        { color: #1e1e3a !important; font-weight: 500 !important; }
-body.light-mode .step-connector   { background: rgba(0,0,0,.12) !important; }
-
-/* ══════════════════════════════════════════════════
-   ⑳ 체크리스트
-══════════════════════════════════════════════════ */
-body.light-mode .ck-progress-wrap  { background: rgba(0,0,0,.09) !important; }
-body.light-mode .ck-reset-btn { background: rgba(0,0,0,.05) !important; border-color: rgba(0,0,0,.12) !important; color: #4a4a6a !important; }
-body.light-mode .ck-list      { border: 1px solid rgba(200,205,255,.35) !important; }
-body.light-mode .ck-header    { background: rgba(85,88,227,.12) !important; }
+body.light-mode .ck-progress-wrap { background: #e9ecef !important; }
+body.light-mode .ck-reset-btn     { background: #f8f9fa !important; border: 1px solid #dee2e6 !important; color: #495057 !important; }
+body.light-mode .ck-list          { border: 1.5px solid #dee2e6 !important; }
+body.light-mode .ck-header        { background: rgba(85,88,227,.10) !important; }
 body.light-mode .ck-h-num,
 body.light-mode .ck-h-item,
-body.light-mode .ck-h-check   { color: #5558e3 !important; font-weight: 700 !important; }
-body.light-mode .ck-row       { border-top: 1px solid rgba(0,0,0,.05) !important; }
-body.light-mode .ck-row:hover { background: rgba(85,88,227,.04) !important; }
-body.light-mode .ck-row.ck-done { background: rgba(16,185,129,.06) !important; }
-body.light-mode .ck-num       { color: #7878a0 !important; }
-body.light-mode .ck-txt       { color: #1e1e3a !important; font-weight: 500 !important; }
-body.light-mode .ck-row.ck-done .ck-txt { color: #7878a0 !important; }
-body.light-mode .ck-circle    { border: 2px solid rgba(0,0,0,.20) !important; }
+body.light-mode .ck-h-check       { color: #5558e3 !important; font-weight: 700 !important; }
+body.light-mode .ck-row:hover     { background: #f8f9fa !important; }
+body.light-mode .ck-row.ck-done   { background: rgba(16,185,129,.06) !important; }
+body.light-mode .ck-row.ck-done .ck-txt { color: #adb5bd !important; }
+body.light-mode .ck-circle        { border: 2px solid #ced4da !important; }
 
 /* ══════════════════════════════════════════════════
-   ㉑ 알림 박스
+   ⑰ 알림 박스
 ══════════════════════════════════════════════════ */
-body.light-mode .alert-caution { background: rgba(244,63,94,.07) !important; border-color: rgba(244,63,94,.24) !important; color: #9f1239 !important; }
-body.light-mode .alert-tip     { background: rgba(85,88,227,.07) !important; border-color: rgba(85,88,227,.24) !important; color: #5558e3 !important; }
+body.light-mode .alert-caution { background: #fff5f5 !important; border: 1.5px solid #fca5a5 !important; color: #9f1239 !important; }
+body.light-mode .alert-tip     { background: #f0f1fe !important; border: 1.5px solid rgba(85,88,227,.35) !important; color: #5558e3 !important; }
 
 /* ══════════════════════════════════════════════════
-   ㉒ 작업기록
+   ⑱ 상태 배지
 ══════════════════════════════════════════════════ */
-body.light-mode .log-stat-box  { background: rgba(255,255,255,.94) !important; border-color: rgba(255,255,255,.99) !important; }
-body.light-mode .log-stat-lbl  { color: #4a4a6a !important; font-weight: 600 !important; }
-body.light-mode .log-stat-num  { color: #0d0d1f !important; font-weight: 800 !important; }
+body.light-mode .rb-done     { background: #ecfdf5 !important; color: #047857 !important; border-color: #6ee7b7 !important; font-weight: 700 !important; }
+body.light-mode .rb-prog     { background: #f0f1fe !important; color: #5558e3 !important; border-color: rgba(85,88,227,.35) !important; font-weight: 700 !important; }
+body.light-mode .rb-todo     { background: #f8f9fa !important; color: #495057 !important; border-color: #dee2e6 !important; font-weight: 700 !important; }
+body.light-mode .m-tag       { background: #f0f1fe !important; border: 1px solid rgba(85,88,227,.28) !important; color: #5558e3 !important; font-weight: 600 !important; }
+body.light-mode .status-badge { background: #f8f9fa !important; color: #495057 !important; font-weight: 600 !important; }
+body.light-mode .spill       { background: #ecfdf5 !important; border-color: #6ee7b7 !important; }
+
+/* ══════════════════════════════════════════════════
+   ⑲ 작업기록 (서브페이지)
+══════════════════════════════════════════════════ */
+body.light-mode .log-stat-box  {
+  background: #ffffff !important;
+  border: 1.5px solid rgba(200,210,255,.50) !important;
+  box-shadow: 0 2px 8px rgba(80,80,180,.10) !important;
+}
+body.light-mode .log-stat-lbl  { color: #495057 !important; font-weight: 700 !important; }
+body.light-mode .log-stat-num  { color: #1a1a1a !important; font-weight: 800 !important; }
 body.light-mode .log-stat-num--done { color: #047857 !important; }
 body.light-mode .log-stat-num--prog { color: #5558e3 !important; }
 body.light-mode .log-stat-num--wait { color: #b45309 !important; }
-body.light-mode .fchip         { background: rgba(255,255,255,.88) !important; border-color: rgba(200,205,255,.45) !important; color: #4a4a6a !important; }
-body.light-mode .fchip:hover   { background: rgba(255,255,255,.99) !important; color: #0d0d1f !important; }
-body.light-mode .fchip.on      { background: #5558e3 !important; border-color: #5558e3 !important; color: #fff !important; box-shadow: 0 2px 10px rgba(85,88,227,.35) !important; }
-body.light-mode .lc-title      { color: #0d0d1f !important; font-weight: 700 !important; }
-body.light-mode .lc-meta span  { color: #7878a0 !important; }
-body.light-mode .lc-desc       { color: #4a4a6a !important; }
-body.light-mode .lc-cat-icon   { background: rgba(85,88,227,.08) !important; }
-body.light-mode .lc-btn-edit   { background: rgba(85,88,227,.10) !important; color: #5558e3 !important; }
-body.light-mode .lc-btn-del    { background: rgba(244,63,94,.08) !important; color: #e11d48 !important; }
-body.light-mode .ba-detail-col { border: 1px solid rgba(200,205,255,.30) !important; }
-body.light-mode .ba-col-body   { background: rgba(255,255,255,.65) !important; }
-body.light-mode .ba-no-photo   { color: #7878a0 !important; }
-body.light-mode .ba-upload-section { border: 1px solid rgba(200,205,255,.30) !important; }
-body.light-mode .ba-upload-section .photo-preview-wrap { background: rgba(255,255,255,.55) !important; }
+
+body.light-mode .fchip         { background: rgba(255,255,255,.92) !important; border: 1.5px solid rgba(200,210,255,.50) !important; color: #495057 !important; font-weight: 600 !important; }
+body.light-mode .fchip:hover   { background: #ffffff !important; color: #1a1a1a !important; border-color: rgba(85,88,227,.40) !important; }
+body.light-mode .fchip.on      { background: #5558e3 !important; border-color: #5558e3 !important; color: #fff !important; font-weight: 700 !important; box-shadow: 0 2px 10px rgba(85,88,227,.38) !important; }
+
+body.light-mode .lc-cat-icon   { background: #f0f1fe !important; }
+body.light-mode .lc-btn-edit   { background: #f0f1fe !important; color: #5558e3 !important; font-weight: 600 !important; }
+body.light-mode .lc-btn-del    { background: #fff5f5 !important; color: #e11d48 !important; font-weight: 600 !important; }
+body.light-mode .ba-detail-col { border: 1.5px solid #dee2e6 !important; }
+body.light-mode .ba-col-body   { background: #f8f9fa !important; }
+body.light-mode .ba-no-photo   { color: #adb5bd !important; }
+body.light-mode .ba-upload-section { border: 1.5px solid #dee2e6 !important; }
+body.light-mode .ba-upload-section .photo-preview-wrap { background: #f8f9fa !important; }
 
 /* ══════════════════════════════════════════════════
-   ㉓ 학습메모
+   ⑳ 학습메모
 ══════════════════════════════════════════════════ */
-body.light-mode .memo-card-title   { color: #0d0d1f !important; font-weight: 700 !important; }
-body.light-mode .memo-card-preview { color: #4a4a6a !important; }
-body.light-mode .memo-cat-badge    { color: #1e1e3a !important; font-weight: 700 !important; }
-body.light-mode .memo-content-box  { color: #1e1e3a !important; background: rgba(255,255,255,.97) !important; border-color: rgba(200,205,255,.40) !important; }
-
-/* ══════════════════════════════════════════════════
-   ㉔ 연간 로드맵
-══════════════════════════════════════════════════ */
-body.light-mode .rm-month-chip     { background: rgba(255,255,255,.82) !important; border-color: rgba(200,205,255,.40) !important; }
-body.light-mode .rm-month-chip:hover { background: rgba(255,255,255,.97) !important; }
-body.light-mode .rm-month-has      { background: rgba(255,255,255,.90) !important; border-color: rgba(200,205,255,.55) !important; }
-body.light-mode .rm-month-active   { background: #5558e3 !important; border-color: #5558e3 !important; box-shadow: 0 3px 12px rgba(85,88,227,.35) !important; }
-body.light-mode .rm-chip-label     { color: #1e1e3a !important; font-weight: 600 !important; }
-body.light-mode .rm-month-active .rm-chip-label { color: #fff !important; }
-body.light-mode .rm-chip-count     { color: #5558e3 !important; font-weight: 800 !important; }
-body.light-mode .rm-month-active .rm-chip-count { color: rgba(255,255,255,.90) !important; }
-body.light-mode .rm-leg-item       { color: #4a4a6a !important; font-weight: 600 !important; }
-body.light-mode .rm-tab            { background: rgba(255,255,255,.82) !important; border-color: rgba(200,205,255,.40) !important; color: #4a4a6a !important; }
-body.light-mode .rm-tab:hover      { background: rgba(255,255,255,.97) !important; color: #0d0d1f !important; }
-body.light-mode .rm-tab-has        { border-color: rgba(200,205,255,.55) !important; color: #1e1e3a !important; }
-body.light-mode .rm-tab-active     { background: #5558e3 !important; border-color: #5558e3 !important; color: #fff !important; box-shadow: 0 2px 10px rgba(85,88,227,.32) !important; }
-body.light-mode .rm-sch-title      { color: #0d0d1f !important; font-weight: 700 !important; }
-body.light-mode .rm-sch-desc       { color: #4a4a6a !important; }
-
-/* ══════════════════════════════════════════════════
-   ㉕ 검색 / 연락처 / 통계 / 설정
-══════════════════════════════════════════════════ */
-body.light-mode .search-bar__icon  { color: #7878a0 !important; }
-body.light-mode .search-bar__input { color: #0d0d1f !important; font-weight: 500 !important; }
-body.light-mode .search-bar__input::placeholder { color: #7878a0 !important; }
-body.light-mode .contact-name      { color: #0d0d1f !important; font-weight: 700 !important; }
-body.light-mode .contact-role      { color: #4a4a6a !important; }
-body.light-mode .contact-phone     { color: #1e1e3a !important; font-weight: 600 !important; }
-body.light-mode .snum              { font-weight: 800 !important; }
-body.light-mode .snum--orange      { color: #5558e3 !important; }
-body.light-mode .settings-row      { border-bottom: 1px solid rgba(0,0,0,.07) !important; }
-body.light-mode .settings-label    { color: #0d0d1f !important; font-weight: 700 !important; }
-body.light-mode .settings-desc     { color: #4a4a6a !important; }
-
-/* ══════════════════════════════════════════════════
-   ㉖ 토스트
-══════════════════════════════════════════════════ */
-body.light-mode #kf-toast {
-  background: rgba(13,13,31,.93) !important;
-  border-color: rgba(0,0,0,.22) !important;
-  color: #ffffff !important;
+body.light-mode .memo-content-box {
+  background: #ffffff !important;
+  border: 1.5px solid #dee2e6 !important;
+  border-radius: 14px !important;
 }
 
 /* ══════════════════════════════════════════════════
-   ㉗ 폼 페이지
+   ㉑ 연간 로드맵
 ══════════════════════════════════════════════════ */
-body.light-mode .form-back-btn    { background: rgba(255,255,255,.90) !important; border-color: rgba(200,205,255,.50) !important; color: #1e1e3a !important; }
-body.light-mode .form-back-btn:hover { background: #ffffff !important; }
-body.light-mode .form-page-title  { color: #0d0d1f !important; font-weight: 800 !important; }
-body.light-mode .form-page-actions { background: linear-gradient(to top, #a8b2f8 65%, transparent) !important; }
+body.light-mode .rm-month-chip       { background: rgba(255,255,255,.88) !important; border: 1.5px solid rgba(200,210,255,.50) !important; }
+body.light-mode .rm-month-chip:hover { background: #ffffff !important; border-color: rgba(85,88,227,.40) !important; }
+body.light-mode .rm-month-has        { background: #ffffff !important; border-color: rgba(85,88,227,.35) !important; }
+body.light-mode .rm-month-active     { background: #5558e3 !important; border-color: #5558e3 !important; box-shadow: 0 3px 12px rgba(85,88,227,.38) !important; }
+body.light-mode .rm-chip-label       { color: #212529 !important; font-weight: 700 !important; }
+body.light-mode .rm-month-active .rm-chip-label { color: #fff !important; }
+body.light-mode .rm-chip-count       { color: #5558e3 !important; font-weight: 800 !important; }
+body.light-mode .rm-month-active .rm-chip-count { color: rgba(255,255,255,.92) !important; }
+body.light-mode .rm-tab              { background: rgba(255,255,255,.88) !important; border: 1.5px solid rgba(200,210,255,.50) !important; color: #495057 !important; font-weight: 600 !important; }
+body.light-mode .rm-tab:hover        { background: #ffffff !important; color: #1a1a1a !important; }
+body.light-mode .rm-tab-has          { border-color: rgba(85,88,227,.35) !important; color: #212529 !important; }
+body.light-mode .rm-tab-active       { background: #5558e3 !important; border-color: #5558e3 !important; color: #fff !important; font-weight: 700 !important; box-shadow: 0 2px 10px rgba(85,88,227,.35) !important; }
 
 /* ══════════════════════════════════════════════════
-   ㉘ 사진 업로드 / 절차블록 / SPGI / 기타
+   ㉒ 검색·연락처·설정·통계
 ══════════════════════════════════════════════════ */
-body.light-mode .photo-add-btn    { background: rgba(255,255,255,.90) !important; border-color: rgba(200,205,255,.45) !important; color: #1e1e3a !important; }
+body.light-mode .search-bar__icon        { color: #adb5bd !important; }
+body.light-mode .search-bar__input       { color: #1a1a1a !important; font-weight: 600 !important; }
+body.light-mode .search-bar__input::placeholder { color: #adb5bd !important; }
+body.light-mode .contact-phone           { font-weight: 700 !important; }
+body.light-mode .snum                    { font-weight: 800 !important; }
+body.light-mode .snum--orange            { color: #5558e3 !important; }
+body.light-mode .slb2                    { color: #495057 !important; font-weight: 600 !important; }
+
+/* ══════════════════════════════════════════════════
+   ㉓ 토스트 / 로그인 / 모달
+══════════════════════════════════════════════════ */
+body.light-mode #kf-toast {
+  background: rgba(26,26,26,.94) !important;
+  border-color: rgba(0,0,0,.20) !important;
+  color: #ffffff !important;
+}
+body.light-mode #lov {
+  background: rgba(120,130,210,.48) !important;
+  backdrop-filter: blur(22px) !important;
+}
+body.light-mode .lcard {
+  background: #ffffff !important;
+  border: 1.5px solid rgba(200,210,255,.55) !important;
+  box-shadow: 0 24px 72px rgba(60,60,160,.28) !important;
+}
+body.light-mode .btn-google {
+  background: #f8f9fa !important;
+  border: 1.5px solid #dee2e6 !important;
+  color: #1a1a1a !important;
+}
+body.light-mode .btn-google:hover { background: #f1f3f5 !important; }
+body.light-mode .ldv              { color: #adb5bd !important; }
+body.light-mode .ldv::before,
+body.light-mode .ldv::after       { background: #dee2e6 !important; }
+body.light-mode .btn-guest        { background: #5558e3 !important; box-shadow: 0 4px 16px rgba(85,88,227,.38) !important; }
+body.light-mode .ln               { color: #868e96 !important; }
+body.light-mode #auth-loader      { background: linear-gradient(155deg, #a8b2ff, #b5a9fc) !important; }
+body.light-mode .auth-spinner     { border-color: rgba(0,0,0,.08) !important; border-top-color: #5558e3 !important; }
+body.light-mode #modal-overlay    { background: rgba(100,110,200,.45) !important; backdrop-filter: blur(10px) !important; }
+body.light-mode #modal-box {
+  background: #ffffff !important;
+  border: 1.5px solid rgba(200,210,255,.55) !important;
+  box-shadow: 0 24px 72px rgba(60,60,160,.28) !important;
+}
+body.light-mode .modal-close      { background: #f8f9fa !important; color: #495057 !important; }
+body.light-mode .modal-close:hover { background: #f0f1fe !important; color: #5558e3 !important; }
+body.light-mode .modal-section-divider { color: #495057 !important; border-top-color: #e9ecef !important; }
+
+/* ══════════════════════════════════════════════════
+   ㉔ 폼 페이지 / 사진업로드 / 절차블록 / SPGI
+══════════════════════════════════════════════════ */
+body.light-mode .form-back-btn       { background: rgba(255,255,255,.92) !important; border: 1.5px solid rgba(200,210,255,.55) !important; color: #212529 !important; }
+body.light-mode .form-back-btn:hover { background: #ffffff !important; }
+body.light-mode .form-page-actions   { background: linear-gradient(to top, #a5aef8 65%, transparent) !important; }
+body.light-mode .photo-add-btn       { background: rgba(255,255,255,.92) !important; border: 1.5px solid rgba(200,210,255,.55) !important; color: #212529 !important; font-weight: 600 !important; }
 body.light-mode .photo-add-btn:hover { background: #ffffff !important; }
 body.light-mode .photo-hint,
-body.light-mode .photo-hint-empty { color: #7878a0 !important; }
-body.light-mode .step-item-block  { background: rgba(255,255,255,.94) !important; border-color: rgba(200,205,255,.38) !important; }
-body.light-mode .step-item-block__header { background: rgba(85,88,227,.08) !important; border-bottom-color: rgba(200,205,255,.28) !important; }
-body.light-mode .step-item-block__label  { color: #1e1e3a !important; font-weight: 600 !important; }
-body.light-mode .step-item-block__del    { background: rgba(244,63,94,.08) !important; color: #e11d48 !important; }
-body.light-mode .step-item-block__btn    { background: rgba(255,255,255,.85) !important; border-color: rgba(200,205,255,.42) !important; color: #1e1e3a !important; }
-body.light-mode .spi    { background: rgba(255,255,255,.90) !important; border-color: rgba(200,205,255,.34) !important; }
-body.light-mode .spll   { color: #4a4a6a !important; }
-body.light-mode .spvl   { color: #0d0d1f !important; text-shadow: none !important; font-weight: 700 !important; }
-body.light-mode .card-actions .btn-gh { background: rgba(255,255,255,.85) !important; border-color: rgba(200,205,255,.42) !important; color: #1e1e3a !important; }
-body.light-mode .detail-card__updated  { color: #7878a0 !important; }
-body.light-mode .detail-card__date     { color: #7878a0 !important; }
+body.light-mode .photo-hint-empty    { color: #868e96 !important; }
+body.light-mode .photo-preview-item img { border: 1.5px solid #dee2e6 !important; }
+
+body.light-mode .step-item-block           { background: #ffffff !important; border: 1.5px solid #dee2e6 !important; }
+body.light-mode .step-item-block__header   { background: #f0f1fe !important; border-bottom: 1px solid #e2e4ff !important; }
+body.light-mode .step-item-block__label    { color: #212529 !important; font-weight: 700 !important; }
+body.light-mode .step-item-block__del      { background: #fff5f5 !important; color: #e11d48 !important; }
+body.light-mode .step-item-block__btn      { background: #f8f9fa !important; border: 1px solid #dee2e6 !important; color: #212529 !important; font-weight: 600 !important; }
+
+body.light-mode .spi    { background: #f8f9fa !important; border: 1.5px solid #dee2e6 !important; }
+body.light-mode .card-actions .btn-gh { background: #f8f9fa !important; border: 1.5px solid #dee2e6 !important; color: #212529 !important; }
+
+/* 썸네일 스크롤바 */
 body.light-mode .step-thumbs-row,
-body.light-mode .step-photos-row       { scrollbar-color: rgba(0,0,0,.15) transparent !important; }
+body.light-mode .step-photos-row { scrollbar-color: rgba(0,0,0,.15) transparent !important; }
 body.light-mode .step-thumbs-row::-webkit-scrollbar-thumb,
 body.light-mode .step-photos-row::-webkit-scrollbar-thumb { background: rgba(0,0,0,.15) !important; }
 
