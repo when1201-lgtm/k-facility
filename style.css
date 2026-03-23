@@ -232,8 +232,8 @@ a { color: inherit; text-decoration: none; }
   border: 2px solid #e0e0e0;
 }
 .uname { font-size: 14px; font-weight: 500; color: var(--t2); white-space: nowrap; }
-.tsw { width: 46px; height: 26px; background: #e8e8e8; border-radius: 99px; position: relative; }
-.tsk { width: 20px; height: 20px; background: #fff; border-radius: 50%; position: absolute; top: 3px; left: 22px; transition: left .2s; box-shadow: 0 1px 4px rgba(0,0,0,.05); }
+.tsw { width: 46px; height: 26px; background: #e8e8e8; border-radius: 99px; position: relative; cursor: pointer; }
+.tsk { width: 20px; height: 20px; background: #fff; border-radius: 50%; position: absolute; top: 3px; left: 3px; transition: transform .2s, background .2s; box-shadow: 0 1px 4px rgba(0,0,0,.12); }
 
 /* ── PAGES ── */
 #pages {
@@ -1284,4 +1284,147 @@ textarea { caret-color: var(--orange); }
   gap: 6px;
   margin-top: 10px;
   justify-content: flex-end;
+}
+
+/* ==================== LIGHT MODE (Aetheris 스타일) ==================== */
+body.light-mode {
+  background: linear-gradient(135deg, #e0f2fe 0%, #c7d2fe 50%, #a5b4fc 100%);
+  color: #0f172a;
+}
+
+body.light-mode {
+  --t1: #0f172a;
+  --t2: #334155;
+  --t3: #64748b;
+  --t4: #94a3b8;
+  --gb: rgba(148, 163, 184, 0.08);
+  --gborder: rgba(148, 163, 184, 0.15);
+}
+
+body.light-mode #sidebar {
+  background: rgba(255, 255, 255, 0.92);
+  border-right: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+body.light-mode .glass,
+body.light-mode .glass-s {
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+}
+
+body.light-mode .gc {
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+}
+body.light-mode .gc:hover {
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+}
+
+body.light-mode #page-manual-detail .glass,
+body.light-mode #page-records-detail .glass,
+body.light-mode #page-memo-detail .glass {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(148, 163, 184, 0.25);
+}
+
+body.light-mode .orb {
+  opacity: 0.28;
+  filter: blur(100px);
+}
+
+body.light-mode button,
+body.light-mode .nb {
+  color: var(--t2);
+}
+body.light-mode .nb.active {
+  background: var(--orange);
+  color: #fff;
+}
+
+body.light-mode .tsw {
+  background: #e2e8f0;
+}
+
+/* 라이트모드 — 헤더 / 배경 */
+body.light-mode #hdr {
+  background: rgba(255, 255, 255, 0.85);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+/* 라이트모드 — 검색창 */
+body.light-mode .srch input {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(148, 163, 184, 0.25);
+  color: #0f172a;
+}
+body.light-mode .srch input:focus {
+  border-color: var(--orange);
+  box-shadow: 0 0 0 3px rgba(224, 92, 10, 0.12);
+}
+
+/* 라이트모드 — 폼 입력 */
+body.light-mode .lf-input,
+body.light-mode .lf-select,
+body.light-mode .lf-textarea {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(148, 163, 184, 0.3);
+  color: #0f172a;
+}
+body.light-mode .lf-input:focus,
+body.light-mode .lf-select:focus,
+body.light-mode .lf-textarea:focus {
+  border-color: var(--orange);
+  background: #ffffff;
+}
+
+/* 라이트모드 — 폼 페이지 배경 그라디언트 유지 */
+body.light-mode .form-page-actions {
+  background: linear-gradient(to top, rgba(224, 232, 255, 0.95) 70%, transparent);
+}
+
+/* 라이트모드 — 아바타 버튼 */
+body.light-mode .ibtn {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(148, 163, 184, 0.25);
+  color: #334155;
+}
+
+/* 라이트모드 — btn-gh */
+body.light-mode .btn-gh {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(148, 163, 184, 0.25);
+  color: #334155;
+}
+body.light-mode .btn-gh:hover {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+/* 라이트모드 — 토스트 */
+body.light-mode #kf-toast {
+  background: rgba(15, 23, 42, 0.9) !important;
+  color: #fff !important;
+}
+
+/* 라이트모드 — 모달 */
+body.light-mode #modal-overlay {
+  background: rgba(15, 23, 42, 0.35);
+}
+body.light-mode #modal-box {
+  background: rgba(255, 255, 255, 0.97);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.12);
+}
+
+/* 라이트모드 — 스크롤바 */
+body.light-mode #pages::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.4);
+}
+
+/* 라이트모드 — 토글 손잡이 색 */
+body.light-mode .tsk {
+  background: var(--orange);
 }
