@@ -925,6 +925,22 @@ textarea { caret-color: var(--orange); }
   .detail-actions button { min-height: 52px; font-size: 16px; }
   .lf-input, .lf-select, .lf-textarea { font-size: 16px; }
   #modal-box { padding: 18px; border-radius: 16px; }
+
+  /* ── 모바일 Step 카드 패딩/폰트 개선 ── */
+  .step-card,
+  .manual-step,
+  .ba-step-item {
+    padding: 20px 16px !important;
+  }
+  .step-title {
+    font-size: 17px !important;
+  }
+  .step-desc,
+  .manual-step-desc,
+  .ba-step-desc {
+    font-size: 16px !important;
+    line-height: 1.75 !important;
+  }
 }
 @media(max-width:390px) {
   .pi { padding: 12px 12px 40px; }
