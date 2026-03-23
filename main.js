@@ -2151,11 +2151,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const sInp = $('search-input');
   if (sInp) sInp.addEventListener('input', e => doSearch(e.target.value));
 
-  /* 테마 토글 */
-  const tsw = $('tsw');
-  if (tsw) tsw.addEventListener('click', () => {
-    const k = $('tsk'); if(k) k.style.left = k.style.left === '22px' ? '3px' : '22px';
-  });
+  /* 테마 토글 — light ↔ dark */
+  initTheme();
+  const _tsw = $('tsw');
+  if (_tsw) _tsw.addEventListener('click', toggleTheme);
 
   initMobileInputFix();
   initFirebase();
@@ -2266,3 +2265,25 @@ window.openContactModal = openContactModal;
 window.exportData       = exportData;
 window.clearLocalData   = clearLocalData;
 window.doSearch         = doSearch;
+
+/* =====================================================
+   ㉓ 테마 토글 (light ↔ dark) — Aetheris 스타일 화이트모드
+===================================================== */
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('light-mode');
+  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+  const tsk = $('tsk');
+  if (tsk) tsk.style.transform = isLight ? 'translateX(20px)' : 'translateX(0)';
+}
+
+function initTheme() {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'light') {
+    document.body.classList.add('light-mode');
+    const tsk = $('tsk');
+    if (tsk) tsk.style.transform = 'translateX(20px)';
+  }
+}
+
+window.toggleTheme = toggleTheme;
+window.initTheme   = initTheme;
