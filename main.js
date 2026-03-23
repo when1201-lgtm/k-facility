@@ -2151,9 +2151,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const sInp = $('search-input');
   if (sInp) sInp.addEventListener('input', e => doSearch(e.target.value));
 
-  /* 테마 토글 — 실제 핸들러는 ㉓ 섹션에 정의 */
-  const _tswEl = document.getElementById('tsw');
-  if (_tswEl) _tswEl.addEventListener('click', toggleTheme);
+  /* 테마 토글 */
+  const tsw = $('tsw');
+  if (tsw) tsw.addEventListener('click', () => {
+    const k = $('tsk'); if(k) k.style.left = k.style.left === '22px' ? '3px' : '22px';
+  });
 
   initMobileInputFix();
   initFirebase();
@@ -2264,38 +2266,3 @@ window.openContactModal = openContactModal;
 window.exportData       = exportData;
 window.clearLocalData   = clearLocalData;
 window.doSearch         = doSearch;
-
-/* =====================================================
-   ㉓ 테마 토글 (dark ↔ light)
-   · 기본 = dark (body에 light-mode 클래스 없음)
-   · localStorage 'light' 저장 시 라이트모드 유지
-===================================================== */
-function toggleTheme() {
-  const isLight = document.body.classList.toggle('light-mode');
-  localStorage.setItem('theme', isLight ? 'light' : 'dark');
-
-  const tsk = document.getElementById('tsk');
-  if (tsk) tsk.style.transform = isLight ? 'translateX(20px)' : 'translateX(0)';
-
-  console.log('[K-Facility] 테마 변경 →', isLight ? 'LIGHT MODE ☀️' : 'DARK MODE 🌙');
-}
-
-function initTheme() {
-  const saved = localStorage.getItem('theme') || 'dark';
-  const tsk   = document.getElementById('tsk');
-
-  if (saved === 'light') {
-    document.body.classList.add('light-mode');
-    if (tsk) tsk.style.transform = 'translateX(20px)';
-  } else {
-    document.body.classList.remove('light-mode');
-    if (tsk) tsk.style.transform = 'translateX(0)';
-  }
-
-  localStorage.setItem('theme', saved); // 재저장으로 영구 보장
-  console.log('[K-Facility] 초기 테마 →', saved.toUpperCase());
-}
-
-window.addEventListener('load', initTheme);
-window.toggleTheme = toggleTheme;
-window.initTheme   = initTheme;
