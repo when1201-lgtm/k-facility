@@ -601,7 +601,7 @@ textarea { caret-color: var(--orange); }
 .step-connector { width: 2px; flex: 1; background: rgba(255,255,255,.12); margin-top: 6px; min-height: 16px; border-radius: 1px; }
 .step-card { flex: 1; overflow: hidden; }
 .step-card-head { padding: 16px 18px; }
-.step-title { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 7px; text-shadow: 0 1px 3px rgba(0,0,0,.5); }
+.step-title { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 7px; text-shadow: 0 1px 3px rgba(0,0,0,.5); white-space: pre-wrap; word-break: break-word; }
 .step-desc  { font-size: 15px; color: rgba(255,255,255,.82); line-height: 1.78; }
 /* ═══════════════════════════════════════════════
    상세 작업 절차 — #step-container 렌더링
@@ -665,11 +665,15 @@ textarea { caret-color: var(--orange); }
   color: #fff;
   margin-bottom: 7px;
   text-shadow: 0 1px 3px rgba(0,0,0,.5);
+  white-space: pre-wrap;   /* ★ 줄바꿈 유지 */
+  word-break: break-word;  /* 긴 단어 자동 줄바꿈 */
 }
 .step-desc {
   font-size: 15px;
   color: rgba(255,255,255,.82);
   line-height: 1.78;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 /* ★ 절차 사진 — 글 바로 아래, 화면 밖 방지 */
