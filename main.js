@@ -2152,7 +2152,6 @@ document.addEventListener('DOMContentLoaded', () => {
   if (sInp) sInp.addEventListener('input', e => doSearch(e.target.value));
 
   /* 테마 토글 — light ↔ dark */
-  initTheme();
   const _tsw = $('tsw');
   if (_tsw) _tsw.addEventListener('click', toggleTheme);
 
@@ -2267,12 +2266,12 @@ window.clearLocalData   = clearLocalData;
 window.doSearch         = doSearch;
 
 /* =====================================================
-   ㉓ 테마 토글 (light ↔ dark) — Aetheris 스타일 화이트모드
+   ㉓ 테마 토글 (light ↔ dark) — Aetheris 스타일
 ===================================================== */
 function toggleTheme() {
   const isLight = document.body.classList.toggle('light-mode');
   localStorage.setItem('theme', isLight ? 'light' : 'dark');
-  const tsk = $('tsk');
+  const tsk = document.getElementById('tsk');
   if (tsk) tsk.style.transform = isLight ? 'translateX(20px)' : 'translateX(0)';
 }
 
@@ -2280,10 +2279,11 @@ function initTheme() {
   const saved = localStorage.getItem('theme');
   if (saved === 'light') {
     document.body.classList.add('light-mode');
-    const tsk = $('tsk');
+    const tsk = document.getElementById('tsk');
     if (tsk) tsk.style.transform = 'translateX(20px)';
   }
 }
 
+window.addEventListener('load', initTheme);
 window.toggleTheme = toggleTheme;
 window.initTheme   = initTheme;
