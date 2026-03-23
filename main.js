@@ -2325,7 +2325,7 @@ if (tsw) {
   initMobileInputFix();
   initTheme();
   initFirebase();
-  initFirebase();
+   
 });
 
 /* ═══════════════════════════════════════════════
