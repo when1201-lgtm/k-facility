@@ -3,74 +3,79 @@
    모든 스타일 담당 (HTML/JS에 inline style 없음)
 ===================================================== */
 /* =====================================================
-   ★ K-Facility LIGHT MODE (한글2022 느낌 완벽 재현)
-   토글 누르면 이미지처럼 하얗고 선명해집니다
+   ★ K-Facility PREMIUM LIGHT MODE (Aetheris 스타일 완벽 재현)
+   토글 누르면 정확히 이미지처럼 부드럽고 고급스러운 라이트 모드 됩니다
 ===================================================== */
 
 body.light-mode {
-  background: linear-gradient(135deg, #f8fafc 0%, #e0f2fe 100%);
+  background: linear-gradient(145deg, #f0f4ff 0%, #e0e7ff 40%, #f3e8ff 70%, #e0f2fe 100%);
   color: #0f172a;
 }
 
-/* 변수 재정의 */
-body.light-mode {
-  --t1: #0f172a;
-  --t2: #1e2937;
-  --t3: #475569;
-  --t4: #64748b;
-  --gb: rgba(15,23,42,.04);
-  --gborder: rgba(148,163,184,.18);
-}
+/* 부드러운 배경 오브 (이미지처럼 은은한 글로우) */
+body.light-mode .bg-layer { display: block !important; opacity: 0.35; }
+body.light-mode .orb.o1 { background: radial-gradient(circle, #a5b4fc, transparent 70%); }
+body.light-mode .orb.o2 { background: radial-gradient(circle, #c4b5fd, transparent 70%); }
+body.light-mode .orb.o3 { background: radial-gradient(circle, #bae6fd, transparent 70%); }
+body.light-mode .orb.o4 { background: radial-gradient(circle, #ddd6fe, transparent 70%); }
 
-/* 배경 오브 숨김 */
-body.light-mode .bg-layer { display: none !important; }
-
-/* Glass & 카드 완전 하얗게 */
+/* Glass 카드 — 이미지처럼 하얗고 투명 + 부드러운 그림자 */
 body.light-mode .glass,
 body.light-mode .glass-s {
-  background: rgba(255,255,255,0.95) !important;
-  border: 1px solid rgba(148,163,184,0.25) !important;
-  backdrop-filter: blur(22px) saturate(200%);
+  background: rgba(255,255,255,0.92) !important;
+  border: 1px solid rgba(165,180,252,0.28) !important;
+  backdrop-filter: blur(28px) saturate(180%);
+  box-shadow: 0 10px 30px rgba(165,180,252,0.12);
 }
 
 body.light-mode .gc {
-  background: rgba(255,255,255,0.97) !important;
-  border: 1px solid rgba(148,163,184,0.15) !important;
+  background: rgba(255,255,255,0.96) !important;
+  border: 1px solid rgba(165,180,252,0.18) !important;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.06);
 }
 
-/* 사이드바, 헤더, 텍스트 모두 밝게 */
-body.light-mode #sidebar { background: rgba(241,245,249,0.98); border-right: 1px solid rgba(148,163,184,0.12); }
+/* 사이드바 — 이미지처럼 연한 퍼플 톤 */
+body.light-mode #sidebar {
+  background: rgba(241,245,255,0.98);
+  border-right: 1px solid rgba(165,180,252,0.25);
+}
+
+/* 버튼 & 텍스트 */
 body.light-mode .nb { color: #64748b; }
-body.light-mode .nb:hover { background: rgba(224,92,10,.12); color: #e05c0a; }
-body.light-mode .nb.active { background: #e05c0a; color: #fff; box-shadow: 0 4px 14px rgba(224,92,10,.3); }
+body.light-mode .nb:hover { background: rgba(165,180,252,0.15); color: #6366f1; }
+body.light-mode .nb.active { background: #6366f1; color: #fff; box-shadow: 0 6px 20px rgba(99,102,241,0.35); }
 
-body.light-mode #hdr { background: rgba(255,255,255,0.98); border-bottom: 1px solid rgba(148,163,184,0.1); }
-
-body.light-mode .slbl, body.light-mode .hero-sub, body.light-mode .detail-card__updated { color: #64748b; }
-body.light-mode .hero-title, body.light-mode .detail-title, body.light-mode .ctitle { color: #0f172a; }
-
-/* 버튼도 밝게 */
-body.light-mode .btn-gh {
-  background: #f8fafc;
-  border: 1px solid #cbd5e1;
-  color: #334155;
-}
-body.light-mode .btn-gh:hover { background: #f1f5f9; }
-
-/* 로그인 화면도 하얗게 */
-body.light-mode #lov { background: rgba(241,245,249,0.95); }
-body.light-mode .lcard { background: rgba(255,255,255,0.95); border: 1px solid #cbd5e1; }
-
-/* 기타 세밀 조정 */
-body.light-mode .empty-state { color: #64748b; }
-body.light-mode .memo-content-box, body.light-mode .step-item-block {
-  background: rgba(255,255,255,0.95) !important;
-  border-color: rgba(148,163,184,0.2) !important;
+body.light-mode #hdr {
+  background: rgba(255,255,255,0.96);
+  border-bottom: 1px solid rgba(165,180,252,0.15);
 }
 
-/* 토글 스위치도 라이트에 맞게 */
-body.light-mode .tsw { background: #e2e8f0; }
-body.light-mode .tsk { background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.15); }
+body.light-mode .hero-title,
+body.light-mode .detail-title,
+body.light-mode .ctitle { color: #1e2937; }
+body.light-mode .slbl,
+body.light-mode .hero-sub { color: #64748b; }
+
+/* 로그인 오버레이도 이미지 스타일 */
+body.light-mode #lov { background: rgba(240,244,255,0.95); }
+body.light-mode .lcard {
+  background: rgba(255,255,255,0.95);
+  border: 1px solid rgba(165,180,252,0.3);
+  box-shadow: 0 25px 60px rgba(99,102,241,0.15);
+}
+
+/* 추가 고급 느낌 */
+body.light-mode .memo-content-box,
+body.light-mode .step-item-block,
+body.light-mode .detail-card {
+  background: rgba(255,255,255,0.94) !important;
+  border-color: rgba(165,180,252,0.22) !important;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.05);
+}
+
+/* 토글 스위치도 예쁘게 */
+body.light-mode .tsw { background: #e0e7ff; }
+body.light-mode .tsk { background: #fff; box-shadow: 0 3px 10px rgba(99,102,241,0.25); }
 
 /* ── RESET ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
