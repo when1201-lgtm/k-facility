@@ -2153,7 +2153,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* 테마 토글 — light ↔ dark */
   const _tsw = $('tsw');
-  if (_tsw) _tsw.addEventListener('click', toggleTheme);
+  if (_tsw) _tsw.addEventListener('click', () => {
+    console.log('[K-Facility] 토글 클릭. 현재 light-mode:', document.body.classList.contains('light-mode'));
+    toggleTheme();
+  });
 
   initMobileInputFix();
   initFirebase();
@@ -2266,24 +2269,38 @@ window.clearLocalData   = clearLocalData;
 window.doSearch         = doSearch;
 
 /* =====================================================
-   ㉓ 테마 토글 (light ↔ dark) — Aetheris 스타일
+   ㉓ 테마 토글 — light(기본) ↔ dark
+   · body에 light-mode 클래스가 기본으로 있음
+   · 토글 클릭 → 클래스 제거 = 다크, 추가 = 라이트
+   · localStorage로 새로고침 후에도 유지
 ===================================================== */
 function toggleTheme() {
   const isLight = document.body.classList.toggle('light-mode');
   localStorage.setItem('theme', isLight ? 'light' : 'dark');
   const tsk = document.getElementById('tsk');
   if (tsk) tsk.style.transform = isLight ? 'translateX(20px)' : 'translateX(0)';
+  console.log('[K-Facility] 테마 변경 →', isLight ? 'LIGHT' : 'DARK');
 }
 
 function initTheme() {
   const saved = localStorage.getItem('theme');
-  if (saved === 'light') {
+  const tsk   = document.getElementById('tsk');
+
+  // 저장된 값이 'dark'이면 light-mode 제거 (다크로 전환)
+  if (saved === 'dark') {
+    document.body.classList.remove('light-mode');
+    if (tsk) tsk.style.transform = 'translateX(0)';
+  } else {
+    // 기본 = light-mode (body 태그에 이미 클래스 있음, 혹시 없으면 추가)
     document.body.classList.add('light-mode');
-    const tsk = document.getElementById('tsk');
     if (tsk) tsk.style.transform = 'translateX(20px)';
   }
 }
 
-window.addEventListener('load', initTheme);
+/* .tsk 기본 위치를 transform 기준으로 세팅 */
+document.addEventListener('DOMContentLoaded', () => {
+  initTheme();
+});
+
 window.toggleTheme = toggleTheme;
 window.initTheme   = initTheme;
