@@ -86,7 +86,6 @@ a { color: inherit; text-decoration: none; }
   backdrop-filter: blur(10px) saturate(140%);
   -webkit-backdrop-filter: blur(10px) saturate(140%);
   border-radius: var(--r);
-   width:100%;
 }
 .glass-s {
   background: rgba(255,255,255,.12);
@@ -252,7 +251,7 @@ a { color: inherit; text-decoration: none; }
 /* 상세 페이지 여백 더 넉넉하게 */
 #page-manual-detail .pi,
 #page-records-detail .pi,
-#page-memo-detail .pi { padding: 48px 80px 100px; /*max-width: 860px;*/ width:100; max-width:none; }
+#page-memo-detail .pi { padding: 48px 64px 96px; max-width: none; width: 100%; }
 
 /* ── BREADCRUMB ── */
 .breadcrumb { display: flex; align-items: center; gap: 7px; margin-bottom: 20px; flex-wrap: wrap; }
@@ -1194,8 +1193,8 @@ textarea { caret-color: var(--orange); }
 /* 페이지 여백 */
 .form-page-pi {
   padding: 48px 80px 120px;
-  max-width: 960px;
-  margin: 0 auto;
+  max-width: none;
+  width: 100%;
 }
 
 /* 상단 헤더: 뒤로 + 제목 */
