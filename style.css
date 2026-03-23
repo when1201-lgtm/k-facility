@@ -2,47 +2,611 @@
    K-Facility — style.css
    모든 스타일 담당 (HTML/JS에 inline style 없음)
 ===================================================== */
-/* =====================================================
-   ★ K-Facility AETHERIS LIGHT MODE FINAL (이미지 98% 일치)
-===================================================== */
 
+/* ═══════════════════════════════════════════════════════
+   ★ LIGHT MODE — Aetheris Style
+   다크모드는 일절 건드리지 않고, body.light-mode 에서만 오버라이드
+═══════════════════════════════════════════════════════ */
+
+/* ── 1. 배경 & CSS 변수 ── */
 body.light-mode {
-  background: linear-gradient(145deg, #f0f4ff 0%, #e8edff 45%, #f3e8ff 100%) !important;
-  color: #1e2937 !important;
-  font-family: 'Noto Sans KR', system-ui, sans-serif !important;
+  background: linear-gradient(145deg, #eef1fc 0%, #e5ecfa 45%, #ece8f9 100%) !important;
+  color: #111827 !important;
+
+  /* 텍스트 토큰 재정의 */
+  --t1: #111827;
+  --t2: rgba(17,24,39,.78);
+  --t3: rgba(17,24,39,.48);
+  --t4: rgba(17,24,39,.32);
+
+  /* 유리 보더/배경 토큰 재정의 */
+  --gb:      rgba(0,0,0,.035);
+  --gborder: rgba(190,200,240,.32);
+
+  /* 브랜드 액센트: 인디고로 교체 */
+  --orange:  #6366f1;
+  --orange-g: rgba(99,102,241,.30);
 }
 
-/* 배경 오브 은은하게 */
-body.light-mode .bg-layer { display: block !important; opacity: 0.22 !important; }
+/* ── 2. 배경 오브 ── */
+body.light-mode .bg-layer {
+  display: block !important;
+  opacity: 0.15 !important;
+}
+body.light-mode .o1 { background: radial-gradient(circle,#8b9ffd,transparent 70%) !important; }
+body.light-mode .o2 { background: radial-gradient(circle,#c4b5fd,transparent 70%) !important; }
+body.light-mode .o3 { background: radial-gradient(circle,#a5f3fc,transparent 70%) !important; }
+body.light-mode .o4 { background: radial-gradient(circle,#ddd6fe,transparent 70%) !important; }
 
-/* 카드 완전 하얗게 (이미지 그대로) */
-body.light-mode .glass,
-body.light-mode .glass-s,
+/* ── 3. 로딩 스피너 ── */
+body.light-mode #auth-loader { background: #eef1fc !important; }
+body.light-mode .auth-spinner {
+  border-color: rgba(0,0,0,.06) !important;
+  border-top-color: #6366f1 !important;
+}
+body.light-mode .auth-label { color: rgba(17,24,39,.38) !important; }
+
+/* ── 4. 카드 시스템 ── */
+body.light-mode .glass {
+  background: rgba(255,255,255,.88) !important;
+  border: 1px solid rgba(190,200,240,.28) !important;
+  box-shadow: 0 4px 24px rgba(99,102,241,.07), 0 1px 4px rgba(0,0,0,.04) !important;
+  backdrop-filter: blur(16px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+}
+body.light-mode .glass-s {
+  background: rgba(255,255,255,.80) !important;
+  border: 1px solid rgba(190,200,240,.28) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+}
 body.light-mode .gc {
-  background: #ffffff !important;
-  border: 1px solid #e2e8f0 !important;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.06) !important;
-  border-radius: 20px !important;
+  background: rgba(255,255,255,.82) !important;
+  border: 1px solid rgba(190,200,240,.25) !important;
+  box-shadow: 0 2px 12px rgba(99,102,241,.06) !important;
+}
+body.light-mode .gc:hover {
+  background: rgba(255,255,255,.97) !important;
+  border-color: rgba(99,102,241,.22) !important;
+  box-shadow: 0 8px 28px rgba(99,102,241,.11) !important;
+  transform: translateY(-2px) !important;
+}
+/* 상세 페이지 카드 */
+body.light-mode #page-manual-detail .glass,
+body.light-mode #page-manual-detail .gc,
+body.light-mode #page-records-detail .glass,
+body.light-mode #page-memo-detail .glass {
+  background: rgba(255,255,255,.94) !important;
+  border-color: rgba(190,200,240,.30) !important;
 }
 
-/* 사이드바 & 헤더 */
-body.light-mode #sidebar { background: #f8f7ff !important; border-right: 1px solid #e0e7ff !important; }
-body.light-mode #hdr { background: #ffffff !important; border-bottom: 1px solid #e2e8f0 !important; }
+/* ── 5. 사이드바 ── */
+body.light-mode #sidebar {
+  background: rgba(243,245,255,.96) !important;
+  border-right: 1px solid rgba(190,200,240,.28) !important;
+  backdrop-filter: blur(20px) !important;
+}
+body.light-mode .s-logo { color: #111827 !important; }
+body.light-mode .s-logo em { color: #6366f1 !important; }
+body.light-mode .s-div  { background: rgba(0,0,0,.07) !important; }
+body.light-mode .nb     { color: rgba(17,24,39,.42) !important; }
+body.light-mode .nb:hover {
+  background: rgba(99,102,241,.08) !important;
+  color: #6366f1 !important;
+}
+body.light-mode .nb.active {
+  background: #6366f1 !important;
+  color: #fff !important;
+  box-shadow: 0 4px 14px rgba(99,102,241,.32) !important;
+}
+body.light-mode .tip {
+  background: rgba(255,255,255,.97) !important;
+  border: 1px solid rgba(190,200,240,.35) !important;
+  color: #111827 !important;
+  box-shadow: 0 6px 20px rgba(99,102,241,.10) !important;
+}
 
-/* 폰트 완전 개선 */
-body.light-mode .hero-title,
-body.light-mode .ctitle,
+/* ── 6. 헤더 ── */
+body.light-mode #hdr {
+  background: rgba(255,255,255,.88) !important;
+  border-bottom: 1px solid rgba(190,200,240,.28) !important;
+  backdrop-filter: blur(20px) !important;
+}
+body.light-mode .h-logo { color: #111827 !important; }
+body.light-mode .h-logo em { color: #6366f1 !important; }
+body.light-mode .srch input {
+  background: rgba(255,255,255,.85) !important;
+  border: 1px solid rgba(190,200,240,.38) !important;
+  color: #111827 !important;
+}
+body.light-mode .srch input::placeholder { color: rgba(17,24,39,.36) !important; }
+body.light-mode .srch input:focus {
+  border-color: rgba(99,102,241,.42) !important;
+  background: rgba(255,255,255,.98) !important;
+  box-shadow: 0 0 0 3px rgba(99,102,241,.10) !important;
+}
+body.light-mode .srch i { color: rgba(17,24,39,.36) !important; }
+body.light-mode .ibtn {
+  background: rgba(255,255,255,.80) !important;
+  border: 1px solid rgba(190,200,240,.32) !important;
+  color: rgba(17,24,39,.65) !important;
+}
+body.light-mode .ibtn:hover { background: rgba(255,255,255,.98) !important; }
+body.light-mode .ibtn--dot::after { border-color: #f5f7ff !important; }
+body.light-mode .ava { border-color: rgba(190,200,240,.50) !important; }
+body.light-mode .uname { color: rgba(17,24,39,.68) !important; }
+
+/* ── 7. 테마 토글 스위치 ── */
+body.light-mode .tsw { background: rgba(99,102,241,.18) !important; }
+body.light-mode .tsk { background: #6366f1 !important; box-shadow: 0 1px 4px rgba(99,102,241,.40) !important; }
+
+/* ── 8. 스크롤바 ── */
+body.light-mode #pages {
+  scrollbar-color: rgba(0,0,0,.12) transparent !important;
+}
+body.light-mode #pages::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,.12) !important;
+}
+
+/* ── 9. 브레드크럼 ── */
+body.light-mode .bc-link     { color: rgba(17,24,39,.42) !important; }
+body.light-mode .bc-link:hover { color: #6366f1 !important; }
+body.light-mode .bc-sep      { color: rgba(17,24,39,.26) !important; }
+body.light-mode .bc-cur      { color: rgba(17,24,39,.80) !important; }
+body.light-mode .bc-date     { color: rgba(17,24,39,.42) !important; }
+
+/* ── 10. 타이포그래피 ── */
+body.light-mode .slbl        { color: rgba(17,24,39,.44) !important; }
+body.light-mode .ctitle      { color: #111827 !important; }
+body.light-mode .hero-title  { color: #111827 !important; font-weight: 800 !important; }
+body.light-mode .hero-sub    { color: rgba(17,24,39,.50) !important; }
 body.light-mode .detail-title {
-  font-weight: 700 !important;
-  letter-spacing: -0.02em !important;
+  color: #111827 !important;
+  text-shadow: none !important;
 }
-body.light-mode .slbl { font-size: 13px !important; font-weight: 600 !important; color: #64748b !important; }
+body.light-mode .detail-desc { color: rgba(17,24,39,.80) !important; }
+body.light-mode .empty-state,
+body.light-mode .empty-state-card { color: rgba(17,24,39,.32) !important; }
 
-/* 버튼 색상 */
-body.light-mode .btn-o { background: #6366f1 !important; }
+/* ── 11. 버튼 전체 ── */
+body.light-mode .btn-o {
+  background: #6366f1 !important;
+  box-shadow: 0 4px 12px rgba(99,102,241,.28) !important;
+  color: #fff !important;
+}
+body.light-mode .btn-b {
+  background: rgba(99,102,241,.08) !important;
+  color: #6366f1 !important;
+  border: 1px solid rgba(99,102,241,.22) !important;
+}
+body.light-mode .btn-b:hover { background: rgba(99,102,241,.14) !important; }
+body.light-mode .btn-gh {
+  background: rgba(255,255,255,.80) !important;
+  color: rgba(17,24,39,.72) !important;
+  border: 1px solid rgba(190,200,240,.38) !important;
+}
+body.light-mode .btn-gh:hover { background: rgba(255,255,255,.97) !important; }
+body.light-mode .btn-gh--danger { color: #e11d48 !important; }
 
-/* 메뉴 카드 */
-body.light-mode .mgrid .gc { background: #ffffff !important; border: 1px solid #e2e8f0 !important; }
+/* ── 12. 상세 액션 버튼 ── */
+body.light-mode .detail-actions button { border-radius: 12px !important; }
+
+/* ── 13. 폼 요소 ── */
+body.light-mode .lf-label { color: rgba(17,24,39,.50) !important; }
+body.light-mode .lf-input,
+body.light-mode .lf-select,
+body.light-mode .lf-textarea {
+  background: rgba(255,255,255,.92) !important;
+  border: 1px solid rgba(190,200,240,.40) !important;
+  color: #111827 !important;
+}
+body.light-mode .lf-input:focus,
+body.light-mode .lf-select:focus,
+body.light-mode .lf-textarea:focus {
+  border-color: rgba(99,102,241,.45) !important;
+  background: rgba(255,255,255,1) !important;
+  box-shadow: 0 0 0 3px rgba(99,102,241,.10) !important;
+}
+body.light-mode .lf-input::placeholder,
+body.light-mode .lf-textarea::placeholder { color: rgba(17,24,39,.34) !important; }
+body.light-mode .lf-select option { background: #fff !important; color: #111827 !important; }
+body.light-mode textarea { caret-color: #6366f1 !important; }
+body.light-mode textarea::selection { background: rgba(99,102,241,.18) !important; color: #111827 !important; }
+
+/* ── 14. 사진 미리보기 ── */
+body.light-mode .photo-preview-item img {
+  border: 1px solid rgba(190,200,240,.32) !important;
+}
+body.light-mode .photo-preview-del { box-shadow: 0 2px 6px rgba(0,0,0,.20) !important; }
+body.light-mode .step-thumb        { border: 1px solid rgba(190,200,240,.30) !important; }
+body.light-mode .step-photo-thumb  { border: 1px solid rgba(190,200,240,.30) !important; }
+body.light-mode .detail-img        { border: 1px solid rgba(190,200,240,.28) !important; }
+body.light-mode .memo-card-thumb   { border: 1px solid rgba(190,200,240,.28) !important; }
+body.light-mode .memo-detail-img   { border: 1px solid rgba(190,200,240,.28) !important; }
+body.light-mode .ba-detail-img     { border: 1px solid rgba(190,200,240,.25) !important; }
+body.light-mode .mc-thumb          { border: 1px solid rgba(190,200,240,.28) !important; }
+
+/* ── 15. 로그인 오버레이 ── */
+body.light-mode #lov {
+  background: rgba(190,205,240,.55) !important;
+  backdrop-filter: blur(22px) !important;
+}
+body.light-mode .lcard {
+  background: rgba(255,255,255,.94) !important;
+  border: 1px solid rgba(190,200,240,.32) !important;
+  box-shadow: 0 24px 64px rgba(99,102,241,.14) !important;
+}
+body.light-mode .ll    { color: #111827 !important; }
+body.light-mode .ll em { color: #6366f1 !important; }
+body.light-mode .ls    { color: rgba(17,24,39,.50) !important; }
+body.light-mode .btn-google {
+  background: rgba(0,0,0,.04) !important;
+  border: 1px solid rgba(190,200,240,.40) !important;
+  color: #111827 !important;
+}
+body.light-mode .btn-google:hover { background: rgba(0,0,0,.07) !important; }
+body.light-mode .ldv  { color: rgba(17,24,39,.34) !important; }
+body.light-mode .ldv::before,
+body.light-mode .ldv::after { background: rgba(0,0,0,.09) !important; }
+body.light-mode .btn-guest {
+  background: #6366f1 !important;
+  box-shadow: 0 4px 16px rgba(99,102,241,.28) !important;
+}
+body.light-mode .ln { color: rgba(17,24,39,.40) !important; }
+
+/* ── 16. 모달 ── */
+body.light-mode #modal-overlay { background: rgba(180,195,240,.45) !important; backdrop-filter: blur(8px) !important; }
+body.light-mode #modal-box {
+  background: rgba(255,255,255,.97) !important;
+  border: 1px solid rgba(190,200,240,.30) !important;
+  box-shadow: 0 24px 64px rgba(99,102,241,.14) !important;
+}
+body.light-mode .modal-title  { color: #111827 !important; }
+body.light-mode .modal-close  {
+  background: rgba(0,0,0,.05) !important;
+  color: rgba(17,24,39,.44) !important;
+}
+body.light-mode .modal-close:hover {
+  background: rgba(99,102,241,.10) !important;
+  color: #6366f1 !important;
+}
+body.light-mode .modal-section-divider {
+  color: rgba(17,24,39,.44) !important;
+  border-top: 1px solid rgba(0,0,0,.06) !important;
+}
+
+/* ── 17. 상태 배지 ── */
+body.light-mode .rb-done {
+  background: rgba(16,185,129,.10) !important;
+  color: #059669 !important;
+  border-color: rgba(16,185,129,.22) !important;
+}
+body.light-mode .rb-prog {
+  background: rgba(99,102,241,.09) !important;
+  color: #6366f1 !important;
+  border-color: rgba(99,102,241,.22) !important;
+}
+body.light-mode .rb-todo {
+  background: rgba(0,0,0,.05) !important;
+  color: rgba(17,24,39,.48) !important;
+  border-color: rgba(0,0,0,.09) !important;
+}
+body.light-mode .m-tag {
+  background: rgba(99,102,241,.07) !important;
+  border: 1px solid rgba(99,102,241,.16) !important;
+  color: #6366f1 !important;
+}
+body.light-mode .status-badge { background: rgba(0,0,0,.05) !important; color: rgba(17,24,39,.48) !important; }
+
+/* Firebase 연결 배지 */
+body.light-mode .spill {
+  background: rgba(16,185,129,.07) !important;
+  border-color: rgba(16,185,129,.20) !important;
+}
+
+/* ── 18. 홈 대시보드 ── */
+body.light-mode .wcard,
+body.light-mode .rcard,
+body.light-mode .ccard { }
+
+body.light-mode .ri { border-bottom: 1px solid rgba(0,0,0,.05) !important; }
+body.light-mode .rtxt { color: rgba(17,24,39,.75) !important; }
+body.light-mode .rdt  { color: rgba(17,24,39,.38) !important; }
+body.light-mode .rdot--todo,
+body.light-mode .rdot.todo { background: rgba(0,0,0,.14) !important; }
+
+body.light-mode .ml   { color: rgba(17,24,39,.48) !important; }
+body.light-mode .mv   { color: #111827 !important; }
+body.light-mode .md   { color: rgba(17,24,39,.36) !important; }
+body.light-mode .mini { border: 1px solid rgba(190,200,240,.22) !important; background: rgba(255,255,255,.70) !important; }
+
+body.light-mode .ck-prog-row { color: rgba(17,24,39,.72) !important; }
+body.light-mode .pw   { background: rgba(0,0,0,.07) !important; }
+body.light-mode .ci   { border-bottom: 1px solid rgba(0,0,0,.05) !important; color: rgba(17,24,39,.72) !important; }
+body.light-mode .chk  { border: 1.5px solid rgba(0,0,0,.18) !important; }
+body.light-mode .chk.on { background: #6366f1 !important; border-color: #6366f1 !important; }
+body.light-mode .ct   { color: rgba(17,24,39,.72) !important; }
+body.light-mode .ct.done { color: rgba(17,24,39,.32) !important; }
+body.light-mode .sdiv { background: rgba(0,0,0,.06) !important; }
+
+body.light-mode .sbox {
+  background: rgba(255,255,255,.75) !important;
+  border: 1px solid rgba(190,200,240,.22) !important;
+}
+body.light-mode .slb2 { color: rgba(17,24,39,.46) !important; }
+body.light-mode .mn   { color: #111827 !important; }
+body.light-mode .ms   { color: rgba(17,24,39,.50) !important; }
+
+/* ── 19. 메뉴 그리드 ── */
+body.light-mode .mgrid .gc {
+  background: rgba(255,255,255,.85) !important;
+  border: 1px solid rgba(190,200,240,.25) !important;
+}
+
+/* ── 20. 매뉴얼 카드 ── */
+body.light-mode .cat-name  { color: #111827 !important; }
+body.light-mode .cat-sub   { color: rgba(17,24,39,.50) !important; }
+body.light-mode .cat-count { color: rgba(17,24,39,.38) !important; }
+body.light-mode .mc-title  { color: #111827 !important; }
+body.light-mode .mc-meta   { color: rgba(17,24,39,.40) !important; }
+body.light-mode .mc-arrow  { color: rgba(17,24,39,.32) !important; }
+body.light-mode .mc-num-badge {
+  background: rgba(99,102,241,.09) !important;
+  border-color: rgba(99,102,241,.20) !important;
+  color: #6366f1 !important;
+}
+
+/* ── 21. 매뉴얼 상세 ── */
+body.light-mode .md-main-title {
+  color: #111827 !important;
+  text-shadow: none !important;
+}
+body.light-mode .md-stat {
+  background: rgba(255,255,255,.75) !important;
+  border: 1px solid rgba(190,200,240,.28) !important;
+  color: rgba(17,24,39,.58) !important;
+}
+body.light-mode .md-sec-count {
+  background: rgba(255,255,255,.70) !important;
+  border: 1px solid rgba(190,200,240,.25) !important;
+  color: rgba(17,24,39,.48) !important;
+}
+body.light-mode .md-overview p { color: rgba(17,24,39,.78) !important; }
+
+/* 준비물 */
+body.light-mode .supply-item {
+  background: rgba(255,255,255,.80) !important;
+  border: 1px solid rgba(190,200,240,.26) !important;
+}
+body.light-mode .supply-name { color: rgba(17,24,39,.80) !important; }
+body.light-mode .supply-num  { background: rgba(99,102,241,.10) !important; color: #6366f1 !important; }
+
+/* 주의사항 섹션 — amber 계열은 유지 */
+
+/* ── 22. Step 절차 ── */
+body.light-mode .step-title {
+  color: #111827 !important;
+  text-shadow: none !important;
+}
+body.light-mode .step-desc  { color: rgba(17,24,39,.75) !important; }
+body.light-mode .step-connector { background: rgba(0,0,0,.09) !important; }
+body.light-mode .step-photo {
+  border: 1px solid rgba(190,200,240,.28) !important;
+  background: rgba(0,0,0,.02) !important;
+}
+body.light-mode .step-card-head img {
+  border: 1px solid rgba(190,200,240,.28) !important;
+  background: rgba(0,0,0,.02) !important;
+}
+
+/* ── 23. 체크리스트 ── */
+body.light-mode .ck-progress-wrap { background: rgba(0,0,0,.07) !important; }
+body.light-mode .ck-reset-btn {
+  background: rgba(0,0,0,.04) !important;
+  border: 1px solid rgba(0,0,0,.09) !important;
+  color: rgba(17,24,39,.46) !important;
+}
+body.light-mode .ck-list { border: 1px solid rgba(190,200,240,.24) !important; overflow: hidden !important; }
+body.light-mode .ck-header { background: rgba(99,102,241,.10) !important; }
+body.light-mode .ck-h-num,
+body.light-mode .ck-h-item,
+body.light-mode .ck-h-check { color: rgba(99,102,241,.78) !important; }
+body.light-mode .ck-row { border-top: 1px solid rgba(0,0,0,.04) !important; }
+body.light-mode .ck-row:hover { background: rgba(99,102,241,.04) !important; }
+body.light-mode .ck-row.ck-done { background: rgba(16,185,129,.05) !important; }
+body.light-mode .ck-num { color: rgba(17,24,39,.32) !important; }
+body.light-mode .ck-txt { color: rgba(17,24,39,.80) !important; }
+body.light-mode .ck-row.ck-done .ck-txt { color: rgba(17,24,39,.36) !important; }
+body.light-mode .ck-circle { border: 2px solid rgba(0,0,0,.16) !important; }
+
+/* ── 24. 알림 박스 ── */
+body.light-mode .alert-caution {
+  background: rgba(244,63,94,.06) !important;
+  border-color: rgba(244,63,94,.20) !important;
+  color: #be123c !important;
+}
+body.light-mode .alert-tip {
+  background: rgba(99,102,241,.06) !important;
+  border-color: rgba(99,102,241,.20) !important;
+  color: #6366f1 !important;
+}
+
+/* ── 25. 작업기록 ── */
+body.light-mode .log-stat-box {
+  background: rgba(255,255,255,.78) !important;
+  border: 1px solid rgba(190,200,240,.24) !important;
+}
+body.light-mode .log-stat-lbl { color: rgba(17,24,39,.40) !important; }
+body.light-mode .log-stat-num { color: #111827 !important; }
+body.light-mode .log-stat-num--done { color: #059669 !important; }
+body.light-mode .log-stat-num--prog { color: #6366f1 !important; }
+body.light-mode .log-stat-num--wait { color: #d97706 !important; }
+
+/* 필터 칩 */
+body.light-mode .fchip {
+  background: rgba(255,255,255,.80) !important;
+  border: 1px solid rgba(190,200,240,.32) !important;
+  color: rgba(17,24,39,.52) !important;
+}
+body.light-mode .fchip:hover {
+  background: rgba(255,255,255,.97) !important;
+  color: #111827 !important;
+}
+body.light-mode .fchip.on {
+  background: #6366f1 !important;
+  border-color: #6366f1 !important;
+  color: #fff !important;
+  box-shadow: 0 2px 8px rgba(99,102,241,.28) !important;
+}
+
+/* 로그 카드 */
+body.light-mode .lc-title { color: #111827 !important; }
+body.light-mode .lc-meta span { color: rgba(17,24,39,.40) !important; }
+body.light-mode .lc-desc  { color: rgba(17,24,39,.50) !important; }
+body.light-mode .lc-cat-icon { background: rgba(99,102,241,.07) !important; }
+body.light-mode .lc-btn-edit { background: rgba(99,102,241,.09) !important; color: #6366f1 !important; }
+body.light-mode .lc-btn-del  { background: rgba(244,63,94,.07) !important; color: #e11d48 !important; }
+
+/* Before/After */
+body.light-mode .ba-detail-col { border: 1px solid rgba(190,200,240,.24) !important; }
+body.light-mode .ba-col-body   { background: rgba(255,255,255,.60) !important; }
+body.light-mode .ba-no-photo   { color: rgba(17,24,39,.34) !important; }
+body.light-mode .ba-upload-section { border: 1px solid rgba(190,200,240,.24) !important; }
+body.light-mode .ba-upload-section .photo-preview-wrap { background: rgba(255,255,255,.50) !important; }
+
+/* ── 26. 학습메모 ── */
+body.light-mode .memo-card-title   { color: #111827 !important; }
+body.light-mode .memo-card-preview { color: rgba(17,24,39,.52) !important; }
+body.light-mode .memo-content-box {
+  color: rgba(17,24,39,.82) !important;
+  background: rgba(248,250,255,.97) !important;
+  border: 1px solid rgba(190,200,240,.28) !important;
+}
+
+/* ── 27. 연간 로드맵 ── */
+body.light-mode .rm-month-chip {
+  background: rgba(255,255,255,.72) !important;
+  border: 1px solid rgba(190,200,240,.28) !important;
+}
+body.light-mode .rm-month-chip:hover { background: rgba(255,255,255,.92) !important; }
+body.light-mode .rm-month-has {
+  background: rgba(255,255,255,.88) !important;
+  border-color: rgba(190,200,240,.45) !important;
+}
+body.light-mode .rm-month-active {
+  background: #6366f1 !important;
+  border-color: #6366f1 !important;
+  box-shadow: 0 3px 10px rgba(99,102,241,.28) !important;
+}
+body.light-mode .rm-chip-label { color: rgba(17,24,39,.68) !important; }
+body.light-mode .rm-month-active .rm-chip-label { color: #fff !important; }
+body.light-mode .rm-chip-count { color: #6366f1 !important; }
+body.light-mode .rm-month-active .rm-chip-count { color: rgba(255,255,255,.85) !important; }
+body.light-mode .rm-leg-item { color: rgba(17,24,39,.50) !important; }
+body.light-mode .rm-tab {
+  background: rgba(255,255,255,.75) !important;
+  border: 1px solid rgba(190,200,240,.28) !important;
+  color: rgba(17,24,39,.52) !important;
+}
+body.light-mode .rm-tab:hover { background: rgba(255,255,255,.95) !important; color: #111827 !important; }
+body.light-mode .rm-tab-has { border-color: rgba(190,200,240,.45) !important; color: rgba(17,24,39,.75) !important; }
+body.light-mode .rm-tab-active {
+  background: #6366f1 !important;
+  border-color: #6366f1 !important;
+  color: #fff !important;
+  box-shadow: 0 2px 8px rgba(99,102,241,.28) !important;
+}
+body.light-mode .rm-sch-title { color: #111827 !important; }
+body.light-mode .rm-sch-desc  { color: rgba(17,24,39,.50) !important; }
+
+/* ── 28. 검색 ── */
+body.light-mode .search-bar__icon  { color: rgba(17,24,39,.36) !important; }
+body.light-mode .search-bar__input { color: #111827 !important; }
+body.light-mode .search-bar__input::placeholder { color: rgba(17,24,39,.34) !important; }
+
+/* ── 29. 연락처 ── */
+body.light-mode .contact-name  { color: #111827 !important; }
+body.light-mode .contact-role  { color: rgba(17,24,39,.50) !important; }
+body.light-mode .contact-phone { color: rgba(17,24,39,.75) !important; }
+
+/* ── 30. 설정 ── */
+body.light-mode .settings-row { border-bottom: 1px solid rgba(0,0,0,.06) !important; }
+body.light-mode .settings-label { color: #111827 !important; }
+body.light-mode .settings-desc  { color: rgba(17,24,39,.50) !important; }
+
+/* ── 31. 토스트 ── */
+body.light-mode #kf-toast {
+  background: rgba(17,24,39,.90) !important;
+  border-color: rgba(0,0,0,.18) !important;
+  color: #fff !important;
+}
+
+/* ── 32. 폼 페이지 ── */
+body.light-mode .form-back-btn {
+  background: rgba(255,255,255,.82) !important;
+  border: 1px solid rgba(190,200,240,.36) !important;
+  color: rgba(17,24,39,.72) !important;
+}
+body.light-mode .form-back-btn:hover { background: rgba(255,255,255,.97) !important; }
+body.light-mode .form-page-title { color: #111827 !important; }
+body.light-mode .form-page-actions {
+  background: linear-gradient(to top, #e8eef9 65%, transparent) !important;
+}
+
+/* ── 33. 사진 업로드 버튼 ── */
+body.light-mode .photo-add-btn {
+  background: rgba(255,255,255,.82) !important;
+  border: 1px solid rgba(190,200,240,.34) !important;
+  color: rgba(17,24,39,.68) !important;
+}
+body.light-mode .photo-add-btn:hover { background: rgba(255,255,255,.97) !important; }
+body.light-mode .photo-hint,
+body.light-mode .photo-hint-empty { color: rgba(17,24,39,.34) !important; }
+
+/* ── 34. 절차 항목 블록 (매뉴얼 폼) ── */
+body.light-mode .step-item-block {
+  background: rgba(255,255,255,.82) !important;
+  border: 1px solid rgba(190,200,240,.28) !important;
+}
+body.light-mode .step-item-block__header {
+  background: rgba(99,102,241,.07) !important;
+  border-bottom: 1px solid rgba(190,200,240,.20) !important;
+}
+body.light-mode .step-item-block__label { color: rgba(17,24,39,.75) !important; }
+body.light-mode .step-item-block__del {
+  background: rgba(244,63,94,.08) !important;
+  color: #e11d48 !important;
+}
+body.light-mode .step-item-block__btn {
+  background: rgba(255,255,255,.78) !important;
+  border: 1px solid rgba(190,200,240,.30) !important;
+  color: rgba(17,24,39,.65) !important;
+}
+
+/* ── 35. SPGI 정보 그리드 ── */
+body.light-mode .spi {
+  background: rgba(255,255,255,.80) !important;
+  border: 1px solid rgba(190,200,240,.24) !important;
+}
+body.light-mode .spll { color: rgba(17,24,39,.44) !important; }
+body.light-mode .spvl { color: #111827 !important; text-shadow: none !important; }
+
+/* ── 36. 카드 수정/삭제 버튼 ── */
+body.light-mode .card-actions .btn-gh {
+  background: rgba(255,255,255,.78) !important;
+  border-color: rgba(190,200,240,.32) !important;
+  color: rgba(17,24,39,.68) !important;
+}
+
+/* ── 37. 스크롤바 (썸네일 rows) ── */
+body.light-mode .step-thumbs-row,
+body.light-mode .step-photos-row {
+  scrollbar-color: rgba(0,0,0,.12) transparent !important;
+}
+body.light-mode .step-thumbs-row::-webkit-scrollbar-thumb,
+body.light-mode .step-photos-row::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,.12) !important;
+}
 
 /* ── RESET ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
