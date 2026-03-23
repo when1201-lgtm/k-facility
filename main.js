@@ -2151,12 +2151,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const sInp = $('search-input');
   if (sInp) sInp.addEventListener('input', e => doSearch(e.target.value));
 
-  /* 테마 토글 — light ↔ dark */
-  const _tsw = $('tsw');
-  if (_tsw) _tsw.addEventListener('click', () => {
-    console.log('[K-Facility] 토글 클릭. 현재 light-mode:', document.body.classList.contains('light-mode'));
-    toggleTheme();
-  });
+  /* 테마 토글 — 실제 핸들러는 ㉓ 섹션에 정의 */
+  const _tswEl = document.getElementById('tsw');
+  if (_tswEl) _tswEl.addEventListener('click', toggleTheme);
 
   initMobileInputFix();
   initFirebase();
@@ -2269,38 +2266,36 @@ window.clearLocalData   = clearLocalData;
 window.doSearch         = doSearch;
 
 /* =====================================================
-   ㉓ 테마 토글 — light(기본) ↔ dark
-   · body에 light-mode 클래스가 기본으로 있음
-   · 토글 클릭 → 클래스 제거 = 다크, 추가 = 라이트
-   · localStorage로 새로고침 후에도 유지
+   ㉓ 테마 토글 (dark ↔ light)
+   · 기본 = dark (body에 light-mode 클래스 없음)
+   · localStorage 'light' 저장 시 라이트모드 유지
 ===================================================== */
 function toggleTheme() {
   const isLight = document.body.classList.toggle('light-mode');
   localStorage.setItem('theme', isLight ? 'light' : 'dark');
+
   const tsk = document.getElementById('tsk');
   if (tsk) tsk.style.transform = isLight ? 'translateX(20px)' : 'translateX(0)';
-  console.log('[K-Facility] 테마 변경 →', isLight ? 'LIGHT' : 'DARK');
+
+  console.log('[K-Facility] 테마 변경 →', isLight ? 'LIGHT MODE ☀️' : 'DARK MODE 🌙');
 }
 
 function initTheme() {
-  const saved = localStorage.getItem('theme');
+  const saved = localStorage.getItem('theme') || 'dark';
   const tsk   = document.getElementById('tsk');
 
-  // 저장된 값이 'dark'이면 light-mode 제거 (다크로 전환)
-  if (saved === 'dark') {
-    document.body.classList.remove('light-mode');
-    if (tsk) tsk.style.transform = 'translateX(0)';
-  } else {
-    // 기본 = light-mode (body 태그에 이미 클래스 있음, 혹시 없으면 추가)
+  if (saved === 'light') {
     document.body.classList.add('light-mode');
     if (tsk) tsk.style.transform = 'translateX(20px)';
+  } else {
+    document.body.classList.remove('light-mode');
+    if (tsk) tsk.style.transform = 'translateX(0)';
   }
+
+  localStorage.setItem('theme', saved); // 재저장으로 영구 보장
+  console.log('[K-Facility] 초기 테마 →', saved.toUpperCase());
 }
 
-/* .tsk 기본 위치를 transform 기준으로 세팅 */
-document.addEventListener('DOMContentLoaded', () => {
-  initTheme();
-});
-
+window.addEventListener('load', initTheme);
 window.toggleTheme = toggleTheme;
 window.initTheme   = initTheme;
