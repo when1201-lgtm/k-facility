@@ -233,7 +233,7 @@ a { color: inherit; text-decoration: none; }
 }
 .uname { font-size: 14px; font-weight: 500; color: var(--t2); white-space: nowrap; }
 .tsw { width: 46px; height: 26px; background: #e8e8e8; border-radius: 99px; position: relative; cursor: pointer; }
-.tsk { width: 20px; height: 20px; background: #fff; border-radius: 50%; position: absolute; top: 3px; left: 3px; transform: translateX(0); transition: transform .22s ease, background .22s ease; box-shadow: 0 1px 4px rgba(0,0,0,.12); }
+.tsk { width: 20px; height: 20px; background: #fff; border-radius: 50%; position: absolute; top: 3px; left: 3px; transform: translateX(20px); transition: transform .22s ease, background .22s ease, box-shadow .22s ease; box-shadow: 0 1px 4px rgba(0,0,0,.12); }
 
 /* ── PAGES ── */
 #pages {
@@ -1286,154 +1286,153 @@ textarea { caret-color: var(--orange); }
   justify-content: flex-end;
 }
 
-/* ==================== LIGHT MODE (Aetheris 스타일 완전 재조정) ==================== */
+/* ==================== LIGHT MODE (Aetheris 그라데이션 + 글래스) ==================== */
+
+/* ── 배경 그라데이션 (기본 흰색 완전 덮어쓰기) ── */
 body.light-mode {
-  background: linear-gradient(135deg, #e0f2fe 0%, #c7d2fe 50%, #a5b4fc 100%);
-  color: #0f172a;
+  background: linear-gradient(135deg, #dbeafe 0%, #c7d2fe 50%, #a5b4fc 100%) !important;
+  color: #0f172a !important;
 }
 
-/* 변수 재정의 */
+/* ── CSS 변수 재정의 ── */
 body.light-mode {
   --t1: #0f172a;
-  --t2: #334155;
-  --t3: #64748b;
+  --t2: #1e293b;
+  --t3: #475569;
   --t4: #94a3b8;
-  --gb: rgba(148, 163, 184, 0.08);
-  --gborder: rgba(148, 163, 184, 0.18);
+  --gb:      rgba(255, 255, 255, 0.12);
+  --gborder: rgba(148, 163, 184, 0.20);
 }
 
-/* 사이드바 + 헤더 */
-body.light-mode #sidebar,
+/* ── 오브 — 은은하게 ── */
+body.light-mode .orb {
+  opacity: 0.22 !important;
+  filter: blur(110px) !important;
+}
+
+/* ── 사이드바 ── */
+body.light-mode #sidebar {
+  background: rgba(255, 255, 255, 0.93) !important;
+  border-right: 1px solid rgba(148, 163, 184, 0.22) !important;
+}
+
+/* ── 헤더 ── */
 body.light-mode #hdr {
-  background: rgba(255, 255, 255, 0.95);
-  border-right: 1px solid rgba(148, 163, 184, 0.2);
-  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(255, 255, 255, 0.90) !important;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.20) !important;
 }
 
-/* 모든 glass 카드 */
+/* ── Glass 카드 전체 ── */
 body.light-mode .glass,
-body.light-mode .glass-s,
-body.light-mode .gc,
+body.light-mode .glass-s {
+  background: rgba(255, 255, 255, 0.88) !important;
+  border: 1px solid rgba(148, 163, 184, 0.22) !important;
+  box-shadow: 0 8px 32px rgba(100, 116, 139, 0.10) !important;
+}
+
+/* ── 메뉴 그리드 카드 ── */
+body.light-mode .gc {
+  background: rgba(255, 255, 255, 0.80) !important;
+  border: 1px solid rgba(148, 163, 184, 0.18) !important;
+  box-shadow: 0 4px 20px rgba(100, 116, 139, 0.08) !important;
+}
+body.light-mode .gc:hover {
+  background: rgba(255, 255, 255, 0.97) !important;
+  box-shadow: 0 12px 40px rgba(100, 116, 139, 0.13) !important;
+}
+
+/* ── 상세 페이지 ── */
 body.light-mode #page-manual-detail .glass,
 body.light-mode #page-records-detail .glass,
 body.light-mode #page-memo-detail .glass {
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(148, 163, 184, 0.25);
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.07);
+  background: rgba(255, 255, 255, 0.93) !important;
+  border-color: rgba(148, 163, 184, 0.28) !important;
 }
 
-/* 호버 효과 */
-body.light-mode .gc:hover {
-  background: rgba(255, 255, 255, 0.98);
-  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.09);
-  border-color: rgba(148, 163, 184, 0.35);
-}
+/* ── 사이드바 버튼 ── */
+body.light-mode .nb { color: #334155 !important; }
+body.light-mode .nb:hover:not(.active) { background: rgba(0,0,0,0.06) !important; }
+body.light-mode .nb.active { background: var(--orange) !important; color: #fff !important; }
 
-/* 오브 — 은은하게 */
-body.light-mode .orb {
-  opacity: 0.25;
-  filter: blur(110px);
-}
-
-/* 토글 스위치 */
-body.light-mode .tsw {
-  background: #e2e8f0;
-}
-body.light-mode .tsk {
-  background: #3b82f6;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
-}
-
-/* 버튼·텍스트 */
-body.light-mode button,
-body.light-mode .nb {
-  color: var(--t2);
-}
-body.light-mode .nb.active {
-  background: #f59e0b;
-  color: #fff;
-}
-body.light-mode .nb:hover:not(.active) {
-  background: rgba(0, 0, 0, 0.06);
-}
-
-/* 검색창 */
+/* ── 검색창 ── */
 body.light-mode .srch input {
-  background: rgba(255, 255, 255, 0.9);
-  border-color: rgba(148, 163, 184, 0.3);
-  color: #0f172a;
+  background: rgba(255, 255, 255, 0.88) !important;
+  border-color: rgba(148, 163, 184, 0.30) !important;
+  color: #0f172a !important;
 }
+body.light-mode .srch input::placeholder { color: #94a3b8 !important; }
 body.light-mode .srch input:focus {
-  border-color: var(--orange);
-  box-shadow: 0 0 0 3px rgba(224, 92, 10, 0.12);
+  border-color: var(--orange) !important;
+  box-shadow: 0 0 0 3px rgba(224,92,10,0.12) !important;
 }
 
-/* 폼 입력창 */
+/* ── 폼 입력창 ── */
 body.light-mode .lf-input,
 body.light-mode .lf-select,
 body.light-mode .lf-textarea {
-  background: rgba(255, 255, 255, 0.9);
-  border-color: rgba(148, 163, 184, 0.3);
-  color: #0f172a;
+  background: rgba(255, 255, 255, 0.90) !important;
+  border-color: rgba(148, 163, 184, 0.32) !important;
+  color: #0f172a !important;
 }
 body.light-mode .lf-input:focus,
 body.light-mode .lf-select:focus,
 body.light-mode .lf-textarea:focus {
-  border-color: var(--orange);
-  background: #ffffff;
-  box-shadow: 0 0 0 3px rgba(224, 92, 10, 0.10);
+  border-color: var(--orange) !important;
+  background: #ffffff !important;
+  box-shadow: 0 0 0 3px rgba(224,92,10,0.10) !important;
 }
 body.light-mode .lf-input::placeholder,
-body.light-mode .lf-textarea::placeholder { color: #94a3b8; }
+body.light-mode .lf-textarea::placeholder { color: #94a3b8 !important; }
 
-/* btn-gh (회색 버튼) */
+/* ── btn-gh ── */
 body.light-mode .btn-gh {
-  background: rgba(255, 255, 255, 0.82);
-  border-color: rgba(148, 163, 184, 0.28);
-  color: #334155;
+  background: rgba(255,255,255,0.82) !important;
+  border-color: rgba(148,163,184,0.28) !important;
+  color: #1e293b !important;
 }
-body.light-mode .btn-gh:hover {
-  background: rgba(255, 255, 255, 0.97);
-}
+body.light-mode .btn-gh:hover { background: rgba(255,255,255,0.97) !important; }
 
-/* 아이콘 버튼 (알림 등) */
+/* ── 아이콘 버튼 ── */
 body.light-mode .ibtn {
-  background: rgba(255, 255, 255, 0.8);
-  border-color: rgba(148, 163, 184, 0.25);
-  color: #334155;
+  background: rgba(255,255,255,0.80) !important;
+  border-color: rgba(148,163,184,0.25) !important;
+  color: #334155 !important;
 }
-body.light-mode .ibtn:hover { background: rgba(255, 255, 255, 0.97); }
 
-/* 모달 */
-body.light-mode #modal-overlay { background: rgba(15, 23, 42, 0.32); }
+/* ── 모달 ── */
+body.light-mode #modal-overlay { background: rgba(15,23,42,0.30) !important; }
 body.light-mode #modal-box {
-  background: rgba(255, 255, 255, 0.97);
-  border: 1px solid rgba(148, 163, 184, 0.22);
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.13);
+  background: rgba(255,255,255,0.97) !important;
+  border: 1px solid rgba(148,163,184,0.22) !important;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.12) !important;
 }
 
-/* 폼 페이지 하단 바 */
+/* ── 폼 하단 sticky 바 ── */
 body.light-mode .form-page-actions {
-  background: linear-gradient(to top, rgba(199, 210, 254, 0.95) 70%, transparent);
+  background: linear-gradient(to top, rgba(219,234,254,0.97) 70%, transparent) !important;
 }
 
-/* 스크롤바 */
+/* ── 스크롤바 ── */
 body.light-mode #pages::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.45);
+  background: rgba(148,163,184,0.45) !important;
 }
 
-/* 토스트 */
+/* ── 토스트 ── */
 body.light-mode #kf-toast {
-  background: rgba(15, 23, 42, 0.92) !important;
+  background: rgba(15,23,42,0.92) !important;
   color: #fff !important;
 }
 
-/* 아바타·유저명 */
-body.light-mode .uname { color: #334155; }
+/* ── 텍스트 계열 ── */
+body.light-mode .uname    { color: #1e293b !important; }
+body.light-mode .s-div    { background: rgba(148,163,184,0.28) !important; }
+body.light-mode .detail-title { color: #0f172a !important; }
+body.light-mode .detail-desc  { color: #1e293b !important; }
+body.light-mode .slbl         { color: #64748b !important; }
 
-/* 구분선 */
-body.light-mode .s-div { background: rgba(148, 163, 184, 0.25); }
-
-/* 세부 페이지 상세 카드 */
-body.light-mode .detail-desc { color: #1e293b; }
-body.light-mode .detail-title { color: #0f172a; }
+/* ── 토글 스위치 (light 상태 = 파란 손잡이 오른쪽) ── */
+body.light-mode .tsw { background: #bfdbfe !important; }
+body.light-mode .tsk {
+  background: #3b82f6 !important;
+  box-shadow: 0 2px 8px rgba(59,130,246,0.35) !important;
+}
