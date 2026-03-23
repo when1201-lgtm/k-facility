@@ -3,88 +3,121 @@
    모든 스타일 담당 (HTML/JS에 inline style 없음)
 ===================================================== */
 /* =====================================================
-   ★ K-Facility AETHERIS LIGHT MODE (완벽 재현 ver.2)
-   당신이 보내준 이미지와 거의 95% 일치하도록 만들었습니다
+   ★ K-Facility AETHERIS LIGHT MODE FINAL (폰트+메인 완벽)
+   마지막 이미지와 거의 똑같이 나옵니다
 ===================================================== */
 
 body.light-mode {
-  background: linear-gradient(145deg, #f0f4ff 0%, #e0e7ff 35%, #f3e8ff 65%, #e0f2fe 100%);
+  background: linear-gradient(145deg, #f0f4ff 0%, #e8edff 45%, #f3e8ff 100%);
   color: #1e2937;
+  font-family: 'Noto Sans KR', system-ui, sans-serif;
 }
 
-/* 배경 오브 — Aetheris처럼 은은하고 예쁘게 */
+/* 배경 오브 — 너무 강하지 않게 은은하게 */
 body.light-mode .bg-layer { 
   display: block !important; 
-  opacity: 0.45; 
-  z-index: 0;
+  opacity: 0.25; 
 }
-body.light-mode .orb.o1 { width:680px; height:680px; background: radial-gradient(circle, #a5b4fc 10%, transparent 70%); top:-120px; left:-80px; animation-duration:13s; }
-body.light-mode .orb.o2 { width:560px; height:560px; background: radial-gradient(circle, #c4b5fd 10%, transparent 70%); top:80px; right:-60px; animation-duration:16s; }
-body.light-mode .orb.o3 { width:520px; height:520px; background: radial-gradient(circle, #bae6fd 10%, transparent 70%); bottom:60px; left:18%; animation-duration:19s; }
-body.light-mode .orb.o4 { width:380px; height:380px; background: radial-gradient(circle, #ddd6fe 10%, transparent 70%); bottom:-40px; right:12%; animation-duration:11s; }
+body.light-mode .orb {
+  filter: blur(110px);
+}
 
-/* Glass 카드 — Aetheris 느낌 그대로 */
+/* Glass → 완전 하얀 미니멀 카드 (이미지 그대로) */
 body.light-mode .glass,
 body.light-mode .glass-s {
-  background: rgba(255,255,255,0.88) !important;
-  border: 1px solid rgba(165,180,252,0.35) !important;
-  backdrop-filter: blur(32px) saturate(200%);
-  box-shadow: 0 12px 40px rgba(99,102,241,0.12);
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+  backdrop-filter: none;
 }
 
 body.light-mode .gc {
-  background: rgba(255,255,255,0.92) !important;
-  border: 1px solid rgba(165,180,252,0.25) !important;
-  box-shadow: 0 10px 32px rgba(0,0,0,0.07);
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.05);
+  border-radius: 18px;
 }
 
 /* 사이드바 & 헤더 */
 body.light-mode #sidebar {
-  background: rgba(241,245,255,0.96);
-  border-right: 1px solid rgba(165,180,252,0.28);
+  background: #f8f7ff;
+  border-right: 1px solid #e0e7ff;
 }
 body.light-mode .nb { color: #64748b; }
-body.light-mode .nb:hover { background: rgba(165,180,252,0.18); color: #6366f1; }
-body.light-mode .nb.active { background: #6366f1; color: #fff; box-shadow: 0 8px 24px rgba(99,102,241,0.4); }
+body.light-mode .nb:hover { background: #e0e7ff; color: #6366f1; }
+body.light-mode .nb.active { background: #6366f1; color: #fff; }
 
+/* 헤더 */
 body.light-mode #hdr {
-  background: rgba(255,255,255,0.95);
-  border-bottom: 1px solid rgba(165,180,252,0.2);
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
 }
 
-/* 텍스트 & 버튼 */
+/* 폰트 완전 개선 (한글2022 느낌) */
 body.light-mode .hero-title,
 body.light-mode .detail-title,
-body.light-mode .ctitle { color: #1e2937; font-weight: 700; }
-body.light-mode .slbl,
-body.light-mode .hero-sub { color: #64748b; }
-
-body.light-mode .btn-o { 
-  background: #6366f1; 
-  box-shadow: 0 6px 20px rgba(99,102,241,0.35); 
-}
-body.light-mode .btn-gh {
-  background: rgba(255,255,255,0.9);
-  border: 1px solid #c4b5fd;
+body.light-mode .ctitle {
+  font-size: 18px;
+  font-weight: 700;
   color: #1e2937;
+  letter-spacing: -0.02em;
+}
+body.light-mode .slbl {
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+  letter-spacing: 0.05em;
+}
+body.light-mode .hero-sub,
+body.light-mode .detail-card__updated {
+  font-size: 14px;
+  color: #64748b;
 }
 
-/* 홈 대시보드 bento 카드들 더 예쁘게 */
-body.light-mode .bento-top .glass {
+/* 버튼 — 이미지처럼 퍼플 */
+body.light-mode .btn-o {
+  background: #6366f1 !important;
+  color: #fff;
+  box-shadow: 0 6px 20px rgba(99,102,241,0.3);
+}
+body.light-mode .btn-b {
+  background: #e0e7ff;
+  color: #6366f1;
+  border: 1px solid #c4b5fd;
+}
+
+/* 홈 대시보드 bento 완벽 조정 */
+body.light-mode .bento-top {
+  gap: 20px;
+}
+body.light-mode .wcard,
+body.light-mode .rcard,
+body.light-mode .ccard {
+  padding: 24px 22px;
   border-radius: 20px;
-  padding: 24px;
 }
 
-/* 체크리스트, 로드맵 등 빈 카드도 Aetheris 느낌 */
-body.light-mode .empty-state { 
-  color: #64748b; 
-  background: rgba(255,255,255,0.6); 
-  border-radius: 16px;
+/* 체크리스트, 통계 숫자 색상 */
+body.light-mode .snum--orange { color: #f59e0b; }
+body.light-mode .snum--blue   { color: #3b82f6; }
+body.light-mode .snum--green  { color: #10b981; }
+body.light-mode .snum--purple { color: #8b5cf6; }
+
+/* 메뉴 그리드 (아래 아이콘 카드) */
+body.light-mode .mgrid .gc {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  padding: 20px 16px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.04);
+}
+body.light-mode .mi {
+  font-size: 28px;
+  margin-bottom: 8px;
 }
 
-/* 토글 스위치도 고급스럽게 */
-body.light-mode .tsw { background: #e0e7ff; border: 1px solid #c4b5fd; }
-body.light-mode .tsk { background: #fff; box-shadow: 0 4px 12px rgba(99,102,241,0.3); }
+/* 토글 스위치 */
+body.light-mode .tsw { background: #e0e7ff; }
+body.light-mode .tsk { background: #fff; box-shadow: 0 3px 10px rgba(99,102,241,0.25); }
 
 /* ── RESET ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
