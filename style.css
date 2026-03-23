@@ -8,10 +8,10 @@
 html, body { height: 100%; overflow: hidden; }
 body {
   font-family: 'Noto Sans KR', sans-serif;
-  background: #080c18;
+  background: #0e1628;
   color: #fff;
-  font-size: 15px;
-  line-height: 1.65;
+  font-size: 16px;
+  line-height: 1.75;
   letter-spacing: -0.015em;
   -webkit-font-smoothing: antialiased;
   -webkit-text-size-adjust: 100%;
@@ -46,7 +46,7 @@ a { color: inherit; text-decoration: none; }
 #auth-loader {
   position: fixed;
   inset: 0;
-  background: #080c18;
+  background: #0e1628;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -112,8 +112,8 @@ a { color: inherit; text-decoration: none; }
 #page-manual-detail .glass, #page-manual-detail .gc,
 #page-records-detail .glass,
 #page-memo-detail .glass {
-  background: rgba(12,16,32,.72);
-  border-color: rgba(255,255,255,.20);
+  background: rgba(18,26,52,.75);
+  border-color: rgba(255,255,255,.22);
 }
 
 /* ── APP SHELL ── */
@@ -251,7 +251,7 @@ a { color: inherit; text-decoration: none; }
 /* 상세 페이지 여백 더 넉넉하게 */
 #page-manual-detail .pi,
 #page-records-detail .pi,
-#page-memo-detail .pi { padding: 28px 40px 56px; }
+#page-memo-detail .pi { padding: 36px 52px 72px; max-width: 860px; }
 
 /* ── BREADCRUMB ── */
 .breadcrumb { display: flex; align-items: center; gap: 7px; margin-bottom: 20px; flex-wrap: wrap; }
@@ -270,7 +270,7 @@ a { color: inherit; text-decoration: none; }
 .hero-title { font-size: 18px; font-weight: 700; color: var(--t1); }
 .hero-sub   { font-size: 13px; color: var(--t3); }
 .detail-title { font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 16px; line-height: 1.3; }
-.detail-desc  { font-size: 18px; color: var(--t2); line-height: 1.85; white-space: pre-wrap; }
+.detail-desc  { font-size: 20px; font-weight: 500; color: var(--t1); line-height: 2.1; white-space: pre-wrap; letter-spacing: -0.01em; }
 .empty-state { text-align: center; padding: 48px 20px; color: var(--t4); }
 .empty-state__icon { font-size: 32px; margin-bottom: 12px; opacity: .3; }
 .empty-state__text { font-size: 15px; }
@@ -320,7 +320,7 @@ a { color: inherit; text-decoration: none; }
 .detail-card__top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
 .detail-card__updated { font-size: 12px; color: var(--t4); }
 .detail-card__date { font-size: 12px; color: var(--t4); }
-.detail-desc-wrap { padding: 20px; margin-bottom: 14px; }
+.detail-desc-wrap { padding: 28px 32px; margin-bottom: 18px; }
 .detail-photos-wrap { padding: 20px; margin-bottom: 14px; }
 .detail-photos-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(120px,1fr)); gap: 10px; }
 
@@ -579,7 +579,7 @@ textarea { caret-color: var(--orange); }
 .md-stat { font-size: 12.5px; color: var(--t3); background: rgba(255,255,255,.07); padding: 4px 12px; border-radius: 99px; border: 1px solid rgba(255,255,255,.1); }
 .md-tags-row { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 5px; }
 .md-overview { padding: 18px 20px; margin-bottom: 16px; }
-.md-overview p { font-size: 15px; color: var(--t2); line-height: 1.8; }
+.md-overview p { font-size: 18px; font-weight: 500; color: var(--t1); line-height: 2.0; }
 .md-section { padding: 20px; margin-bottom: 16px; }
 .md-sec-title { display: flex; align-items: center; gap: 9px; font-size: 14px; font-weight: 700; color: var(--t1); margin-bottom: 16px; }
 .md-sec-count { margin-left: auto; font-size: 12.5px; color: var(--t3); background: rgba(255,255,255,.07); padding: 3px 10px; border-radius: 99px; border: 1px solid rgba(255,255,255,.1); }
@@ -601,8 +601,8 @@ textarea { caret-color: var(--orange); }
 .step-connector { width: 2px; flex: 1; background: rgba(255,255,255,.12); margin-top: 6px; min-height: 16px; border-radius: 1px; }
 .step-card { flex: 1; overflow: hidden; }
 .step-card-head { padding: 16px 18px; }
-.step-title { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 7px; text-shadow: 0 1px 3px rgba(0,0,0,.5); white-space: pre-wrap; word-break: break-word; }
-.step-desc  { font-size: 15px; color: rgba(255,255,255,.82); line-height: 1.78; }
+.step-title { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 10px; text-shadow: 0 1px 3px rgba(0,0,0,.5); white-space: pre-wrap; word-break: break-word; line-height: 1.7; }
+.step-desc  { font-size: 17px; font-weight: 500; color: rgba(255,255,255,.9); line-height: 2.05; white-space: pre-wrap; word-break: break-word; }
 /* ═══════════════════════════════════════════════
    상세 작업 절차 — #step-container 렌더링
    데이터: steps: [{text, imgUrl}]
@@ -655,23 +655,25 @@ textarea { caret-color: var(--orange); }
   overflow: hidden;
 }
 .step-card-head {
-  padding: 16px 18px;
+  padding: 22px 24px;
   display: flex;
-  flex-direction: column;  /* ★ 글 → 사진 세로 배치 */
+  flex-direction: column;
   gap: 0;
 }
 .step-title {
-  font-size: 16px; font-weight: 700;
+  font-size: 18px; font-weight: 700;
   color: #fff;
-  margin-bottom: 7px;
+  margin-bottom: 10px;
+  line-height: 1.7;
   text-shadow: 0 1px 3px rgba(0,0,0,.5);
-  white-space: pre-wrap;   /* ★ 줄바꿈 유지 */
-  word-break: break-word;  /* 긴 단어 자동 줄바꿈 */
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 .step-desc {
-  font-size: 15px;
-  color: rgba(255,255,255,.82);
-  line-height: 1.78;
+  font-size: 17px;
+  font-weight: 500;
+  color: rgba(255,255,255,.9);
+  line-height: 2.05;
   white-space: pre-wrap;
   word-break: break-word;
 }
@@ -792,7 +794,7 @@ textarea { caret-color: var(--orange); }
 .memo-card-preview { font-size: 13.5px; color: var(--t3); line-height: 1.7; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
 .memo-tags { display: flex; gap: 5px; flex-wrap: wrap; }
 .memo-tags-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
-.memo-content-box { font-size: 16px; color: var(--t2); line-height: 1.88; padding: 22px 24px; border-radius: 12px; background: rgba(8,12,28,.65); border: 1px solid rgba(255,255,255,.12); white-space: pre-wrap; font-family: inherit; min-height: 180px; }
+.memo-content-box { font-size: 20px; font-weight: 500; color: var(--t1); line-height: 2.1; padding: 28px 32px; border-radius: 14px; background: rgba(16,22,44,.70); border: 1px solid rgba(255,255,255,.14); white-space: pre-wrap; font-family: inherit; min-height: 200px; letter-spacing: -0.01em; }
 
 /* ── ROADMAP ── */
 .rm-hero { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 20px; margin-bottom: 16px; flex-wrap: wrap; }
