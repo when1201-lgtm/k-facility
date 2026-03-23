@@ -711,7 +711,10 @@ function renderManualCat(catKey) {
         </div>
         <div class="mc-tags">${(m.tags||[]).map(t=>`<span class="m-tag">${esc(t)}</span>`).join('')}</div>
       </div>
-      <div class="mc-arrow">›</div>
+      <div class="card-actions" onclick="event.stopPropagation()">
+        <button class="lc-btn lc-btn-edit" onclick="openManualModal('${catKey}','${m.id}')">✏️</button>
+        <button class="lc-btn lc-btn-del"  onclick="deleteManual('${catKey}','${m.id}')">🗑</button>
+      </div>
     </div>`;
   }).join('') :
   `<div class="gc" style="padding:48px;text-align:center;color:var(--t4)">
@@ -1712,6 +1715,10 @@ function renderMemo() {
       <div class="memo-card-preview">${esc(preview)}</div>
       <div class="memo-tags">${(m.tags||[]).map(t=>`<span class="m-tag">${esc(t)}</span>`).join('')}</div>
       ${thumbHtml}
+      <div class="card-actions" onclick="event.stopPropagation()">
+        <button class="lc-btn lc-btn-edit" onclick="openMemoModal('${m.id}')">✏️ 수정</button>
+        <button class="lc-btn lc-btn-del"  onclick="deleteMemo('${m.id}')">🗑 삭제</button>
+      </div>
     </div>`;
   }).join('') :
   `<div class="gc" style="padding:48px;text-align:center;color:var(--t4);grid-column:1/-1">
