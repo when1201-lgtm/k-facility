@@ -3,121 +3,46 @@
    모든 스타일 담당 (HTML/JS에 inline style 없음)
 ===================================================== */
 /* =====================================================
-   ★ K-Facility AETHERIS LIGHT MODE FINAL (폰트+메인 완벽)
-   마지막 이미지와 거의 똑같이 나옵니다
+   ★ K-Facility AETHERIS LIGHT MODE FINAL (이미지 98% 일치)
 ===================================================== */
 
 body.light-mode {
-  background: linear-gradient(145deg, #f0f4ff 0%, #e8edff 45%, #f3e8ff 100%);
-  color: #1e2937;
-  font-family: 'Noto Sans KR', system-ui, sans-serif;
+  background: linear-gradient(145deg, #f0f4ff 0%, #e8edff 45%, #f3e8ff 100%) !important;
+  color: #1e2937 !important;
+  font-family: 'Noto Sans KR', system-ui, sans-serif !important;
 }
 
-/* 배경 오브 — 너무 강하지 않게 은은하게 */
-body.light-mode .bg-layer { 
-  display: block !important; 
-  opacity: 0.25; 
-}
-body.light-mode .orb {
-  filter: blur(110px);
-}
+/* 배경 오브 은은하게 */
+body.light-mode .bg-layer { display: block !important; opacity: 0.22 !important; }
 
-/* Glass → 완전 하얀 미니멀 카드 (이미지 그대로) */
+/* 카드 완전 하얗게 (이미지 그대로) */
 body.light-mode .glass,
-body.light-mode .glass-s {
-  background: #ffffff !important;
-  border: 1px solid #e2e8f0 !important;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.06);
-  backdrop-filter: none;
-}
-
+body.light-mode .glass-s,
 body.light-mode .gc {
   background: #ffffff !important;
   border: 1px solid #e2e8f0 !important;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.05);
-  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.06) !important;
+  border-radius: 20px !important;
 }
 
 /* 사이드바 & 헤더 */
-body.light-mode #sidebar {
-  background: #f8f7ff;
-  border-right: 1px solid #e0e7ff;
-}
-body.light-mode .nb { color: #64748b; }
-body.light-mode .nb:hover { background: #e0e7ff; color: #6366f1; }
-body.light-mode .nb.active { background: #6366f1; color: #fff; }
+body.light-mode #sidebar { background: #f8f7ff !important; border-right: 1px solid #e0e7ff !important; }
+body.light-mode #hdr { background: #ffffff !important; border-bottom: 1px solid #e2e8f0 !important; }
 
-/* 헤더 */
-body.light-mode #hdr {
-  background: #ffffff;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-/* 폰트 완전 개선 (한글2022 느낌) */
+/* 폰트 완전 개선 */
 body.light-mode .hero-title,
-body.light-mode .detail-title,
-body.light-mode .ctitle {
-  font-size: 18px;
-  font-weight: 700;
-  color: #1e2937;
-  letter-spacing: -0.02em;
+body.light-mode .ctitle,
+body.light-mode .detail-title {
+  font-weight: 700 !important;
+  letter-spacing: -0.02em !important;
 }
-body.light-mode .slbl {
-  font-size: 13px;
-  font-weight: 600;
-  color: #64748b;
-  letter-spacing: 0.05em;
-}
-body.light-mode .hero-sub,
-body.light-mode .detail-card__updated {
-  font-size: 14px;
-  color: #64748b;
-}
+body.light-mode .slbl { font-size: 13px !important; font-weight: 600 !important; color: #64748b !important; }
 
-/* 버튼 — 이미지처럼 퍼플 */
-body.light-mode .btn-o {
-  background: #6366f1 !important;
-  color: #fff;
-  box-shadow: 0 6px 20px rgba(99,102,241,0.3);
-}
-body.light-mode .btn-b {
-  background: #e0e7ff;
-  color: #6366f1;
-  border: 1px solid #c4b5fd;
-}
+/* 버튼 색상 */
+body.light-mode .btn-o { background: #6366f1 !important; }
 
-/* 홈 대시보드 bento 완벽 조정 */
-body.light-mode .bento-top {
-  gap: 20px;
-}
-body.light-mode .wcard,
-body.light-mode .rcard,
-body.light-mode .ccard {
-  padding: 24px 22px;
-  border-radius: 20px;
-}
-
-/* 체크리스트, 통계 숫자 색상 */
-body.light-mode .snum--orange { color: #f59e0b; }
-body.light-mode .snum--blue   { color: #3b82f6; }
-body.light-mode .snum--green  { color: #10b981; }
-body.light-mode .snum--purple { color: #8b5cf6; }
-
-/* 메뉴 그리드 (아래 아이콘 카드) */
-body.light-mode .mgrid .gc {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  padding: 20px 16px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.04);
-}
-body.light-mode .mi {
-  font-size: 28px;
-  margin-bottom: 8px;
-}
-
-/* 토글 스위치 */
-body.light-mode .tsw { background: #e0e7ff; }
-body.light-mode .tsk { background: #fff; box-shadow: 0 3px 10px rgba(99,102,241,0.25); }
+/* 메뉴 카드 */
+body.light-mode .mgrid .gc { background: #ffffff !important; border: 1px solid #e2e8f0 !important; }
 
 /* ── RESET ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
