@@ -7,12 +7,12 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; overflow: hidden; }
 body {
-  font-family: 'Noto Sans KR', sans-serif;
-  background: #101a30;
-  color: #fff;
+  font-family: 'Malgun Gothic', 'Nanum Gothic', 'Noto Sans KR', system-ui, sans-serif;
+  background: #141e30;
+  color: #eef2ff;
   font-size: 18px;
-  line-height: 1.95;
-  letter-spacing: -0.01em;
+  line-height: 2.1;
+  letter-spacing: 0em;
   -webkit-font-smoothing: antialiased;
   -webkit-text-size-adjust: 100%;
 }
@@ -31,7 +31,7 @@ a { color: inherit; text-decoration: none; }
   --amber:   #f59e0b;
   --red:     #f43f5e;
   --purple:  #7c3aed;
-  --t1: rgba(255,255,255,1);
+  --t1: #eef2ff;
   --t2: rgba(255,255,255,.82);
   --t3: rgba(255,255,255,.48);
   --t4: rgba(255,255,255,.28);
@@ -46,7 +46,7 @@ a { color: inherit; text-decoration: none; }
 #auth-loader {
   position: fixed;
   inset: 0;
-  background: #101a30;
+  background: #141e30;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -81,10 +81,10 @@ a { color: inherit; text-decoration: none; }
 
 /* ── GLASS SYSTEM ── */
 .glass {
-  background: rgba(25,35,65,.68);
-  border: 1px solid var(--gborder);
-  backdrop-filter: blur(10px) saturate(140%);
-  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  background: rgba(28,40,72,.72);
+  border: 1px solid rgba(255,255,255,.16);
+  backdrop-filter: blur(5px) saturate(120%);
+  -webkit-backdrop-filter: blur(5px) saturate(120%);
   border-radius: var(--r);
 }
 .glass-s {
@@ -97,8 +97,8 @@ a { color: inherit; text-decoration: none; }
 .gc {
   background: rgba(255,255,255,.06);
   border: 1px solid rgba(255,255,255,.10);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   border-radius: 12px;
   transition: background .2s, border-color .2s, transform .2s, box-shadow .2s;
 }
@@ -247,7 +247,7 @@ a { color: inherit; text-decoration: none; }
 .page { display: none; animation: fadeUp .28s ease both; }
 .page.active { display: block; }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-.pi { padding: 28px 28px 60px; }
+.pi { padding: 28px 40px 60px; }
 /* 상세 페이지 여백 더 넉넉하게 */
 #page-manual-detail .pi,
 #page-records-detail .pi,
@@ -270,7 +270,7 @@ a { color: inherit; text-decoration: none; }
 .hero-title { font-size: 18px; font-weight: 700; color: var(--t1); }
 .hero-sub   { font-size: 13px; color: var(--t3); }
 .detail-title { font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 16px; line-height: 1.3; }
-.detail-desc  { font-size: 20px; font-weight: 500; color: var(--t1); line-height: 2.1; white-space: pre-wrap; letter-spacing: -0.01em; }
+.detail-desc  { font-size: 20px; font-weight: 400; color: #eef2ff; line-height: 2.2; white-space: pre-wrap; letter-spacing: 0em; }
 .empty-state { text-align: center; padding: 48px 20px; color: var(--t4); }
 .empty-state__icon { font-size: 32px; margin-bottom: 12px; opacity: .3; }
 .empty-state__text { font-size: 15px; }
@@ -331,22 +331,22 @@ a { color: inherit; text-decoration: none; }
 .lf-input, .lf-select, .lf-textarea {
   width: 100%; padding: 14px 18px;
   border-radius: 10px;
-  border: 1px solid rgba(255,255,255,.2);
-  background: rgba(255,255,255,.10);
-  color: var(--t1); font-size: 17px; font-weight: 500; font-family: inherit;
+  border: 1px solid rgba(255,255,255,.22);
+  background: rgba(255,255,255,.12);
+  color: #eef2ff; font-size: 18px; font-weight: 400; font-family: inherit;
   outline: none;
   transition: border-color .15s, background .15s;
   appearance: none; -webkit-appearance: none;
-  line-height: 1.75;
+  line-height: 2.0;
 }
 .lf-input:focus, .lf-select:focus, .lf-textarea:focus {
   border-color: rgba(255,255,255,.38);
   background: rgba(255,255,255,.13);
   box-shadow: 0 0 0 3px rgba(224,92,10,.15);
 }
-.lf-input::placeholder, .lf-textarea::placeholder { color: rgba(255,255,255,.40); }
+.lf-input::placeholder, .lf-textarea::placeholder { color: rgba(200,215,255,.55); }
 .lf-select option { background: #1a1d2e; color: #fff; }
-.lf-textarea { resize: vertical; min-height: 180px; line-height: 2.1; }
+.lf-textarea { resize: vertical; min-height: 180px; line-height: 2.2; }
 textarea::selection { background: rgba(224,92,10,.35); color: #fff; }
 textarea { caret-color: var(--orange); }
 
@@ -670,10 +670,10 @@ textarea { caret-color: var(--orange); }
   word-break: break-word;
 }
 .step-desc {
-  font-size: 17px;
-  font-weight: 500;
-  color: rgba(255,255,255,.9);
-  line-height: 2.05;
+  font-size: 18px;
+  font-weight: 400;
+  color: #dde4ff;
+  line-height: 2.2;
   white-space: pre-wrap;
   word-break: break-word;
 }
@@ -794,7 +794,7 @@ textarea { caret-color: var(--orange); }
 .memo-card-preview { font-size: 13.5px; color: var(--t3); line-height: 1.7; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
 .memo-tags { display: flex; gap: 5px; flex-wrap: wrap; }
 .memo-tags-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
-.memo-content-box { font-size: 20px; font-weight: 500; color: var(--t1); line-height: 2.1; padding: 28px 32px; border-radius: 14px; background: rgba(16,22,44,.70); border: 1px solid rgba(255,255,255,.14); white-space: pre-wrap; font-family: inherit; min-height: 200px; letter-spacing: -0.01em; }
+.memo-content-box { font-size: 20px; font-weight: 400; color: #eef2ff; line-height: 2.2; padding: 28px 32px; border-radius: 14px; background: rgba(16,22,44,.70); border: 1px solid rgba(255,255,255,.14); white-space: pre-wrap; font-family: inherit; min-height: 200px; letter-spacing: -0.01em; }
 
 /* ── ROADMAP ── */
 .rm-hero { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 20px; margin-bottom: 16px; flex-wrap: wrap; }
@@ -1229,8 +1229,8 @@ textarea { caret-color: var(--orange); }
 /* 폼 전용 textarea — 더 크고 넉넉하게 */
 .form-textarea {
   min-height: 200px;
-  font-size: 18px;
-  line-height: 2.15;
+  font-size: 19px;
+  line-height: 2.25;
 }
 
 /* 절차 추가 버튼 (섹션3 헤더 안) */
