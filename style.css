@@ -10,33 +10,34 @@
 
 /* ── 1. 배경 & CSS 변수 ── */
 body.light-mode {
-  background: linear-gradient(145deg, #eef1fc 0%, #e5ecfa 45%, #ece8f9 100%) !important;
+  /* Aetheris: 좌상단 보라→파랑→연보라 진한 그라디언트 */
+  background: linear-gradient(135deg, #b8c1ff 0%, #c5b8f8 25%, #d4c0ff 50%, #b8d4ff 75%, #c5d5ff 100%) !important;
   color: #111827 !important;
 
   /* 텍스트 토큰 재정의 */
   --t1: #111827;
   --t2: rgba(17,24,39,.78);
-  --t3: rgba(17,24,39,.48);
-  --t4: rgba(17,24,39,.32);
+  --t3: rgba(17,24,39,.52);
+  --t4: rgba(17,24,39,.34);
 
   /* 유리 보더/배경 토큰 재정의 */
-  --gb:      rgba(0,0,0,.035);
-  --gborder: rgba(190,200,240,.32);
+  --gb:      rgba(255,255,255,.45);
+  --gborder: rgba(255,255,255,.60);
 
   /* 브랜드 액센트: 인디고로 교체 */
   --orange:  #6366f1;
   --orange-g: rgba(99,102,241,.30);
 }
 
-/* ── 2. 배경 오브 ── */
+/* ── 2. 배경 오브 — Aetheris처럼 선명하게 ── */
 body.light-mode .bg-layer {
   display: block !important;
-  opacity: 0.15 !important;
+  opacity: 0.55 !important;
 }
-body.light-mode .o1 { background: radial-gradient(circle,#8b9ffd,transparent 70%) !important; }
-body.light-mode .o2 { background: radial-gradient(circle,#c4b5fd,transparent 70%) !important; }
-body.light-mode .o3 { background: radial-gradient(circle,#a5f3fc,transparent 70%) !important; }
-body.light-mode .o4 { background: radial-gradient(circle,#ddd6fe,transparent 70%) !important; }
+body.light-mode .o1 { background: radial-gradient(circle,#7c8dff 0%,#a78bfa 50%,transparent 70%) !important; opacity: 0.75 !important; }
+body.light-mode .o2 { background: radial-gradient(circle,#c4b5fd 0%,#e0c3ff 50%,transparent 70%) !important; opacity: 0.60 !important; }
+body.light-mode .o3 { background: radial-gradient(circle,#93c5fd 0%,#c7d2fe 50%,transparent 70%) !important; opacity: 0.55 !important; }
+body.light-mode .o4 { background: radial-gradient(circle,#ddd6fe 0%,#ede9fe 50%,transparent 70%) !important; opacity: 0.50 !important; }
 
 /* ── 3. 로딩 스피너 ── */
 body.light-mode #auth-loader { background: #eef1fc !important; }
@@ -48,27 +49,29 @@ body.light-mode .auth-label { color: rgba(17,24,39,.38) !important; }
 
 /* ── 4. 카드 시스템 ── */
 body.light-mode .glass {
-  background: rgba(255,255,255,.88) !important;
-  border: 1px solid rgba(190,200,240,.28) !important;
-  box-shadow: 0 4px 24px rgba(99,102,241,.07), 0 1px 4px rgba(0,0,0,.04) !important;
-  backdrop-filter: blur(16px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  background: rgba(255,255,255,.72) !important;
+  border: 1px solid rgba(255,255,255,.85) !important;
+  box-shadow: 0 8px 32px rgba(99,102,241,.12), 0 1px 4px rgba(0,0,0,.04) !important;
+  backdrop-filter: blur(24px) saturate(200%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(200%) !important;
 }
 body.light-mode .glass-s {
-  background: rgba(255,255,255,.80) !important;
-  border: 1px solid rgba(190,200,240,.28) !important;
-  backdrop-filter: blur(20px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  background: rgba(255,255,255,.65) !important;
+  border: 1px solid rgba(255,255,255,.80) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
 }
 body.light-mode .gc {
-  background: rgba(255,255,255,.82) !important;
-  border: 1px solid rgba(190,200,240,.25) !important;
-  box-shadow: 0 2px 12px rgba(99,102,241,.06) !important;
+  background: rgba(255,255,255,.68) !important;
+  border: 1px solid rgba(255,255,255,.82) !important;
+  box-shadow: 0 4px 16px rgba(99,102,241,.08) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
 }
 body.light-mode .gc:hover {
-  background: rgba(255,255,255,.97) !important;
-  border-color: rgba(99,102,241,.22) !important;
-  box-shadow: 0 8px 28px rgba(99,102,241,.11) !important;
+  background: rgba(255,255,255,.90) !important;
+  border-color: rgba(255,255,255,.98) !important;
+  box-shadow: 0 10px 32px rgba(99,102,241,.14) !important;
   transform: translateY(-2px) !important;
 }
 /* 상세 페이지 카드 */
@@ -76,15 +79,15 @@ body.light-mode #page-manual-detail .glass,
 body.light-mode #page-manual-detail .gc,
 body.light-mode #page-records-detail .glass,
 body.light-mode #page-memo-detail .glass {
-  background: rgba(255,255,255,.94) !important;
-  border-color: rgba(190,200,240,.30) !important;
+  background: rgba(255,255,255,.82) !important;
+  border-color: rgba(255,255,255,.90) !important;
 }
 
 /* ── 5. 사이드바 ── */
 body.light-mode #sidebar {
-  background: rgba(243,245,255,.96) !important;
-  border-right: 1px solid rgba(190,200,240,.28) !important;
-  backdrop-filter: blur(20px) !important;
+  background: rgba(255,255,255,.55) !important;
+  border-right: 1px solid rgba(255,255,255,.70) !important;
+  backdrop-filter: blur(24px) !important;
 }
 body.light-mode .s-logo { color: #111827 !important; }
 body.light-mode .s-logo em { color: #6366f1 !important; }
@@ -108,9 +111,9 @@ body.light-mode .tip {
 
 /* ── 6. 헤더 ── */
 body.light-mode #hdr {
-  background: rgba(255,255,255,.88) !important;
-  border-bottom: 1px solid rgba(190,200,240,.28) !important;
-  backdrop-filter: blur(20px) !important;
+  background: rgba(255,255,255,.55) !important;
+  border-bottom: 1px solid rgba(255,255,255,.70) !important;
+  backdrop-filter: blur(24px) !important;
 }
 body.light-mode .h-logo { color: #111827 !important; }
 body.light-mode .h-logo em { color: #6366f1 !important; }
