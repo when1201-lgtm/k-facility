@@ -554,13 +554,6 @@ function goto(pageId) {
 
 /* =====================================================
    ⑩ MODAL (공용)
-   ※ 진짜 모달(overlay)을 사용하는 함수:
-     - openSchModal()   : 일정 추가/수정
-     - previewPhoto()   : 사진 전체화면 미리보기
-   ※ 풀페이지 폼으로 이동하는 함수 (모달 아님):
-     - openLogForm()    → goto('form-log')
-     - openMemoForm()   → goto('form-memo')
-     - openManualForm() → goto('form-manual')
 ===================================================== */
 function openModal(html) {
   $('modal-box').innerHTML = html;
@@ -639,7 +632,7 @@ function renderHome() {
           <div style="font-size:28px;margin-bottom:8px;opacity:.4">📋</div>
           작업기록 없음<br>
           <button class="btn-o" style="margin:12px auto 0;display:flex;font-size:12px;padding:7px 14px"
-            onclick="openLogForm()">＋ 첫 기록 작성</button>
+            onclick="openLogModal()">＋ 첫 기록 작성</button>
         </div>`;
     }
   }
@@ -718,13 +711,17 @@ function renderManualCat(catKey) {
         </div>
         <div class="mc-tags">${(m.tags||[]).map(t=>`<span class="m-tag">${esc(t)}</span>`).join('')}</div>
       </div>
+      <div class="mc-actions" onclick="event.stopPropagation()">
+        <button class="lc-btn lc-btn-edit" onclick="openManualForm('${catKey}','${m.id}')">✏️</button>
+        <button class="lc-btn lc-btn-del"  onclick="deleteManual('${catKey}','${m.id}')">🗑</button>
+      </div>
       <div class="mc-arrow">›</div>
     </div>`;
   }).join('') :
   `<div class="gc" style="padding:48px;text-align:center;color:var(--t4)">
     <div style="font-size:36px;opacity:.3;margin-bottom:12px">📋</div>
     <div style="font-size:15px">등록된 매뉴얼이 없습니다</div>
-    <button class="btn-o" style="margin:16px auto 0;display:flex" onclick="openManualForm('${catKey}')">＋ 첫 매뉴얼 추가</button>
+    <button class="btn-o" style="margin:16px auto 0;display:flex" onclick="openManualModal('${catKey}')">＋ 첫 매뉴얼 추가</button>
   </div>`;
 }
 
@@ -824,7 +821,7 @@ function renderManualDetail() {
   /* 수정/삭제 버튼 */
   const editBtn = $('md-edit-btn');
   const delBtn  = $('md-del-btn');
-  if (editBtn) editBtn.onclick = () => openManualForm(catKey, id);
+  if (editBtn) editBtn.onclick = () => openManualModal(catKey, id);
   if (delBtn)  delBtn.onclick  = () => deleteManual(catKey, id);
 }
 
@@ -870,7 +867,7 @@ function updateCkUI(ckKey, checklist) {
 }
 
 /* ── 매뉴얼 추가/수정 — 풀페이지 ── */
-function openManualForm(catKey, id) {
+function openManualModal(catKey, id) {
   S.editManualCat  = catKey;
   S.editManualId   = id || null;
   S.uploadPhotos   = [];
@@ -1302,7 +1299,7 @@ function renderRecords() {
       </div>
       ${thumb}
       <div class="lc-actions" onclick="event.stopPropagation()">
-        <button class="lc-btn lc-btn-edit" onclick="openLogForm('${l.id}')">✏️</button>
+        <button class="lc-btn lc-btn-edit" onclick="openLogModal('${l.id}')">✏️</button>
         <button class="lc-btn lc-btn-del"  onclick="deleteLog('${l.id}')">🗑</button>
       </div>
     </div>`;
@@ -1310,7 +1307,7 @@ function renderRecords() {
   `<div class="gc" style="padding:48px;text-align:center;color:var(--t4)">
     <div style="font-size:36px;opacity:.3;margin-bottom:12px">📋</div>
     <div style="font-size:15px">해당하는 기록이 없습니다</div>
-    <button class="btn-o" style="margin:16px auto 0;display:flex" onclick="openLogForm()">＋ 첫 기록 작성</button>
+    <button class="btn-o" style="margin:16px auto 0;display:flex" onclick="openLogModal()">＋ 첫 기록 작성</button>
   </div>`;
 }
 
@@ -1422,14 +1419,14 @@ function openLogDetail(id) {
   /* ── 버튼 ── */
   const eb  = $('btn-log-detail-edit');
   const db2 = $('btn-log-detail-del');
-  if (eb)  eb.onclick  = () => openLogForm(id);
+  if (eb)  eb.onclick  = () => openLogModal(id);
   if (db2) db2.onclick = () => deleteLog(id);
 
   goto('records-detail');
 }
 
 /* 작업기록 추가/수정 — 풀페이지 */
-function openLogForm(id) {
+function openLogModal(id) {
   S.editLogId   = id || null;
   S.uploadPhotos = [];
   const l = id ? logs.find(x=>x.id===id) : null;
@@ -1527,7 +1524,7 @@ function removeUploadPhoto(i) {
 
 
 /* ══════════════════════════════════════════════════════
-   공용 폼 사진 핸들러 — openLogForm / openMemoForm 공유
+   공용 폼 사진 핸들러 — openLogModal / openMemoModal 공유
    handleFormPhoto(e, side, previewId)
    renderFormPhotoPreview(previewId, side)
 ══════════════════════════════════════════════════════ */
@@ -1711,12 +1708,16 @@ function renderMemo() {
       <div class="memo-card-preview">${esc(preview)}</div>
       <div class="memo-tags">${(m.tags||[]).map(t=>`<span class="m-tag">${esc(t)}</span>`).join('')}</div>
       ${thumbHtml}
+      <div class="card-action-row" onclick="event.stopPropagation()">
+        <button class="lc-btn lc-btn-edit" onclick="openMemoForm('${m.id}')">✏️ 수정</button>
+        <button class="lc-btn lc-btn-del"  onclick="deleteMemo('${m.id}')">🗑 삭제</button>
+      </div>
     </div>`;
   }).join('') :
   `<div class="gc" style="padding:48px;text-align:center;color:var(--t4);grid-column:1/-1">
     <div style="font-size:36px;opacity:.3;margin-bottom:12px">📒</div>
     <div style="font-size:15px">등록된 메모가 없습니다</div>
-    <button class="btn-o" style="margin:16px auto 0;display:flex" onclick="openMemoForm()">＋ 첫 메모 작성</button>
+    <button class="btn-o" style="margin:16px auto 0;display:flex" onclick="openMemoModal()">＋ 첫 메모 작성</button>
   </div>`;
 }
 
@@ -1756,13 +1757,13 @@ function openMemoDetail(id) {
 
   const eb  = $('btn-memo-detail-edit');
   const db3 = $('btn-memo-detail-del');
-  if (eb)  eb.onclick  = () => openMemoForm(id);
+  if (eb)  eb.onclick  = () => openMemoModal(id);
   if (db3) db3.onclick = () => deleteMemo(id);
   goto('memo-detail');
 }
 
 /* 메모 추가/수정 — 풀페이지 */
-function openMemoForm(id) {
+function openMemoModal(id) {
   S.editMemoId  = id || null;
   S.uploadPhotos = [];
   const m = id ? memos.find(x=>x.id===id) : null;
@@ -2244,7 +2245,7 @@ window.loginGuest       = loginGuest;
 window.logout           = logout;
 window.closeModal       = closeModal;
 window.openModal        = openModal;
-window.openLogForm     = openLogForm;
+window.openLogModal     = openLogModal;
 window.openLogDetail    = openLogDetail;
 window.deleteLog        = deleteLog;
 window.triggerPhotoInput = triggerPhotoInput;
@@ -2254,11 +2255,11 @@ window.saveLog          = saveLog;
 window.handleFormPhoto  = handleFormPhoto;
 window.renderFormPhotoPreview = renderFormPhotoPreview;
 window.removeFormPhoto  = removeFormPhoto;
-window.openMemoForm    = openMemoForm;
+window.openMemoModal    = openMemoModal;
 window.openMemoDetail   = openMemoDetail;
 window.deleteMemo       = deleteMemo;
 window.saveMemo         = saveMemo;
-window.openManualForm  = openManualForm;
+window.openManualModal  = openManualModal;
 window.renderStepItems  = renderStepItems;
 window.renderSteps      = renderSteps;
 window.addStepItem      = addStepItem;
