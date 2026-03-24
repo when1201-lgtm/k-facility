@@ -355,7 +355,7 @@ body.light-mode .mini {
   box-shadow: 0 4px 6px -1px rgba(0,0,0,.08) !important;
 }
 body.light-mode .pw       { background: #E5E7EB !important; }
-body.light-mode .ci       { border-bottom: 1.5px solid #E5E7EB !important; padding: 12px 12px !important; color: #111827 !important; font-weight: 500 !important; }
+body.light-mode .ci       { border-bottom: 1.5px solid #E5E7EB !important; padding: 12px 0 !important; color: #111827 !important; font-weight: 500 !important; }
 body.light-mode .chk      { border: 2px solid #D1D5DB !important; }
 body.light-mode .chk.on   { background: #4f46e5 !important; border-color: #4f46e5 !important; }
 body.light-mode .ct       { color: #111827 !important; }
@@ -2023,7 +2023,7 @@ a { color: inherit; text-decoration: none; }
 .bc-link:hover { color: var(--t1); }
 .bc-sep { color: var(--t4); }
 .bc-cur { font-weight: 600; color: var(--t2); }
-.bc-date { margin-left: auto; font-size: 12.5px; color: var(--t3); }
+.bc-date { margin-left: auto; font-size: 12.5px; color: var(--t3); flex-shrink: 0; }
 
 /* ── TYPOGRAPHY HELPERS ── */
 .slbl { font-size: 12.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--t3); }
@@ -3052,33 +3052,74 @@ textarea { caret-color: var(--orange); }
 .fpf-card .lf-group { margin-bottom: 14px; }
 .fpf-card .lf-group:last-child { margin-bottom: 0; }
 
-/* ── 메모 카드 수정/삭제 버튼 행 ── */
-.card-action-row {
-  display: flex;
-  gap: 6px;
-  margin-top: 4px;
-  justify-content: flex-end;
+/* ══════════════════════════════════════════
+   홈 날짜 + 실시간 시계 위젯
+══════════════════════════════════════════ */
+.home-clock-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.13);
+  border-radius: 999px;
+  padding: 6px 16px 6px 14px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 2px 16px rgba(0,0,0,.15);
 }
-.card-action-row .lc-btn {
+.home-clock-date {
   font-size: 12px;
-  padding: 5px 10px;
-  min-height: 30px;
+  font-weight: 500;
+  color: var(--t3);
+  letter-spacing: .01em;
+  white-space: nowrap;
 }
-body.light-mode .card-action-row .lc-btn-edit { background: #eef2ff !important; color: #4338ca !important; border: 1px solid #c7d2fe !important; }
-body.light-mode .card-action-row .lc-btn-del  { background: #fef2f2 !important; color: #dc2626 !important; border: 1px solid #fca5a5 !important; }
-
-/* ── 매뉴얼 카드 수정/삭제 버튼 ── */
-.mc-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
+.home-clock-divider {
+  width: 1px;
+  height: 14px;
+  background: rgba(255,255,255,.2);
   flex-shrink: 0;
 }
-.mc-actions .lc-btn {
-  font-size: 13px;
-  padding: 6px 9px;
-  min-height: 32px;
-  min-width: 36px;
+.home-clock-time {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--t1);
+  letter-spacing: .06em;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
 }
-body.light-mode .mc-actions .lc-btn-edit { background: #eef2ff !important; color: #4338ca !important; border: 1px solid #c7d2fe !important; }
-body.light-mode .mc-actions .lc-btn-del  { background: #fef2f2 !important; color: #dc2626 !important; border: 1px solid #fca5a5 !important; }
+.home-clock-colon {
+  opacity: .5;
+  animation: clock-blink 1s step-end infinite;
+}
+@keyframes clock-blink {
+  0%,100% { opacity: .5; }
+  50%      { opacity: .15; }
+}
+.home-clock-ampm {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent, #818cf8);
+  letter-spacing: .08em;
+  background: rgba(129,140,248,.15);
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+
+/* 라이트모드 override */
+body.light-mode .home-clock-wrap {
+  background: rgba(255,255,255,.75) !important;
+  border: 1px solid rgba(99,102,241,.15) !important;
+  box-shadow: 0 2px 16px rgba(99,102,241,.1) !important;
+}
+body.light-mode .home-clock-date   { color: #6b7280 !important; }
+body.light-mode .home-clock-divider{ background: #e5e7eb !important; }
+body.light-mode .home-clock-time   { color: #111827 !important; }
+body.light-mode .home-clock-ampm   { color: #4f46e5 !important; background: rgba(99,102,241,.1) !important; }
+
+/* 모바일에서 날짜 텍스트 줄이기 */
+@media (max-width: 480px) {
+  .home-clock-date { font-size: 11px; }
+  .home-clock-time { font-size: 13px; }
+  .home-clock-wrap { padding: 5px 12px 5px 10px; gap: 8px; }
+}
