@@ -49,7 +49,7 @@
   </div>
 </div>
 
-<!-- 모달 오버레이 (openSchModal·previewPhoto 전용 — 삭제 금지) -->
+<!-- 모달 오버레이 -->
 <div id="modal-overlay" onclick="if(event.target===this)closeModal()">
   <div id="modal-box"></div>
 </div>
@@ -142,7 +142,7 @@
                   <div class="slbl">최근 작업기록</div>
                   <div class="ctitle">Before / After 요약</div>
                 </div>
-                <button class="btn-o" onclick="openLogForm()">＋ 새 기록</button>
+                <button class="btn-o" onclick="openLogModal()">＋ 새 기록</button>
               </div>
               <div id="home-mini-row" class="mini-row">
                 <div class="mini">
@@ -272,7 +272,7 @@
               <div class="cat-sub">전기설비 점검 및 수리 절차 매뉴얼</div>
               <div class="cat-count" id="electric-count">매뉴얼 0건</div>
             </div>
-            <button class="btn-o" onclick="openManualForm('electric')">＋ 매뉴얼 추가</button>
+            <button class="btn-o" onclick="openManualModal('electric')">＋ 매뉴얼 추가</button>
           </div>
           <div class="slbl slbl--mb">매뉴얼 목록</div>
           <div class="manual-list" id="manual-list-electric"></div>
@@ -294,7 +294,7 @@
               <div class="cat-sub">기계설비 유지보수 절차 매뉴얼</div>
               <div class="cat-count" id="mechanical-count">매뉴얼 0건</div>
             </div>
-            <button class="btn-o" onclick="openManualForm('mechanical')">＋ 매뉴얼 추가</button>
+            <button class="btn-o" onclick="openManualModal('mechanical')">＋ 매뉴얼 추가</button>
           </div>
           <div class="slbl slbl--mb">매뉴얼 목록</div>
           <div class="manual-list" id="manual-list-mechanical"></div>
@@ -316,7 +316,7 @@
               <div class="cat-sub">건축·인테리어 보수 절차 매뉴얼</div>
               <div class="cat-count" id="construction-count">매뉴얼 0건</div>
             </div>
-            <button class="btn-o" onclick="openManualForm('construction')">＋ 매뉴얼 추가</button>
+            <button class="btn-o" onclick="openManualModal('construction')">＋ 매뉴얼 추가</button>
           </div>
           <div class="slbl slbl--mb">매뉴얼 목록</div>
           <div class="manual-list" id="manual-list-construction"></div>
@@ -338,7 +338,7 @@
               <div class="cat-sub">소방설비 점검 및 관리 절차 매뉴얼</div>
               <div class="cat-count" id="fire-count">매뉴얼 0건</div>
             </div>
-            <button class="btn-o" onclick="openManualForm('fire')">＋ 매뉴얼 추가</button>
+            <button class="btn-o" onclick="openManualModal('fire')">＋ 매뉴얼 추가</button>
           </div>
           <div class="slbl slbl--mb">매뉴얼 목록</div>
           <div class="manual-list" id="manual-list-fire"></div>
@@ -422,7 +422,7 @@
           </div>
           <!-- 작업 기록 -->
           <div class="glass md-action-bar">
-            <button class="btn-o btn--full" onclick="openLogForm()">＋ 이 작업 기록하기</button>
+            <button class="btn-o btn--full" onclick="openLogModal()">＋ 이 작업 기록하기</button>
           </div>
         </div>
       </section>
@@ -443,7 +443,7 @@
                 <div class="hero-sub">시설 작업 이력 관리</div>
               </div>
             </div>
-            <button class="btn-o" onclick="openLogForm()">＋ 새 기록</button>
+            <button class="btn-o" onclick="openLogModal()">＋ 새 기록</button>
           </div>
           <div class="log-stats-row">
             <div class="log-stat-box">
@@ -526,7 +526,7 @@
                 <div class="hero-sub">기술 노트 & 현장 지식 아카이브</div>
               </div>
             </div>
-            <button class="btn-o" onclick="openMemoForm()">＋ 메모 추가</button>
+            <button class="btn-o" onclick="openMemoModal()">＋ 메모 추가</button>
           </div>
           <div class="filter-wrap">
             <div class="filter-scroll" id="memo-filter"></div>
@@ -586,7 +586,7 @@
             <button class="btn-o" onclick="openSchModal()">＋ 일정 추가</button>
           </div>
           <div class="glass rm-minimap">
-            <div class="slbl slbl--mb">2025년 전체 일정</div>
+            <div class="rm-year-selector" id="rm-year-selector"></div>
             <div class="rm-year-grid" id="rm-year-grid"></div>
             <div class="rm-legend">
               <span class="rm-leg-item"><span class="rm-dot rm-dot--legal"></span>법정</span>
