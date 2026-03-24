@@ -1322,7 +1322,7 @@ body.light-mode .log-card:hover {
   transform: translateY(-2px) !important;
 }
 body.light-mode .lc-title  { color: #111827 !important; font-weight: 700 !important; font-size: 16px !important; }
-body.light-mode .lc-desc   { color: #000000 !important; font-weight: 500 !important; }
+body.light-mode .lc-desc   { color: #4b5563 !important; font-weight: 500 !important; }
 body.light-mode .lc-meta span { color: #9ca3af !important; }
 
 /* ══════════════════════════════════════════
