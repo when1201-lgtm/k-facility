@@ -481,7 +481,7 @@ body.light-mode .lc-btn-del   { background: #fef2f2 !important; color: #dc2626 !
 body.light-mode .ba-detail-col     { border: 2px solid #E5E7EB !important; border-radius: 12px !important; }
 body.light-mode .ba-col-body       { background: #F9FAFB !important; }
 body.light-mode .ba-no-photo       { color: #9ca3af !important; }
-body.light-mode .ba-upload-section { border: 2px solid #E5E7EB !important; border-radius: 12px !important; }
+body.light-mode .ba-upload-section { border: 2px solid #E5E7EB !important; border-radius: 12px !important; padding:10px;}
 body.light-mode .ba-upload-section .photo-preview-wrap { background: #F9FAFB !important; }
 
 /* ══════════════════════════════════════════════════
