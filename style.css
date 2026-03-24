@@ -355,7 +355,7 @@ body.light-mode .mini {
   box-shadow: 0 4px 6px -1px rgba(0,0,0,.08) !important;
 }
 body.light-mode .pw       { background: #E5E7EB !important; }
-body.light-mode .ci       { border-bottom: 1.5px solid #E5E7EB !important; padding: 15px 15px !important; color: #111827 !important; font-weight: 500 !important; }
+body.light-mode .ci       { border-bottom: 1.5px solid #E5E7EB !important; padding: 12px 0 !important; color: #111827 !important; font-weight: 500 !important; }
 body.light-mode .chk      { border: 2px solid #D1D5DB !important; }
 body.light-mode .chk.on   { background: #4f46e5 !important; border-color: #4f46e5 !important; }
 body.light-mode .ct       { color: #111827 !important; }
@@ -2023,7 +2023,7 @@ a { color: inherit; text-decoration: none; }
 .bc-link:hover { color: var(--t1); }
 .bc-sep { color: var(--t4); }
 .bc-cur { font-weight: 600; color: var(--t2); }
-.bc-date { margin-left: auto; font-size: 14.5px; color: var(--t3); flex-shrink: 0; }
+.bc-date { margin-left: auto; font-size: 12.5px; color: var(--t3); }
 
 /* ── TYPOGRAPHY HELPERS ── */
 .slbl { font-size: 12.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--t3); }
@@ -3053,73 +3053,81 @@ textarea { caret-color: var(--orange); }
 .fpf-card .lf-group:last-child { margin-bottom: 0; }
 
 /* ══════════════════════════════════════════
-   홈 날짜 + 실시간 시계 위젯
+   연간 로드맵 — 연도 셀렉터
 ══════════════════════════════════════════ */
-.home-clock-wrap {
-  display: inline-flex;
+.rm-year-selector {
+  display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+.rm-year-btn {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,.18);
   background: rgba(255,255,255,.07);
-  border: 1px solid rgba(255,255,255,.13);
-  border-radius: 999px;
-  padding: 6px 16px 6px 14px;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  box-shadow: 0 2px 16px rgba(0,0,0,.15);
-}
-.home-clock-date {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--t3);
-  letter-spacing: .01em;
-  white-space: nowrap;
-}
-.home-clock-divider {
-  width: 1px;
-  height: 14px;
-  background: rgba(255,255,255,.2);
+  color: var(--t2);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s, transform .1s;
   flex-shrink: 0;
 }
-.home-clock-time {
-  font-size: 15px;
-  font-weight: 700;
+.rm-year-btn:hover {
+  background: rgba(255,255,255,.15);
+  transform: scale(1.1);
+}
+.rm-year-btn:active { transform: scale(.95); }
+
+.rm-year-label {
+  font-size: 22px;
+  font-weight: 800;
   color: var(--t1);
-  letter-spacing: .06em;
+  letter-spacing: .03em;
+  min-width: 72px;
+  text-align: center;
+  display: inline-block;
   font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum";
-}
-.home-clock-colon {
-  opacity: .5;
-  animation: clock-blink 1s step-end infinite;
-}
-@keyframes clock-blink {
-  0%,100% { opacity: .5; }
-  50%      { opacity: .15; }
-}
-.home-clock-ampm {
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--accent, #818cf8);
-  letter-spacing: .08em;
-  background: rgba(129,140,248,.15);
-  padding: 2px 7px;
-  border-radius: 999px;
 }
 
-/* 라이트모드 override */
-body.light-mode .home-clock-wrap {
-  background: rgba(255,255,255,.75) !important;
-  border: 1px solid rgba(99,102,241,.15) !important;
-  box-shadow: 0 2px 16px rgba(99,102,241,.1) !important;
+/* 연도 롤링 애니메이션 */
+@keyframes rmYearRollUp {
+  0%   { opacity:1; transform: translateY(0); }
+  40%  { opacity:0; transform: translateY(-18px); }
+  60%  { opacity:0; transform: translateY(18px); }
+  100% { opacity:1; transform: translateY(0); }
 }
-body.light-mode .home-clock-date   { color: #6b7280 !important; }
-body.light-mode .home-clock-divider{ background: #e5e7eb !important; }
-body.light-mode .home-clock-time   { color: #111827 !important; }
-body.light-mode .home-clock-ampm   { color: #4f46e5 !important; background: rgba(99,102,241,.1) !important; }
+@keyframes rmYearRollDown {
+  0%   { opacity:1; transform: translateY(0); }
+  40%  { opacity:0; transform: translateY(18px); }
+  60%  { opacity:0; transform: translateY(-18px); }
+  100% { opacity:1; transform: translateY(0); }
+}
+.rm-year-roll-up   { animation: rmYearRollUp   .35s ease both; }
+.rm-year-roll-down { animation: rmYearRollDown .35s ease both; }
 
-/* 모바일에서 날짜 텍스트 줄이기 */
-@media (max-width: 480px) {
-  .home-clock-date { font-size: 11px; }
-  .home-clock-time { font-size: 13px; }
-  .home-clock-wrap { padding: 5px 12px 5px 10px; gap: 8px; }
+/* 월 그리드 슬라이드 애니메이션 */
+@keyframes rmSlideOutLeft  { to   { opacity:0; transform:translateX(-24px); } }
+@keyframes rmSlideOutRight { to   { opacity:0; transform:translateX(24px);  } }
+@keyframes rmSlideInRight  { from { opacity:0; transform:translateX(24px);  } }
+@keyframes rmSlideInLeft   { from { opacity:0; transform:translateX(-24px); } }
+.rm-slide-out-left  { animation: rmSlideOutLeft  .18s ease forwards; }
+.rm-slide-out-right { animation: rmSlideOutRight .18s ease forwards; }
+.rm-slide-in-right  { animation: rmSlideInRight  .22s ease both; }
+.rm-slide-in-left   { animation: rmSlideInLeft   .22s ease both; }
+
+/* 라이트모드 */
+body.light-mode .rm-year-btn {
+  background: #fff !important;
+  border: 1.5px solid #e5e7eb !important;
+  color: #374151 !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,.07) !important;
 }
+body.light-mode .rm-year-btn:hover {
+  background: #f5f3ff !important;
+  border-color: #a5b4fc !important;
+  color: #4f46e5 !important;
+}
+body.light-mode .rm-year-label { color: #111827 !important; }
