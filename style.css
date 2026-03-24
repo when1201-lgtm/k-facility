@@ -490,7 +490,7 @@ body.light-mode .ba-upload-section .photo-preview-wrap { background: #F9FAFB !im
 body.light-mode .memo-content-box {
   background: #FFFFFF !important;
   border: 2px solid #E5E7EB !important;
-  color: #111827 !important;
+  color: #000000 !important;
   border-radius: 14px !important;
   padding: 2.5rem !important;
 }
