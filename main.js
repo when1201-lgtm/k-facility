@@ -227,39 +227,6 @@ function toast(msg, dur = 2500) {
   t._t = setTimeout(() => { t.style.opacity = '0'; }, dur);
 }
 
-/* 에러 토스트 (재시도 버튼 포함) */
-function toastError(msg, retryFn) {
-  let el = $('kf-toast-err');
-  if (!el) { el = document.createElement('div'); el.id = 'kf-toast-err'; document.body.appendChild(el); }
-  el.innerHTML = '';
-  el.style.cssText = 'position:fixed;bottom:88px;left:50%;transform:translateX(-50%);background:rgba(185,28,28,.97);color:#fff;padding:12px 18px;border-radius:14px;font-size:13px;font-weight:600;z-index:99999;opacity:1;transition:opacity .3s;border:1px solid rgba(255,120,120,.3);pointer-events:auto;display:flex;align-items:center;gap:10px;max-width:88vw;box-shadow:0 8px 24px rgba(0,0,0,.4)';
-  const txt = document.createElement('span');
-  txt.textContent = '⚠️ ' + msg;
-  el.appendChild(txt);
-  if (typeof retryFn === 'function') {
-    const btn = document.createElement('button');
-    btn.textContent = '재시도';
-    btn.style.cssText = 'background:rgba(255,255,255,.22);border:none;color:#fff;padding:5px 13px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0';
-    btn.onclick = () => { el.style.opacity = '0'; retryFn(); };
-    el.appendChild(btn);
-  }
-  clearTimeout(el._t);
-  el._t = setTimeout(() => {
-    el.style.opacity = '0';
-    setTimeout(() => { if (el.parentNode) el.parentNode.removeChild(el); }, 320);
-  }, 7000);
-}
-
-/* 파일 크기 검사 — 10 MB 초과 시 false 반환 */
-const MAX_PHOTO_MB = 10;
-function checkFileSize(file) {
-  if (file.size > MAX_PHOTO_MB * 1024 * 1024) {
-    toast(`⚠️ 파일이 너무 큽니다 (${(file.size / 1024 / 1024).toFixed(1)} MB). 최대 ${MAX_PHOTO_MB} MB까지 가능합니다.`, 4000);
-    return false;
-  }
-  return true;
-}
-
 /* ── 인증 로딩 스피너 제어 ──
    페이지 진입 시 스피너만 보이다가
    onAuthStateChanged 결과가 오면 정확한 화면으로 전환 */
@@ -581,6 +548,7 @@ function goto(pageId) {
     case 'memo':         renderMemo();                    break;
     case 'memo-detail':  /* openMemoDetail에서 주입 */    break;
     case 'roadmap':      renderRoadmap();                 break;
+    case 'form-schedule': /* openSchForm에서 주입 */      break;
     case 'contacts':     renderContacts();                break;
     case 'stats':        renderStats();                   break;
     case 'manual-detail':renderManualDetail();            break;
@@ -1064,7 +1032,6 @@ function handleStepPhoto(e, idx) {
   if (!item.previewUrls) item.previewUrls = [];
 
   files.forEach(file => {
-    if (!checkFileSize(file)) return;
     const total = (item.imgUrls||[]).length + item.files.length;
     if (total >= MAX_PER_STEP) { toast('절차당 최대 ' + MAX_PER_STEP + '장까지 등록 가능합니다'); return; }
     const reader = new FileReader();
@@ -1102,7 +1069,6 @@ function handleManualPhoto(e) {
   if (!files.length) return;
   const MAX = 3;  /* 매뉴얼 대표 사진 최대 3장 */
   files.slice(0, MAX).forEach(file => {
-    if (!checkFileSize(file)) return;
     const reader = new FileReader();
     reader.onload = ev => {
       const cur = S.uploadPhotos.filter(p => p.side === 'main');
@@ -1121,17 +1087,10 @@ function handleManualPhoto(e) {
 function removeManualPhoto(idx) {
   /* side=main 인 것 중 idx번째 제거 */
   let mainCount = 0;
-  let removedItem = null;
   S.uploadPhotos = S.uploadPhotos.filter(p => {
     if (p.side !== 'main') return true;
-    if (mainCount === idx) { removedItem = p; mainCount++; return false; }
-    mainCount++;
-    return true;
+    return mainCount++ !== idx;
   });
-  /* ★ 기존 Storage 사진이면 실제 삭제 */
-  if (removedItem?.existing && removedItem?.storagePath && S.fbReady && !S.isGuest && storage) {
-    deleteStorageFile(removedItem.storagePath).catch(() => {});
-  }
   _refreshManualPhotoPreview();
 }
 
@@ -1295,8 +1254,8 @@ async function saveManual() {
     goto(catKey);           /* ★ 저장 후 해당 카테고리 목록으로 이동 */
   } catch(e) {
     console.error('[saveManual]', e);
+    toast('⚠️ 저장 실패: '+e.message);
     if (btn) { btn.disabled=false; btn.textContent='💾 저장'; }
-    toastError('저장 실패: ' + e.message, saveManual);
   }
 }
 
@@ -1554,7 +1513,6 @@ function handlePhotoSelect(e) {
   const target = S.photoTarget || 'lm-before-preview';
   if (!files.length) return;
   files.forEach(file => {
-    if (!checkFileSize(file)) return;
     const reader = new FileReader();
     reader.onload = ev => {
       S.uploadPhotos.push({ file, url:ev.target.result, existing:false, side, storagePath:'' });
@@ -1584,10 +1542,6 @@ function removeUploadPhoto(i) {
   const removed = S.uploadPhotos.splice(i, 1)[0];
   const side    = removed?.side || 'before';
   const target  = side==='after' ? 'lm-after-preview' : 'lm-before-preview';
-  /* ★ 기존 Storage 사진이면 실제 삭제 */
-  if (removed?.existing && removed?.storagePath && S.fbReady && !S.isGuest && storage) {
-    deleteStorageFile(removed.storagePath).catch(() => {});
-  }
   renderPhotoPreview(target, side);
 }
 
@@ -1607,7 +1561,6 @@ function handleFormPhoto(e, side, previewId) {
   if (cur >= MAX) { toast('사진은 최대 ' + MAX + '장까지 등록 가능합니다'); e.target.value=''; return; }
 
   files.slice(0, MAX - cur).forEach(file => {
-    if (!checkFileSize(file)) return;
     const reader = new FileReader();
     reader.onload = ev => {
       S.uploadPhotos.push({ file, url: ev.target.result, existing: false, side, storagePath: '' });
@@ -1635,11 +1588,7 @@ function renderFormPhotoPreview(previewId, side) {
 
 /** 사진 개별 삭제 */
 function removeFormPhoto(idx, previewId, side) {
-  const removed = S.uploadPhotos.splice(idx, 1)[0];
-  /* ★ 기존 Storage 사진이면 실제 삭제 */
-  if (removed?.existing && removed?.storagePath && S.fbReady && !S.isGuest && storage) {
-    deleteStorageFile(removed.storagePath).catch(() => {});
-  }
+  S.uploadPhotos.splice(idx, 1);
   renderFormPhotoPreview(previewId, side);
 }
 
@@ -1723,8 +1672,8 @@ async function saveLog() {
 
   } catch(e) {
     console.error('[saveLog]', e);
+    toast('⚠️ 저장 실패: '+e.message, 4000);
     if (btn) { btn.disabled=false; btn.textContent='💾 저장'; }
-    toastError('저장 실패: ' + e.message, saveLog);
   }
 }
 
@@ -1941,9 +1890,8 @@ async function saveMemo() {
     toast('✅ 저장됐습니다');
     goto('memo');
   } catch(e) {
-    console.error('[saveMemo]', e);
+    toast('⚠️ 저장 실패: ' + e.message);
     if (btn) { btn.disabled=false; btn.textContent='💾 저장'; }
-    toastError('저장 실패: ' + e.message, saveMemo);
   }
 }
 
@@ -2031,7 +1979,7 @@ function renderRoadmap(dir) {
         ${s.desc?`<div class="rm-sch-desc">${esc(s.desc)}</div>`:''}
       </div>
       <div class="rm-sch-acts" onclick="event.stopPropagation()">
-        <button class="lc-btn lc-btn-edit" onclick="openSchModal('${s.id}')">✏️</button>
+        <button class="lc-btn lc-btn-edit" onclick="openSchForm('${s.id}')">✏️</button>
         <button class="lc-btn lc-btn-del"  onclick="deleteSchedule('${s.id}')">🗑</button>
       </div>
     </div>`;
@@ -2039,7 +1987,7 @@ function renderRoadmap(dir) {
   `<div class="gc" style="padding:48px;text-align:center;color:var(--t4)">
     <div style="font-size:36px;opacity:.3;margin-bottom:12px">📭</div>
     <div style="font-size:15px">일정이 없습니다</div>
-    <button class="btn-o" style="margin:16px auto 0;display:flex" onclick="openSchModal()">＋ 일정 추가</button>
+    <button class="btn-o" style="margin:16px auto 0;display:flex" onclick="openSchForm()">＋ 일정 추가</button>
   </div>`;
 }
 
@@ -2057,63 +2005,104 @@ function setRmYear(y, dir){
   renderRoadmap(dir);
 }
 
-function openSchModal(id) {
-  S.editSchId=id||null;
-  const s=id?schedules.find(x=>String(x.id)===String(id)):null;
-  openModal(`
-    <div class="modal-title">
-      ${s?'일정 수정':'일정 추가'}
-      <button class="modal-close" onclick="closeModal()">✕</button>
-    </div>
-    <div class="lf-row">
-      <div class="lf-group" style="margin:0">
-        <label class="lf-label">월</label>
-        <select class="lf-select" id="sm-month">
-          ${Array.from({length:12},(_,i)=>i+1).map(m=>`<option value="${m}"${(s?s.month:S.activeMonth)===m?' selected':''}>${MONTH_NAMES[m]}</option>`).join('')}
-        </select>
-      </div>
-      <div class="lf-group" style="margin:0">
-        <label class="lf-label">유형</label>
-        <select class="lf-select" id="sm-type">
-          ${['법정','정기','계절'].map(t=>`<option${s?.type===t?' selected':''}>${t}</option>`).join('')}
-        </select>
-      </div>
-    </div>
-    <div class="lf-group">
-      <label class="lf-label">일정 제목 *</label>
-      <input class="lf-input" id="sm-title" type="text" value="${esc(s?.title||'')}" placeholder="점검·작업 제목"/>
-    </div>
-    <div class="lf-group">
-      <label class="lf-label">설명</label>
-      <textarea class="lf-textarea" id="sm-desc" rows="3" placeholder="세부 내용, 준비사항...">${esc(s?.desc||'')}</textarea>
-    </div>
-    <div class="modal-actions">
-      <button class="btn-gh" onclick="closeModal()">취소</button>
-      <button class="btn-o" id="btn-save-sch" onclick="saveSchedule()">💾 저장</button>
-    </div>`);
+function openSchForm(id) {
+  S.editSchId = id || null;
+  const s = id ? schedules.find(x => String(x.id) === String(id)) : null;
+
+  /* 페이지 제목 */
+  const titleEl = document.getElementById('form-schedule-title');
+  if (titleEl) titleEl.textContent = s ? '일정 수정' : '일정 추가';
+
+  /* 월 그리드 렌더링 */
+  const grid = document.getElementById('sch-month-grid');
+  if (grid) {
+    const activeMonth = s ? s.month : S.activeMonth;
+    grid.innerHTML = Array.from({length: 12}, (_, i) => i + 1).map(m => `
+      <button type="button" class="sch-month-btn${activeMonth === m ? ' on' : ''}"
+        data-month="${m}" onclick="schSelectMonth(${m}, this)">${MONTH_NAMES[m]}</button>
+    `).join('');
+  }
+
+  /* 유형 칩 초기화 */
+  const activeType = s ? (s.type || '정기') : '정기';
+  document.querySelectorAll('.sch-type-chip').forEach(chip => {
+    chip.classList.remove('on--legal', 'on--regular', 'on--season');
+    if (chip.dataset.type === activeType) _applySchTypeClass(chip, activeType);
+  });
+  const hiddenType = document.getElementById('sm-type-hidden');
+  if (hiddenType) hiddenType.value = activeType;
+
+  /* 필드 값 */
+  const setVal = (elId, v) => { const el = document.getElementById(elId); if (el) el.value = v; };
+  setVal('sm-title', s?.title || '');
+  setVal('sm-desc',  s?.desc  || '');
+
+  goto('form-schedule');
 }
 
+/* 내부: 유형 칩 클래스 적용 */
+function _applySchTypeClass(chip, type) {
+  if (type === '법정') chip.classList.add('on--legal');
+  else if (type === '정기') chip.classList.add('on--regular');
+  else if (type === '계절') chip.classList.add('on--season');
+}
+
+function schSelectType(type, chipEl) {
+  document.querySelectorAll('.sch-type-chip').forEach(c =>
+    c.classList.remove('on--legal', 'on--regular', 'on--season'));
+  _applySchTypeClass(chipEl, type);
+  const h = document.getElementById('sm-type-hidden');
+  if (h) h.value = type;
+}
+
+function schSelectMonth(m, btnEl) {
+  document.querySelectorAll('.sch-month-btn').forEach(b => b.classList.remove('on'));
+  if (btnEl) btnEl.classList.add('on');
+}
+
+/* 기존 모달 방식도 호환 유지 (내부에서 풀페이지로 위임) */
+function openSchModal(id) { openSchForm(id); }
+
 async function saveSchedule() {
-  const title=$('sm-title')?.value.trim();
-  if(!title){ toast('⚠️ 제목을 입력하세요'); return; }
-  const data={
-    month:parseInt($('sm-month')?.value||S.activeMonth),
-    type:$('sm-type')?.value||'정기', title,
-    desc:$('sm-desc')?.value.trim()||'', updatedAt:new Date().toISOString(),
+  const title = $('sm-title')?.value.trim();
+  if (!title) { toast('⚠️ 제목을 입력하세요'); $('sm-title')?.focus(); return; }
+
+  /* 월: 그리드에서 .on 버튼 → fallback: activeMonth */
+  const onMonthBtn = document.querySelector('.sch-month-btn.on');
+  const month = onMonthBtn ? parseInt(onMonthBtn.dataset.month) : S.activeMonth;
+
+  /* 유형: hidden input */
+  const type = $('sm-type-hidden')?.value || '정기';
+
+  const btn = $('btn-save-sch');
+  if (btn) { btn.disabled = true; btn.textContent = '저장 중...'; }
+
+  const data = {
+    month, type, title,
+    desc: $('sm-desc')?.value.trim() || '',
+    updatedAt: new Date().toISOString(),
   };
   try {
-    if(S.fbReady&&!S.isGuest&&db){
-      if(S.editSchId){ await db.collection('schedules').doc(S.editSchId).update(data); }
-      else{ data.createdAt=new Date().toISOString(); await db.collection('schedules').add(data); }
+    if (S.fbReady && !S.isGuest && db) {
+      if (S.editSchId) { await db.collection('schedules').doc(S.editSchId).update(data); }
+      else { data.createdAt = new Date().toISOString(); await db.collection('schedules').add(data); }
     } else {
-      data.id=S.editSchId||genId();
-      if(S.editSchId){ const idx=schedules.findIndex(x=>String(x.id)===String(S.editSchId)); if(idx!==-1)schedules[idx]=data; else schedules.push(data); }
-      else{ schedules.push(data); }
+      data.id = S.editSchId || genId();
+      if (S.editSchId) {
+        const idx = schedules.findIndex(x => String(x.id) === String(S.editSchId));
+        if (idx !== -1) schedules[idx] = data; else schedules.push(data);
+      } else { schedules.push(data); }
+      S.activeMonth = month;
       renderRoadmap();
     }
-    S.editSchId=null; toast('✅ 저장됐습니다'); closeModal();
-    if(S.currentPage==='roadmap') renderRoadmap();
-  } catch(e){ toast('⚠️ 저장 실패: '+e.message); }
+    S.activeMonth = month;
+    S.editSchId = null;
+    toast('✅ 저장됐습니다');
+    goto('roadmap');
+  } catch(e) {
+    toastError('저장 실패: ' + e.message, saveSchedule);
+    if (btn) { btn.disabled = false; btn.textContent = '💾 저장'; }
+  }
 }
 
 async function deleteSchedule(id) {
@@ -2353,9 +2342,10 @@ function renderSteps(steps, containerId) {
 
 /* ── 풀페이지 폼 뒤로 가기 ── */
 function formBack(type) {
-  if (type === 'log')    goto('records');
-  else if (type === 'memo')   goto('memo');
-  else if (type === 'manual') goto(S.editManualCat || 'electric');
+  if (type === 'log')      goto('records');
+  else if (type === 'memo')     goto('memo');
+  else if (type === 'manual')   goto(S.editManualCat || 'electric');
+  else if (type === 'schedule') goto('roadmap');
   else goto('home');
 }
 
@@ -2428,6 +2418,9 @@ window.setMemoFilter    = setMemoFilter;
 window.setRmMonth       = setRmMonth;
 window.setRmYear        = setRmYear;
 window.openSchModal     = openSchModal;
+window.openSchForm      = openSchForm;
+window.schSelectType    = schSelectType;
+window.schSelectMonth   = schSelectMonth;
 window.saveSchedule     = saveSchedule;
 window.deleteSchedule   = deleteSchedule;
 window.openContactModal = openContactModal;
