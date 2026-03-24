@@ -3131,3 +3131,112 @@ body.light-mode .rm-year-btn:hover {
   color: #4f46e5 !important;
 }
 body.light-mode .rm-year-label { color: #111827 !important; }
+
+/* ══════════════════════════════════════════
+   홈 + 서브페이지 실시간 시계 위젯
+══════════════════════════════════════════ */
+.home-clock-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.13);
+  border-radius: 999px;
+  padding: 6px 16px 6px 14px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 2px 16px rgba(0,0,0,.15);
+}
+/* 서브페이지용 — 조금 더 작게 */
+.home-clock-wrap--sub {
+  padding: 4px 12px 4px 10px;
+  gap: 8px;
+}
+.home-clock-wrap--sub .home-clock-date { font-size: 11px; }
+.home-clock-wrap--sub .home-clock-time { font-size: 13px; }
+.home-clock-wrap--sub .home-clock-ampm { font-size: 9px; padding: 1px 6px; }
+
+.home-clock-date {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--t3);
+  letter-spacing: .01em;
+  white-space: nowrap;
+}
+.home-clock-divider {
+  width: 1px; height: 14px;
+  background: rgba(255,255,255,.2);
+  flex-shrink: 0;
+}
+.home-clock-time {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--t1);
+  letter-spacing: .06em;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+.home-clock-colon {
+  opacity: .5;
+  animation: clock-blink 1s step-end infinite;
+}
+@keyframes clock-blink {
+  0%,100% { opacity:.5; }
+  50%      { opacity:.15; }
+}
+.home-clock-ampm {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent, #818cf8);
+  letter-spacing: .08em;
+  background: rgba(129,140,248,.15);
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+/* 라이트모드 */
+body.light-mode .home-clock-wrap {
+  background: rgba(255,255,255,.75) !important;
+  border: 1px solid rgba(99,102,241,.15) !important;
+  box-shadow: 0 2px 16px rgba(99,102,241,.08) !important;
+}
+body.light-mode .home-clock-date    { color: #6b7280 !important; }
+body.light-mode .home-clock-divider { background: #e5e7eb !important; }
+body.light-mode .home-clock-time    { color: #111827 !important; }
+body.light-mode .home-clock-ampm    { color: #4f46e5 !important; background: rgba(99,102,241,.1) !important; }
+
+@media (max-width: 480px) {
+  .home-clock-date { font-size: 10px; }
+  .home-clock-time { font-size: 12px; }
+  .home-clock-wrap { padding: 4px 10px; gap: 6px; }
+}
+
+/* ── 메모 카드 수정/삭제 버튼 행 ── */
+.card-action-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+  justify-content: flex-end;
+}
+.card-action-row .lc-btn {
+  font-size: 12px;
+  padding: 5px 10px;
+  min-height: 30px;
+}
+body.light-mode .card-action-row .lc-btn-edit { background: #eef2ff !important; color: #4338ca !important; border: 1px solid #c7d2fe !important; }
+body.light-mode .card-action-row .lc-btn-del  { background: #fef2f2 !important; color: #dc2626 !important; border: 1px solid #fca5a5 !important; }
+
+/* ── 매뉴얼 카드 수정/삭제 버튼 ── */
+.mc-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex-shrink: 0;
+}
+.mc-actions .lc-btn {
+  font-size: 13px;
+  padding: 6px 9px;
+  min-height: 32px;
+  min-width: 36px;
+}
+body.light-mode .mc-actions .lc-btn-edit { background: #eef2ff !important; color: #4338ca !important; border: 1px solid #c7d2fe !important; }
+body.light-mode .mc-actions .lc-btn-del  { background: #fef2f2 !important; color: #dc2626 !important; border: 1px solid #fca5a5 !important; }
