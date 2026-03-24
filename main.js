@@ -227,6 +227,39 @@ function toast(msg, dur = 2500) {
   t._t = setTimeout(() => { t.style.opacity = '0'; }, dur);
 }
 
+/* 에러 토스트 (재시도 버튼 포함) */
+function toastError(msg, retryFn) {
+  let el = $('kf-toast-err');
+  if (!el) { el = document.createElement('div'); el.id = 'kf-toast-err'; document.body.appendChild(el); }
+  el.innerHTML = '';
+  el.style.cssText = 'position:fixed;bottom:88px;left:50%;transform:translateX(-50%);background:rgba(185,28,28,.97);color:#fff;padding:12px 18px;border-radius:14px;font-size:13px;font-weight:600;z-index:99999;opacity:1;transition:opacity .3s;border:1px solid rgba(255,120,120,.3);pointer-events:auto;display:flex;align-items:center;gap:10px;max-width:88vw;box-shadow:0 8px 24px rgba(0,0,0,.4)';
+  const txt = document.createElement('span');
+  txt.textContent = '⚠️ ' + msg;
+  el.appendChild(txt);
+  if (typeof retryFn === 'function') {
+    const btn = document.createElement('button');
+    btn.textContent = '재시도';
+    btn.style.cssText = 'background:rgba(255,255,255,.22);border:none;color:#fff;padding:5px 13px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0';
+    btn.onclick = () => { el.style.opacity = '0'; retryFn(); };
+    el.appendChild(btn);
+  }
+  clearTimeout(el._t);
+  el._t = setTimeout(() => {
+    el.style.opacity = '0';
+    setTimeout(() => { if (el.parentNode) el.parentNode.removeChild(el); }, 320);
+  }, 7000);
+}
+
+/* 파일 크기 검사 — 10 MB 초과 시 false 반환 */
+const MAX_PHOTO_MB = 10;
+function checkFileSize(file) {
+  if (file.size > MAX_PHOTO_MB * 1024 * 1024) {
+    toast(`⚠️ 파일이 너무 큽니다 (${(file.size / 1024 / 1024).toFixed(1)} MB). 최대 ${MAX_PHOTO_MB} MB까지 가능합니다.`, 4000);
+    return false;
+  }
+  return true;
+}
+
 /* ── 인증 로딩 스피너 제어 ──
    페이지 진입 시 스피너만 보이다가
    onAuthStateChanged 결과가 오면 정확한 화면으로 전환 */
@@ -1031,6 +1064,7 @@ function handleStepPhoto(e, idx) {
   if (!item.previewUrls) item.previewUrls = [];
 
   files.forEach(file => {
+    if (!checkFileSize(file)) return;
     const total = (item.imgUrls||[]).length + item.files.length;
     if (total >= MAX_PER_STEP) { toast('절차당 최대 ' + MAX_PER_STEP + '장까지 등록 가능합니다'); return; }
     const reader = new FileReader();
@@ -1068,6 +1102,7 @@ function handleManualPhoto(e) {
   if (!files.length) return;
   const MAX = 3;  /* 매뉴얼 대표 사진 최대 3장 */
   files.slice(0, MAX).forEach(file => {
+    if (!checkFileSize(file)) return;
     const reader = new FileReader();
     reader.onload = ev => {
       const cur = S.uploadPhotos.filter(p => p.side === 'main');
@@ -1086,10 +1121,17 @@ function handleManualPhoto(e) {
 function removeManualPhoto(idx) {
   /* side=main 인 것 중 idx번째 제거 */
   let mainCount = 0;
+  let removedItem = null;
   S.uploadPhotos = S.uploadPhotos.filter(p => {
     if (p.side !== 'main') return true;
-    return mainCount++ !== idx;
+    if (mainCount === idx) { removedItem = p; mainCount++; return false; }
+    mainCount++;
+    return true;
   });
+  /* ★ 기존 Storage 사진이면 실제 삭제 */
+  if (removedItem?.existing && removedItem?.storagePath && S.fbReady && !S.isGuest && storage) {
+    deleteStorageFile(removedItem.storagePath).catch(() => {});
+  }
   _refreshManualPhotoPreview();
 }
 
@@ -1253,8 +1295,8 @@ async function saveManual() {
     goto(catKey);           /* ★ 저장 후 해당 카테고리 목록으로 이동 */
   } catch(e) {
     console.error('[saveManual]', e);
-    toast('⚠️ 저장 실패: '+e.message);
     if (btn) { btn.disabled=false; btn.textContent='💾 저장'; }
+    toastError('저장 실패: ' + e.message, saveManual);
   }
 }
 
@@ -1512,6 +1554,7 @@ function handlePhotoSelect(e) {
   const target = S.photoTarget || 'lm-before-preview';
   if (!files.length) return;
   files.forEach(file => {
+    if (!checkFileSize(file)) return;
     const reader = new FileReader();
     reader.onload = ev => {
       S.uploadPhotos.push({ file, url:ev.target.result, existing:false, side, storagePath:'' });
@@ -1541,6 +1584,10 @@ function removeUploadPhoto(i) {
   const removed = S.uploadPhotos.splice(i, 1)[0];
   const side    = removed?.side || 'before';
   const target  = side==='after' ? 'lm-after-preview' : 'lm-before-preview';
+  /* ★ 기존 Storage 사진이면 실제 삭제 */
+  if (removed?.existing && removed?.storagePath && S.fbReady && !S.isGuest && storage) {
+    deleteStorageFile(removed.storagePath).catch(() => {});
+  }
   renderPhotoPreview(target, side);
 }
 
@@ -1560,6 +1607,7 @@ function handleFormPhoto(e, side, previewId) {
   if (cur >= MAX) { toast('사진은 최대 ' + MAX + '장까지 등록 가능합니다'); e.target.value=''; return; }
 
   files.slice(0, MAX - cur).forEach(file => {
+    if (!checkFileSize(file)) return;
     const reader = new FileReader();
     reader.onload = ev => {
       S.uploadPhotos.push({ file, url: ev.target.result, existing: false, side, storagePath: '' });
@@ -1587,7 +1635,11 @@ function renderFormPhotoPreview(previewId, side) {
 
 /** 사진 개별 삭제 */
 function removeFormPhoto(idx, previewId, side) {
-  S.uploadPhotos.splice(idx, 1);
+  const removed = S.uploadPhotos.splice(idx, 1)[0];
+  /* ★ 기존 Storage 사진이면 실제 삭제 */
+  if (removed?.existing && removed?.storagePath && S.fbReady && !S.isGuest && storage) {
+    deleteStorageFile(removed.storagePath).catch(() => {});
+  }
   renderFormPhotoPreview(previewId, side);
 }
 
@@ -1671,8 +1723,8 @@ async function saveLog() {
 
   } catch(e) {
     console.error('[saveLog]', e);
-    toast('⚠️ 저장 실패: '+e.message, 4000);
     if (btn) { btn.disabled=false; btn.textContent='💾 저장'; }
+    toastError('저장 실패: ' + e.message, saveLog);
   }
 }
 
@@ -1889,8 +1941,9 @@ async function saveMemo() {
     toast('✅ 저장됐습니다');
     goto('memo');
   } catch(e) {
-    toast('⚠️ 저장 실패: ' + e.message);
+    console.error('[saveMemo]', e);
     if (btn) { btn.disabled=false; btn.textContent='💾 저장'; }
+    toastError('저장 실패: ' + e.message, saveMemo);
   }
 }
 
