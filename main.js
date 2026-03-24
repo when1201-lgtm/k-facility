@@ -535,6 +535,8 @@ function goto(pageId) {
   if (target) { target.classList.add('active'); document.getElementById('pages').scrollTop = 0; }
   document.querySelectorAll('.nb').forEach(b => b.classList.toggle('active', b.dataset.p === pageId));
   S.currentPage = pageId;
+  /* 서브페이지 breadcrumb 시계 업데이트 */
+  if (pageId !== 'home') _updateSubClock();
   switch (pageId) {
     case 'home':         renderHome();                    break;
     case 'electric':     renderManualCat('electric');     break;
@@ -555,6 +557,8 @@ function goto(pageId) {
 
 /* =====================================================
    ⑩ MODAL (공용)
+   ※ 진짜 모달(overlay): openSchModal(), previewPhoto()
+   ※ 풀페이지 폼:        openLogForm(), openMemoForm(), openManualForm()
 ===================================================== */
 function openModal(html) {
   $('modal-box').innerHTML = html;
@@ -569,9 +573,26 @@ function closeModal() {
    ⑪ HOME
 ===================================================== */
 function renderHome() {
-  /* 날짜 */
-  const de = $('home-date');
-  if (de) de.textContent = new Date().toLocaleDateString('ko-KR', {year:'numeric',month:'long',day:'numeric',weekday:'short'});
+  /* 날짜 + 실시간 시계 */
+  function _tickClock() {
+    const de = $('home-date');
+    if (!de) return;
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('ko-KR', {year:'numeric',month:'long',day:'numeric',weekday:'long'});
+    const hh = String(now.getHours()).padStart(2,'0');
+    const mm = String(now.getMinutes()).padStart(2,'0');
+    const ss = String(now.getSeconds()).padStart(2,'0');
+    const ampm = now.getHours() < 12 ? 'AM' : 'PM';
+    de.innerHTML = `<div class="home-clock-wrap">
+      <span class="home-clock-date">${dateStr}</span>
+      <span class="home-clock-divider"></span>
+      <span class="home-clock-time">${hh}<span class="home-clock-colon">:</span>${mm}<span class="home-clock-colon">:</span>${ss}</span>
+      <span class="home-clock-ampm">${ampm}</span>
+    </div>`;
+  }
+  _tickClock();
+  if (window._clockTimer) clearInterval(window._clockTimer);
+  window._clockTimer = setInterval(_tickClock, 1000);
 
   /* 최근 작업 2건 — Before/After 나란히 + 큰 이미지 */
   const mr = $('home-mini-row');
@@ -633,7 +654,7 @@ function renderHome() {
           <div style="font-size:28px;margin-bottom:8px;opacity:.4">📋</div>
           작업기록 없음<br>
           <button class="btn-o" style="margin:12px auto 0;display:flex;font-size:12px;padding:7px 14px"
-            onclick="openLogModal()">＋ 첫 기록 작성</button>
+            onclick="openLogForm()">＋ 첫 기록 작성</button>
         </div>`;
     }
   }
@@ -712,13 +733,17 @@ function renderManualCat(catKey) {
         </div>
         <div class="mc-tags">${(m.tags||[]).map(t=>`<span class="m-tag">${esc(t)}</span>`).join('')}</div>
       </div>
+      <div class="mc-actions" onclick="event.stopPropagation()">
+        <button class="lc-btn lc-btn-edit" onclick="openManualForm('${catKey}','${m.id}')">✏️</button>
+        <button class="lc-btn lc-btn-del"  onclick="deleteManual('${catKey}','${m.id}')">🗑</button>
+      </div>
       <div class="mc-arrow">›</div>
     </div>`;
   }).join('') :
   `<div class="gc" style="padding:48px;text-align:center;color:var(--t4)">
     <div style="font-size:36px;opacity:.3;margin-bottom:12px">📋</div>
     <div style="font-size:15px">등록된 매뉴얼이 없습니다</div>
-    <button class="btn-o" style="margin:16px auto 0;display:flex" onclick="openManualModal('${catKey}')">＋ 첫 매뉴얼 추가</button>
+    <button class="btn-o" style="margin:16px auto 0;display:flex" onclick="openManualForm('${catKey}')">＋ 첫 매뉴얼 추가</button>
   </div>`;
 }
 
@@ -818,7 +843,7 @@ function renderManualDetail() {
   /* 수정/삭제 버튼 */
   const editBtn = $('md-edit-btn');
   const delBtn  = $('md-del-btn');
-  if (editBtn) editBtn.onclick = () => openManualModal(catKey, id);
+  if (editBtn) editBtn.onclick = () => openManualForm(catKey, id);
   if (delBtn)  delBtn.onclick  = () => deleteManual(catKey, id);
 }
 
@@ -864,7 +889,7 @@ function updateCkUI(ckKey, checklist) {
 }
 
 /* ── 매뉴얼 추가/수정 — 풀페이지 ── */
-function openManualModal(catKey, id) {
+function openManualForm(catKey, id) {
   S.editManualCat  = catKey;
   S.editManualId   = id || null;
   S.uploadPhotos   = [];
@@ -1296,7 +1321,7 @@ function renderRecords() {
       </div>
       ${thumb}
       <div class="lc-actions" onclick="event.stopPropagation()">
-        <button class="lc-btn lc-btn-edit" onclick="openLogModal('${l.id}')">✏️</button>
+        <button class="lc-btn lc-btn-edit" onclick="openLogForm('${l.id}')">✏️</button>
         <button class="lc-btn lc-btn-del"  onclick="deleteLog('${l.id}')">🗑</button>
       </div>
     </div>`;
@@ -1304,7 +1329,7 @@ function renderRecords() {
   `<div class="gc" style="padding:48px;text-align:center;color:var(--t4)">
     <div style="font-size:36px;opacity:.3;margin-bottom:12px">📋</div>
     <div style="font-size:15px">해당하는 기록이 없습니다</div>
-    <button class="btn-o" style="margin:16px auto 0;display:flex" onclick="openLogModal()">＋ 첫 기록 작성</button>
+    <button class="btn-o" style="margin:16px auto 0;display:flex" onclick="openLogForm()">＋ 첫 기록 작성</button>
   </div>`;
 }
 
@@ -1416,14 +1441,14 @@ function openLogDetail(id) {
   /* ── 버튼 ── */
   const eb  = $('btn-log-detail-edit');
   const db2 = $('btn-log-detail-del');
-  if (eb)  eb.onclick  = () => openLogModal(id);
+  if (eb)  eb.onclick  = () => openLogForm(id);
   if (db2) db2.onclick = () => deleteLog(id);
 
   goto('records-detail');
 }
 
 /* 작업기록 추가/수정 — 풀페이지 */
-function openLogModal(id) {
+function openLogForm(id) {
   S.editLogId   = id || null;
   S.uploadPhotos = [];
   const l = id ? logs.find(x=>x.id===id) : null;
@@ -1521,7 +1546,7 @@ function removeUploadPhoto(i) {
 
 
 /* ══════════════════════════════════════════════════════
-   공용 폼 사진 핸들러 — openLogModal / openMemoModal 공유
+   공용 폼 사진 핸들러 — openLogForm / openMemoForm 공유
    handleFormPhoto(e, side, previewId)
    renderFormPhotoPreview(previewId, side)
 ══════════════════════════════════════════════════════ */
@@ -1705,12 +1730,16 @@ function renderMemo() {
       <div class="memo-card-preview">${esc(preview)}</div>
       <div class="memo-tags">${(m.tags||[]).map(t=>`<span class="m-tag">${esc(t)}</span>`).join('')}</div>
       ${thumbHtml}
+      <div class="card-action-row" onclick="event.stopPropagation()">
+        <button class="lc-btn lc-btn-edit" onclick="openMemoForm('${m.id}')">✏️ 수정</button>
+        <button class="lc-btn lc-btn-del"  onclick="deleteMemo('${m.id}')">🗑 삭제</button>
+      </div>
     </div>`;
   }).join('') :
   `<div class="gc" style="padding:48px;text-align:center;color:var(--t4);grid-column:1/-1">
     <div style="font-size:36px;opacity:.3;margin-bottom:12px">📒</div>
     <div style="font-size:15px">등록된 메모가 없습니다</div>
-    <button class="btn-o" style="margin:16px auto 0;display:flex" onclick="openMemoModal()">＋ 첫 메모 작성</button>
+    <button class="btn-o" style="margin:16px auto 0;display:flex" onclick="openMemoForm()">＋ 첫 메모 작성</button>
   </div>`;
 }
 
@@ -1750,13 +1779,13 @@ function openMemoDetail(id) {
 
   const eb  = $('btn-memo-detail-edit');
   const db3 = $('btn-memo-detail-del');
-  if (eb)  eb.onclick  = () => openMemoModal(id);
+  if (eb)  eb.onclick  = () => openMemoForm(id);
   if (db3) db3.onclick = () => deleteMemo(id);
   goto('memo-detail');
 }
 
 /* 메모 추가/수정 — 풀페이지 */
-function openMemoModal(id) {
+function openMemoForm(id) {
   S.editMemoId  = id || null;
   S.uploadPhotos = [];
   const m = id ? memos.find(x=>x.id===id) : null;
@@ -2277,6 +2306,33 @@ function formBack(type) {
   else goto('home');
 }
 
+/* ── 서브페이지 breadcrumb 실시간 시계 ── */
+function _updateSubClock() {
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('ko-KR', {year:'numeric',month:'long',day:'numeric',weekday:'long'});
+  const hh = String(now.getHours()).padStart(2,'0');
+  const mm = String(now.getMinutes()).padStart(2,'0');
+  const ss = String(now.getSeconds()).padStart(2,'0');
+  const ampm = now.getHours() < 12 ? 'AM' : 'PM';
+  const html = `<div class="home-clock-wrap home-clock-wrap--sub">
+    <span class="home-clock-date">${dateStr}</span>
+    <span class="home-clock-divider"></span>
+    <span class="home-clock-time">${hh}<span class="home-clock-colon">:</span>${mm}<span class="home-clock-colon">:</span>${ss}</span>
+    <span class="home-clock-ampm">${ampm}</span>
+  </div>`;
+  /* 현재 active 페이지의 bc-date 요소에만 삽입 */
+  const activePage = document.querySelector('.page.active');
+  if (activePage) {
+    const bcDate = activePage.querySelector('.bc-date');
+    if (bcDate) bcDate.innerHTML = html;
+  }
+}
+/* 서브 시계 타이머 — 1초마다 갱신 */
+if (window._subClockTimer) clearInterval(window._subClockTimer);
+window._subClockTimer = setInterval(() => {
+  if (S.currentPage !== 'home') _updateSubClock();
+}, 1000);
+
 /* 전역 노출 */
 window.goto             = goto;
 window.formBack         = formBack;
@@ -2285,7 +2341,7 @@ window.loginGuest       = loginGuest;
 window.logout           = logout;
 window.closeModal       = closeModal;
 window.openModal        = openModal;
-window.openLogModal     = openLogModal;
+window.openLogForm     = openLogForm;
 window.openLogDetail    = openLogDetail;
 window.deleteLog        = deleteLog;
 window.triggerPhotoInput = triggerPhotoInput;
@@ -2295,11 +2351,11 @@ window.saveLog          = saveLog;
 window.handleFormPhoto  = handleFormPhoto;
 window.renderFormPhotoPreview = renderFormPhotoPreview;
 window.removeFormPhoto  = removeFormPhoto;
-window.openMemoModal    = openMemoModal;
+window.openMemoForm    = openMemoForm;
 window.openMemoDetail   = openMemoDetail;
 window.deleteMemo       = deleteMemo;
 window.saveMemo         = saveMemo;
-window.openManualModal  = openManualModal;
+window.openManualForm  = openManualForm;
 window.renderStepItems  = renderStepItems;
 window.renderSteps      = renderSteps;
 window.addStepItem      = addStepItem;
