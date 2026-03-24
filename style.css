@@ -2270,7 +2270,7 @@ textarea { caret-color: var(--orange); }
 .ck-prog-row { display: flex; align-items: center; justify-content: space-between; font-size: 14px; margin-bottom: 4px; }
 .pw { background: rgba(255,255,255,.08); border-radius: 99px; height: 5px; margin: 8px 0 14px; }
 .pf { height: 100%; border-radius: 99px; background: linear-gradient(90deg,var(--orange),#f97316); transition: width .4s; width: 0; }
-.ck-list .ci { display: flex; align-items: center; gap: 10px; padding: 15px 15px !important; border-bottom: 1px solid rgba(255,255,255,.05); font-size: 14px; cursor: pointer; }
+.ck-list .ci { display: flex; align-items: center; gap: 10px !important; padding: 15px 15px !important; border-bottom: 1px solid rgba(255,255,255,.05); font-size: 17px !important; cursor: pointer; }
 .ci:last-child { border-bottom: none; }
 .chk { width: 20px; height: 20px; border-radius: 6px; border: 1.5px solid rgba(255,255,255,.25); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 11px; color: transparent; transition: all .15s; user-select: none; }
 .chk.on { background: var(--orange); border-color: var(--orange); color: #fff; }
