@@ -234,7 +234,7 @@ body.light-mode .rtxt,
 body.light-mode .ct,
 body.light-mode .memo-content-box,
 body.light-mode .md-overview p,
-body.light-mode .supply-name        { color: #111827 !important; font-weight: 500 !important; text-shadow: none !important; }
+body.light-mode .supply-name        { color: #111827 !important; font-weight: 400 !important; text-shadow: none !important; }
 
 /* 3단계: 서브 텍스트 */
 body.light-mode .hero-sub,
@@ -247,8 +247,8 @@ body.light-mode .rm-sch-desc,
 body.light-mode .contact-role,
 body.light-mode .settings-desc,
 body.light-mode .ml,
-body.light-mode .spll               { color: #000000 !important; font-weight: 600 !important; }
-body.light-mode .lf-label           { color: #000000 !important; font-weight: 700 !important; font-size: 15px !important; }
+body.light-mode .spll               { color: #374151 !important; font-weight: 600 !important; }
+body.light-mode .lf-label           { color: #374151 !important; font-weight: 700 !important; font-size: 15px !important; }
 
 /* 4단계: 날짜·메타 (최소한 이 정도는 어둡게) */
 body.light-mode .rdt,
@@ -332,17 +332,17 @@ body.light-mode .lf-select,
 body.light-mode .lf-textarea {
   background: #FFFFFF !important;
   border: 2px solid #D1D5DB !important;
-  color: #000000 !important;
+  color: #111827 !important;
   font-size: 17px !important;
 }
 body.light-mode .lf-input:focus,
 body.light-mode .lf-select:focus,
 body.light-mode .lf-textarea:focus {
-  border-color: #000000 !important;
+  border-color: #6366f1 !important;
   box-shadow: 0 0 0 3px rgba(99,102,241,.15) !important;
 }
 body.light-mode .lf-input::placeholder,
-body.light-mode .lf-textarea::placeholder { color: #000000 !important; }
+body.light-mode .lf-textarea::placeholder { color: #9ca3af !important; }
 body.light-mode .lf-select option { background: #fff !important; color: #111827 !important; }
 body.light-mode textarea { caret-color: #4f46e5 !important; }
 
@@ -490,7 +490,7 @@ body.light-mode .ba-upload-section .photo-preview-wrap { background: #F9FAFB !im
 body.light-mode .memo-content-box {
   background: #FFFFFF !important;
   border: 2px solid #E5E7EB !important;
-  color: #000000 !important;
+  color: #111827 !important;
   border-radius: 14px !important;
   padding: 2.5rem !important;
 }
@@ -657,16 +657,19 @@ body.light-mode .step-card-head {
 }
 body.light-mode .step-title {
   color: #111827 !important;
-  font-size: 17px !important;
-  font-weight: 700 !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
   text-shadow: none !important;
-  margin-bottom: 10px !important;
+  line-height: 1.8 !important;
+  letter-spacing: -0.02em !important;
+  margin-bottom: 8px !important;
 }
 body.light-mode .step-desc {
   color: #1f2937 !important;
-  font-size: 16px !important;
-  font-weight: 500 !important;
-  line-height: 1.85 !important;
+  font-size: 15px !important;
+  font-weight: 400 !important;
+  line-height: 1.8 !important;
+  letter-spacing: -0.02em !important;
 }
 
 /* ── 준비물 그리드 아이템 더 선명하게 ── */
@@ -783,10 +786,11 @@ body.light-mode .detail-title {
   margin-top: 20px !important;
 }
 body.light-mode .detail-desc {
-  color: #111827 !important;
-  font-size: 16px !important;
-  font-weight: 500 !important;
-  line-height: 1.9 !important;
+  color: #1f2937 !important;
+  font-size: 15px !important;
+  font-weight: 400 !important;
+  line-height: 1.8 !important;
+  letter-spacing: -0.02em !important;
   white-space: pre-wrap !important;
 }
 body.light-mode .detail-desc-wrap {
@@ -800,11 +804,11 @@ body.light-mode .memo-content-box {
   background: #FFFFFF !important;
   border: 2px solid #D1D5DB !important;
   color: #111827 !important;
-  font-size: 16px !important;
-  font-weight: 500 !important;
-  line-height: 1.9 !important;
+  font-size: 15px !important;
+  font-weight: 400 !important;
+  line-height: 1.8 !important;
   border-radius: 14px !important;
-  padding: 2rem !important;
+  padding: 22px 26px !important;
   box-shadow: 0 4px 12px rgba(0,0,0,.07) !important;
 }
 body.light-mode .memo-tags-row { gap: 8px !important; margin-bottom: 20px !important; }
@@ -1115,16 +1119,19 @@ body.light-mode .step-card-head {
 }
 body.light-mode .step-title {
   color: #111827 !important;
-  font-weight: 700 !important;
-  font-size: 17px !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
   text-shadow: none !important;
-  margin-bottom: 10px !important;
+  line-height: 1.8 !important;
+  letter-spacing: -0.02em !important;
+  margin-bottom: 8px !important;
 }
 body.light-mode .step-desc {
   color: #1f2937 !important;
-  font-weight: 500 !important;
-  font-size: 16px !important;
-  line-height: 2.0 !important;
+  font-size: 15px !important;
+  font-weight: 400 !important;
+  line-height: 1.8 !important;
+  letter-spacing: -0.02em !important;
 }
 body.light-mode .step-num-circle {
   background: #4f46e5 !important;
@@ -1192,10 +1199,11 @@ body.light-mode .detail-desc-wrap {
   margin-bottom: 1.5rem !important;
 }
 body.light-mode .detail-desc {
-  color: #000000 !important;
-  font-size: 20px !important;
-  font-weight: 500 !important;
-  line-height: 2.0 !important;
+  color: #1f2937 !important;
+  font-size: 15px !important;
+  font-weight: 400 !important;
+  line-height: 1.8 !important;
+  letter-spacing: -0.02em !important;
   white-space: pre-wrap !important;
 }
 body.light-mode .detail-photos-wrap {
@@ -1358,10 +1366,10 @@ body.light-mode .memo-content-box {
   box-shadow: 0 10px 15px -3px rgba(0,0,0,.08) !important;
   border-radius: 14px !important;
   color: #1f2937 !important;
-  font-size: 18px !important;
-  font-weight: 500 !important;
-  line-height: 2.2 !important;
-  padding: 2.5rem !important;
+  font-size: 15px !important;
+  font-weight: 400 !important;
+  line-height: 1.8 !important;
+  padding: 22px 26px !important;
 }
 
 /* ══════════════════════════════════════════
@@ -2035,7 +2043,7 @@ a { color: inherit; text-decoration: none; }
 .hero-title { font-size: 18px; font-weight: 700; color: var(--t1); }
 .hero-sub   { font-size: 13px; color: var(--t3); }
 .detail-title { font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 16px; line-height: 1.3; }
-.detail-desc  { font-size: 20px; font-weight: 400; color: #eef2ff; line-height: 2.2; white-space: pre-wrap; letter-spacing: 0em; }
+.detail-desc  { font-size: 15px; font-weight: 400; color: #eef2ff; line-height: 1.8; white-space: pre-wrap; letter-spacing: -0.02em; word-break: break-word; }
 .empty-state { text-align: center; padding: 48px 20px; color: var(--t4); }
 .empty-state__icon { font-size: 32px; margin-bottom: 12px; opacity: .3; }
 .empty-state__text { font-size: 15px; }
@@ -2366,8 +2374,8 @@ textarea { caret-color: var(--orange); }
 .step-connector { width: 2px; flex: 1; background: rgba(255,255,255,.12); margin-top: 6px; min-height: 16px; border-radius: 1px; }
 .step-card { flex: 1; overflow: hidden; }
 .step-card-head { padding: 16px 18px; }
-.step-title { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 10px; text-shadow: 0 1px 3px rgba(0,0,0,.5); white-space: pre-wrap; word-break: break-word; line-height: 1.7; }
-.step-desc  { font-size: 17px; font-weight: 500; color: rgba(255,255,255,.9); line-height: 2.05; white-space: pre-wrap; word-break: break-word; }
+.step-title { font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 8px; text-shadow: none; white-space: pre-wrap; word-break: break-word; line-height: 1.8; letter-spacing: -0.02em; }
+.step-desc  { font-size: 15px; font-weight: 400; color: rgba(255,255,255,.85); line-height: 1.8; white-space: pre-wrap; word-break: break-word; letter-spacing: -0.02em; }
 /* ═══════════════════════════════════════════════
    상세 작업 절차 — #step-container 렌더링
    데이터: steps: [{text, imgUrl}]
@@ -2426,21 +2434,23 @@ textarea { caret-color: var(--orange); }
   gap: 0;
 }
 .step-title {
-  font-size: 18px; font-weight: 700;
+  font-size: 15px; font-weight: 600;
   color: #fff;
-  margin-bottom: 10px;
-  line-height: 1.7;
-  text-shadow: 0 1px 3px rgba(0,0,0,.5);
+  margin-bottom: 8px;
+  line-height: 1.8;
+  text-shadow: none;
   white-space: pre-wrap;
   word-break: break-word;
+  letter-spacing: -0.02em;
 }
 .step-desc {
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 400;
   color: #dde4ff;
-  line-height: 2.2;
+  line-height: 1.8;
   white-space: pre-wrap;
   word-break: break-word;
+  letter-spacing: -0.02em;
 }
 
 /* ★ 절차 사진 — 글 바로 아래, 화면 밖 방지 */
@@ -2559,7 +2569,7 @@ textarea { caret-color: var(--orange); }
 .memo-card-preview { font-size: 13.5px; color: var(--t3); line-height: 1.7; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
 .memo-tags { display: flex; gap: 5px; flex-wrap: wrap; }
 .memo-tags-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
-.memo-content-box { font-size: 20px; font-weight: 400; color: #eef2ff; line-height: 2.2; padding: 28px 32px; border-radius: 14px; background: rgba(16,22,44,.70); border: 1px solid rgba(255,255,255,.14); white-space: pre-wrap; font-family: inherit; min-height: 200px; letter-spacing: -0.01em; }
+.memo-content-box { font-size: 15px; font-weight: 400; color: #eef2ff; line-height: 1.8; padding: 22px 26px; border-radius: 14px; background: rgba(16,22,44,.70); border: 1px solid rgba(255,255,255,.14); white-space: pre-wrap; font-family: inherit; min-height: 200px; letter-spacing: -0.02em; word-break: break-word; }
 
 /* ── ROADMAP ── */
 .rm-hero { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 20px; margin-bottom: 16px; flex-wrap: wrap; }
