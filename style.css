@@ -356,7 +356,7 @@ body.light-mode .mini {
   box-shadow: 0 4px 6px -1px rgba(0,0,0,.08) !important;
 }
 body.light-mode .pw       { background: #E5E7EB !important; }
-body.light-mode .ci       { border-bottom: 1.5px solid #E5E7EB !important; padding: 14px 4px !important; color: #111827 !important; font-size: 17px !important; font-weight: 500 !important; }
+body.light-mode .ci       { border-bottom: 1.5px solid #E5E7EB !important; padding: 15px 15px !important; color: #111827 !important; font-size: 17px !important; font-weight: 500 !important; }
 body.light-mode .chk      { border: 2px solid #D1D5DB !important; width: 24px !important; height: 24px !important; border-radius: 7px !important; }
 body.light-mode .chk.on   { background: #4f46e5 !important; border-color: #4f46e5 !important; }
 body.light-mode .ct       { color: #111827 !important; font-size: 17px !important; }
