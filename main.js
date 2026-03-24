@@ -712,7 +712,7 @@ function renderManualCat(catKey) {
         <div class="mc-tags">${(m.tags||[]).map(t=>`<span class="m-tag">${esc(t)}</span>`).join('')}</div>
       </div>
       <div class="mc-actions" onclick="event.stopPropagation()">
-        <button class="lc-btn lc-btn-edit" onclick="openManualForm('${catKey}','${m.id}')">✏️</button>
+        <button class="lc-btn lc-btn-edit" onclick="openManualModal('${catKey}','${m.id}')">✏️</button>
         <button class="lc-btn lc-btn-del"  onclick="deleteManual('${catKey}','${m.id}')">🗑</button>
       </div>
       <div class="mc-arrow">›</div>
@@ -1709,7 +1709,7 @@ function renderMemo() {
       <div class="memo-tags">${(m.tags||[]).map(t=>`<span class="m-tag">${esc(t)}</span>`).join('')}</div>
       ${thumbHtml}
       <div class="card-action-row" onclick="event.stopPropagation()">
-        <button class="lc-btn lc-btn-edit" onclick="openMemoForm('${m.id}')">✏️ 수정</button>
+        <button class="lc-btn lc-btn-edit" onclick="openMemoModal('${m.id}')">✏️ 수정</button>
         <button class="lc-btn lc-btn-del"  onclick="deleteMemo('${m.id}')">🗑 삭제</button>
       </div>
     </div>`;
