@@ -568,9 +568,27 @@ function closeModal() {
    ⑪ HOME
 ===================================================== */
 function renderHome() {
-  /* 날짜 */
-  const de = $('home-date');
-  if (de) de.textContent = new Date().toLocaleDateString('ko-KR', {year:'numeric',month:'long',day:'numeric',weekday:'short'});
+  /* 날짜 + 실시간 시계 */
+  function _tickClock() {
+    const de = $('home-date');
+    if (!de) return;
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('ko-KR', {year:'numeric', month:'long', day:'numeric', weekday:'long'});
+    const hh = String(now.getHours()).padStart(2,'0');
+    const mm = String(now.getMinutes()).padStart(2,'0');
+    const ss = String(now.getSeconds()).padStart(2,'0');
+    const ampm = now.getHours() < 12 ? 'AM' : 'PM';
+    de.innerHTML = `
+      <div class="home-clock-wrap">
+        <span class="home-clock-date">${dateStr}</span>
+        <span class="home-clock-divider"></span>
+        <span class="home-clock-time">${hh}<span class="home-clock-colon">:</span>${mm}<span class="home-clock-colon">:</span>${ss}</span>
+        <span class="home-clock-ampm">${ampm}</span>
+      </div>`;
+  }
+  _tickClock();
+  if (window._clockTimer) clearInterval(window._clockTimer);
+  window._clockTimer = setInterval(_tickClock, 1000);
 
   /* 최근 작업 2건 — Before/After 나란히 + 큰 이미지 */
   const mr = $('home-mini-row');
@@ -710,10 +728,6 @@ function renderManualCat(catKey) {
           <span>🔧 절차 ${(m.steps||[]).length}단계</span>
         </div>
         <div class="mc-tags">${(m.tags||[]).map(t=>`<span class="m-tag">${esc(t)}</span>`).join('')}</div>
-      </div>
-      <div class="mc-actions" onclick="event.stopPropagation()">
-        <button class="lc-btn lc-btn-edit" onclick="openManualModal('${catKey}','${m.id}')">✏️</button>
-        <button class="lc-btn lc-btn-del"  onclick="deleteManual('${catKey}','${m.id}')">🗑</button>
       </div>
       <div class="mc-arrow">›</div>
     </div>`;
@@ -1708,10 +1722,6 @@ function renderMemo() {
       <div class="memo-card-preview">${esc(preview)}</div>
       <div class="memo-tags">${(m.tags||[]).map(t=>`<span class="m-tag">${esc(t)}</span>`).join('')}</div>
       ${thumbHtml}
-      <div class="card-action-row" onclick="event.stopPropagation()">
-        <button class="lc-btn lc-btn-edit" onclick="openMemoModal('${m.id}')">✏️ 수정</button>
-        <button class="lc-btn lc-btn-del"  onclick="deleteMemo('${m.id}')">🗑 삭제</button>
-      </div>
     </div>`;
   }).join('') :
   `<div class="gc" style="padding:48px;text-align:center;color:var(--t4);grid-column:1/-1">
