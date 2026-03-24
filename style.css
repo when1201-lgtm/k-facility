@@ -355,7 +355,7 @@ body.light-mode .mini {
   box-shadow: 0 4px 6px -1px rgba(0,0,0,.08) !important;
 }
 body.light-mode .pw       { background: #E5E7EB !important; }
-body.light-mode .ci       { border-bottom: 1.5px solid #E5E7EB !important; padding: 15px 15px !important; color: #111827 !important; font-weight: 500 !important; }
+body.light-mode .ci       { border-bottom: 1.5px solid #E5E7EB !important; padding: 12px 0 !important; color: #111827 !important; font-weight: 500 !important; }
 body.light-mode .chk      { border: 2px solid #D1D5DB !important; }
 body.light-mode .chk.on   { background: #4f46e5 !important; border-color: #4f46e5 !important; }
 body.light-mode .ct       { color: #111827 !important; }
@@ -779,7 +779,6 @@ body.light-mode .detail-title {
   text-shadow: none !important;
   line-height: 1.3 !important;
   margin-bottom: 20px !important;
-  margin-top: 20px !important;
 }
 body.light-mode .detail-desc {
   color: #111827 !important;
@@ -3052,3 +3051,36 @@ textarea { caret-color: var(--orange); }
 /* ── 풀페이지 폼 — 다크모드 lf-group margin 보정 ── */
 .fpf-card .lf-group { margin-bottom: 14px; }
 .fpf-card .lf-group:last-child { margin-bottom: 0; }
+
+/* ── 메모 카드 수정/삭제 버튼 행 ── */
+.card-action-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+  justify-content: flex-end;
+}
+.card-action-row .lc-btn {
+  font-size: 12px;
+  padding: 5px 10px;
+  min-height: 30px;
+}
+
+/* ── 매뉴얼 카드 수정/삭제 버튼 (아이콘만) ── */
+.mc-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex-shrink: 0;
+}
+.mc-actions .lc-btn {
+  font-size: 13px;
+  padding: 6px 9px;
+  min-height: 32px;
+  min-width: 36px;
+}
+
+/* ── 라이트 모드 override ── */
+body.light-mode .card-action-row .lc-btn-edit { background: #eef2ff !important; color: #4338ca !important; border: 1px solid #c7d2fe !important; }
+body.light-mode .card-action-row .lc-btn-del  { background: #fef2f2 !important; color: #dc2626 !important; border: 1px solid #fca5a5 !important; }
+body.light-mode .mc-actions .lc-btn-edit { background: #eef2ff !important; color: #4338ca !important; border: 1px solid #c7d2fe !important; }
+body.light-mode .mc-actions .lc-btn-del  { background: #fef2f2 !important; color: #dc2626 !important; border: 1px solid #fca5a5 !important; }
