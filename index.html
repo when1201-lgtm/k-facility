@@ -593,7 +593,7 @@
                 <div class="hero-sub">월별 법정·정기·계절 점검 일정</div>
               </div>
             </div>
-            <button class="btn-o" onclick="openSchModal()">＋ 일정 추가</button>
+            <button class="btn-o" onclick="openSchForm()">＋ 일정 추가</button>
           </div>
           <div class="glass rm-minimap">
             <div class="rm-year-selector" id="rm-year-selector"></div>
@@ -879,6 +879,53 @@
           <div class="fpf-sticky-bar">
             <button class="btn-gh fpf-cancel-btn" onclick="formBack('memo')">취소</button>
             <button class="btn-o  fpf-save-btn"   id="btn-save-memo" onclick="saveMemo()">💾 저장</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== 일정 폼 (추가/수정) — 풀페이지 ===== -->
+      <section id="page-form-schedule" class="page">
+        <div class="fullpage-form-wrap">
+          <div class="fpf-header">
+            <button class="fpf-back-btn" onclick="formBack('schedule')">
+              <span class="fpf-back-icon">←</span>
+              <span class="fpf-back-label">뒤로</span>
+            </button>
+            <h1 class="fpf-title" id="form-schedule-title">일정 추가</h1>
+          </div>
+
+          <div class="fpf-body">
+            <div class="fpf-card">
+              <div class="fpf-section-title">📅 월 선택</div>
+              <div class="sch-month-grid" id="sch-month-grid"></div>
+            </div>
+
+            <div class="fpf-card">
+              <div class="fpf-section-title">🏷️ 유형</div>
+              <div class="sch-type-group">
+                <button type="button" class="sch-type-chip" data-type="법정" onclick="schSelectType('법정',this)">⚖️ 법정</button>
+                <button type="button" class="sch-type-chip" data-type="정기" onclick="schSelectType('정기',this)">🔄 정기</button>
+                <button type="button" class="sch-type-chip" data-type="계절" onclick="schSelectType('계절',this)">🌿 계절</button>
+              </div>
+              <input type="hidden" id="sm-type-hidden" value="정기"/>
+            </div>
+
+            <div class="fpf-card">
+              <div class="fpf-section-title">📋 일정 내용</div>
+              <div class="lf-group">
+                <label class="lf-label">일정 제목 *</label>
+                <input class="lf-input" id="sm-title" type="text" placeholder="점검·작업 제목"/>
+              </div>
+              <div class="lf-group" style="margin-top:16px">
+                <label class="lf-label">설명</label>
+                <textarea class="lf-textarea fpf-textarea" id="sm-desc" rows="5" placeholder="세부 내용, 준비사항..."></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="fpf-sticky-bar">
+            <button class="btn-gh fpf-cancel-btn" onclick="formBack('schedule')">취소</button>
+            <button class="btn-o  fpf-save-btn" id="btn-save-sch" onclick="saveSchedule()">💾 저장</button>
           </div>
         </div>
       </section>
