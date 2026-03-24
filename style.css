@@ -3064,8 +3064,10 @@ textarea { caret-color: var(--orange); }
   padding: 5px 10px;
   min-height: 30px;
 }
+body.light-mode .card-action-row .lc-btn-edit { background: #eef2ff !important; color: #4338ca !important; border: 1px solid #c7d2fe !important; }
+body.light-mode .card-action-row .lc-btn-del  { background: #fef2f2 !important; color: #dc2626 !important; border: 1px solid #fca5a5 !important; }
 
-/* ── 매뉴얼 카드 수정/삭제 버튼 (아이콘만) ── */
+/* ── 매뉴얼 카드 수정/삭제 버튼 ── */
 .mc-actions {
   display: flex;
   flex-direction: column;
@@ -3078,9 +3080,5 @@ textarea { caret-color: var(--orange); }
   min-height: 32px;
   min-width: 36px;
 }
-
-/* ── 라이트 모드 override ── */
-body.light-mode .card-action-row .lc-btn-edit { background: #eef2ff !important; color: #4338ca !important; border: 1px solid #c7d2fe !important; }
-body.light-mode .card-action-row .lc-btn-del  { background: #fef2f2 !important; color: #dc2626 !important; border: 1px solid #fca5a5 !important; }
 body.light-mode .mc-actions .lc-btn-edit { background: #eef2ff !important; color: #4338ca !important; border: 1px solid #c7d2fe !important; }
 body.light-mode .mc-actions .lc-btn-del  { background: #fef2f2 !important; color: #dc2626 !important; border: 1px solid #fca5a5 !important; }
