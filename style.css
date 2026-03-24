@@ -247,8 +247,8 @@ body.light-mode .rm-sch-desc,
 body.light-mode .contact-role,
 body.light-mode .settings-desc,
 body.light-mode .ml,
-body.light-mode .spll               { color: #374151 !important; font-weight: 600 !important; }
-body.light-mode .lf-label           { color: #374151 !important; font-weight: 700 !important; font-size: 15px !important; }
+body.light-mode .spll               { color: #000000 !important; font-weight: 600 !important; }
+body.light-mode .lf-label           { color: #000000 !important; font-weight: 700 !important; font-size: 15px !important; }
 
 /* 4단계: 날짜·메타 (최소한 이 정도는 어둡게) */
 body.light-mode .rdt,
@@ -332,17 +332,17 @@ body.light-mode .lf-select,
 body.light-mode .lf-textarea {
   background: #FFFFFF !important;
   border: 2px solid #D1D5DB !important;
-  color: #111827 !important;
+  color: #000000 !important;
   font-size: 17px !important;
 }
 body.light-mode .lf-input:focus,
 body.light-mode .lf-select:focus,
 body.light-mode .lf-textarea:focus {
-  border-color: #6366f1 !important;
+  border-color: #000000 !important;
   box-shadow: 0 0 0 3px rgba(99,102,241,.15) !important;
 }
 body.light-mode .lf-input::placeholder,
-body.light-mode .lf-textarea::placeholder { color: #9ca3af !important; }
+body.light-mode .lf-textarea::placeholder { color: #000000 !important; }
 body.light-mode .lf-select option { background: #fff !important; color: #111827 !important; }
 body.light-mode textarea { caret-color: #4f46e5 !important; }
 
