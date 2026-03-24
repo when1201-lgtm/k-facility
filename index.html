@@ -49,7 +49,7 @@
   </div>
 </div>
 
-<!-- 모달 오버레이 -->
+<!-- 모달 오버레이 (openSchModal·previewPhoto 전용 — 삭제 금지) -->
 <div id="modal-overlay" onclick="if(event.target===this)closeModal()">
   <div id="modal-box"></div>
 </div>
@@ -142,7 +142,7 @@
                   <div class="slbl">최근 작업기록</div>
                   <div class="ctitle">Before / After 요약</div>
                 </div>
-                <button class="btn-o" onclick="openLogModal()">＋ 새 기록</button>
+                <button class="btn-o" onclick="openLogForm()">＋ 새 기록</button>
               </div>
               <div id="home-mini-row" class="mini-row">
                 <div class="mini">
@@ -264,6 +264,7 @@
             <span class="bc-ico bc-link" data-goto="home">🏠</span>
             <span class="bc-sep">/</span>
             <span class="bc-cur">전기 설비</span>
+            <span class="bc-date"></span>
           </div>
           <div class="glass cat-hero">
             <div class="cat-icon cat-icon--electric">⚡</div>
@@ -272,7 +273,7 @@
               <div class="cat-sub">전기설비 점검 및 수리 절차 매뉴얼</div>
               <div class="cat-count" id="electric-count">매뉴얼 0건</div>
             </div>
-            <button class="btn-o" onclick="openManualModal('electric')">＋ 매뉴얼 추가</button>
+            <button class="btn-o" onclick="openManualForm('electric')">＋ 매뉴얼 추가</button>
           </div>
           <div class="slbl slbl--mb">매뉴얼 목록</div>
           <div class="manual-list" id="manual-list-electric"></div>
@@ -286,6 +287,7 @@
             <span class="bc-ico bc-link" data-goto="home">🏠</span>
             <span class="bc-sep">/</span>
             <span class="bc-cur">기계 설비</span>
+            <span class="bc-date"></span>
           </div>
           <div class="glass cat-hero">
             <div class="cat-icon cat-icon--mechanical">⚙️</div>
@@ -294,7 +296,7 @@
               <div class="cat-sub">기계설비 유지보수 절차 매뉴얼</div>
               <div class="cat-count" id="mechanical-count">매뉴얼 0건</div>
             </div>
-            <button class="btn-o" onclick="openManualModal('mechanical')">＋ 매뉴얼 추가</button>
+            <button class="btn-o" onclick="openManualForm('mechanical')">＋ 매뉴얼 추가</button>
           </div>
           <div class="slbl slbl--mb">매뉴얼 목록</div>
           <div class="manual-list" id="manual-list-mechanical"></div>
@@ -308,6 +310,7 @@
             <span class="bc-ico bc-link" data-goto="home">🏠</span>
             <span class="bc-sep">/</span>
             <span class="bc-cur">영선 / 보수</span>
+            <span class="bc-date"></span>
           </div>
           <div class="glass cat-hero">
             <div class="cat-icon cat-icon--construction">🔨</div>
@@ -316,7 +319,7 @@
               <div class="cat-sub">건축·인테리어 보수 절차 매뉴얼</div>
               <div class="cat-count" id="construction-count">매뉴얼 0건</div>
             </div>
-            <button class="btn-o" onclick="openManualModal('construction')">＋ 매뉴얼 추가</button>
+            <button class="btn-o" onclick="openManualForm('construction')">＋ 매뉴얼 추가</button>
           </div>
           <div class="slbl slbl--mb">매뉴얼 목록</div>
           <div class="manual-list" id="manual-list-construction"></div>
@@ -330,6 +333,7 @@
             <span class="bc-ico bc-link" data-goto="home">🏠</span>
             <span class="bc-sep">/</span>
             <span class="bc-cur">소방 설비</span>
+            <span class="bc-date"></span>
           </div>
           <div class="glass cat-hero">
             <div class="cat-icon cat-icon--fire">🔥</div>
@@ -338,7 +342,7 @@
               <div class="cat-sub">소방설비 점검 및 관리 절차 매뉴얼</div>
               <div class="cat-count" id="fire-count">매뉴얼 0건</div>
             </div>
-            <button class="btn-o" onclick="openManualModal('fire')">＋ 매뉴얼 추가</button>
+            <button class="btn-o" onclick="openManualForm('fire')">＋ 매뉴얼 추가</button>
           </div>
           <div class="slbl slbl--mb">매뉴얼 목록</div>
           <div class="manual-list" id="manual-list-fire"></div>
@@ -354,6 +358,7 @@
             <span class="bc-link" id="md-bread-cat">전기</span>
             <span class="bc-sep">/</span>
             <span class="bc-cur" id="md-bread-title">매뉴얼 상세</span>
+            <span class="bc-date"></span>
           </div>
           <!-- 헤더 -->
           <div class="glass md-header-card">
@@ -422,7 +427,7 @@
           </div>
           <!-- 작업 기록 -->
           <div class="glass md-action-bar">
-            <button class="btn-o btn--full" onclick="openLogModal()">＋ 이 작업 기록하기</button>
+            <button class="btn-o btn--full" onclick="openLogForm()">＋ 이 작업 기록하기</button>
           </div>
         </div>
       </section>
@@ -434,6 +439,7 @@
             <span class="bc-ico bc-link" data-goto="home">🏠</span>
             <span class="bc-sep">/</span>
             <span class="bc-cur">작업기록</span>
+            <span class="bc-date"></span>
           </div>
           <div class="glass log-hero">
             <div class="log-hero-left">
@@ -443,7 +449,7 @@
                 <div class="hero-sub">시설 작업 이력 관리</div>
               </div>
             </div>
-            <button class="btn-o" onclick="openLogModal()">＋ 새 기록</button>
+            <button class="btn-o" onclick="openLogForm()">＋ 새 기록</button>
           </div>
           <div class="log-stats-row">
             <div class="log-stat-box">
@@ -481,6 +487,7 @@
             <span class="bc-link" data-goto="records">작업기록</span>
             <span class="bc-sep">/</span>
             <span class="bc-cur" id="log-detail-breadcrumb">상세</span>
+            <span class="bc-date"></span>
           </div>
           <div class="glass detail-card">
             <div class="detail-card__top">
@@ -517,6 +524,7 @@
             <span class="bc-ico bc-link" data-goto="home">🏠</span>
             <span class="bc-sep">/</span>
             <span class="bc-cur">학습메모</span>
+            <span class="bc-date"></span>
           </div>
           <div class="glass memo-hero">
             <div class="memo-hero__left">
@@ -526,7 +534,7 @@
                 <div class="hero-sub">기술 노트 & 현장 지식 아카이브</div>
               </div>
             </div>
-            <button class="btn-o" onclick="openMemoModal()">＋ 메모 추가</button>
+            <button class="btn-o" onclick="openMemoForm()">＋ 메모 추가</button>
           </div>
           <div class="filter-wrap">
             <div class="filter-scroll" id="memo-filter"></div>
@@ -545,6 +553,7 @@
             <span class="bc-link" data-goto="memo">학습메모</span>
             <span class="bc-sep">/</span>
             <span class="bc-cur" id="memo-detail-breadcrumb">상세</span>
+            <span class="bc-date"></span>
           </div>
           <div class="glass detail-card">
             <div class="detail-card__top">
@@ -574,6 +583,7 @@
             <span class="bc-ico bc-link" data-goto="home">🏠</span>
             <span class="bc-sep">/</span>
             <span class="bc-cur">연간 로드맵</span>
+            <span class="bc-date"></span>
           </div>
           <div class="glass rm-hero">
             <div class="rm-hero__left">
@@ -607,6 +617,7 @@
             <span class="bc-ico bc-link" data-goto="home">🏠</span>
             <span class="bc-sep">/</span>
             <span class="bc-cur">검색</span>
+            <span class="bc-date"></span>
           </div>
           <div class="glass search-bar">
             <i class="fa-solid fa-magnifying-glass search-bar__icon"></i>
@@ -629,6 +640,7 @@
             <span class="bc-ico bc-link" data-goto="home">🏠</span>
             <span class="bc-sep">/</span>
             <span class="bc-cur">연락처</span>
+            <span class="bc-date"></span>
           </div>
           <div class="glass log-hero">
             <div class="log-hero-left">
@@ -651,6 +663,7 @@
             <span class="bc-ico bc-link" data-goto="home">🏠</span>
             <span class="bc-sep">/</span>
             <span class="bc-cur">통계</span>
+            <span class="bc-date"></span>
           </div>
           <div class="glass log-hero">
             <div class="log-hero-left">
@@ -693,6 +706,7 @@
             <span class="bc-ico bc-link" data-goto="home">🏠</span>
             <span class="bc-sep">/</span>
             <span class="bc-cur">설정</span>
+            <span class="bc-date"></span>
           </div>
           <div class="glass settings-card">
             <div class="slbl slbl--mb">계정</div>
