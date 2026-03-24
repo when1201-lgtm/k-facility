@@ -1250,6 +1250,7 @@ async function saveManual() {
       renderManualCat(catKey);
     }
     S.uploadPhotos = [];
+    if (btn) { btn.disabled=false; btn.textContent='💾 저장'; }
     toast('✅ 저장됐습니다');
     goto(catKey);           /* ★ 저장 후 해당 카테고리 목록으로 이동 */
   } catch(e) {
@@ -1667,6 +1668,7 @@ async function saveLog() {
     }
 
     S.editLogId = null;
+    if (btn) { btn.disabled=false; btn.textContent='💾 저장'; }
     toast('✅ 저장됐습니다');
     goto('records');        /* ★ 무조건 목록으로 이동 */
 
@@ -1887,6 +1889,7 @@ async function saveMemo() {
     }
     S.editMemoId  = null;
     S.uploadPhotos = [];
+    if (btn) { btn.disabled=false; btn.textContent='💾 저장'; }
     toast('✅ 저장됐습니다');
     goto('memo');
   } catch(e) {
@@ -2097,6 +2100,7 @@ async function saveSchedule() {
     }
     S.activeMonth = month;
     S.editSchId = null;
+    if (btn) { btn.disabled = false; btn.textContent = '💾 저장'; }
     toast('✅ 저장됐습니다');
     goto('roadmap');
   } catch(e) {
