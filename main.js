@@ -63,6 +63,7 @@ const S = {
   logStatusFilter:  '전체',
   memoFilter:       '전체',
   activeMonth:      new Date().getMonth() + 1,
+  activeYear:       new Date().getFullYear(),
   /* 매뉴얼 체크리스트 (로컬) */
   checklistState:   {},
   /* 사진 업로드 버퍼: [{file, url, existing, storagePath}] */
@@ -568,27 +569,9 @@ function closeModal() {
    ⑪ HOME
 ===================================================== */
 function renderHome() {
-  /* 날짜 + 실시간 시계 */
-  function _tickClock() {
-    const de = $('home-date');
-    if (!de) return;
-    const now = new Date();
-    const dateStr = now.toLocaleDateString('ko-KR', {year:'numeric', month:'long', day:'numeric', weekday:'long'});
-    const hh = String(now.getHours()).padStart(2,'0');
-    const mm = String(now.getMinutes()).padStart(2,'0');
-    const ss = String(now.getSeconds()).padStart(2,'0');
-    const ampm = now.getHours() < 12 ? 'AM' : 'PM';
-    de.innerHTML = `
-      <div class="home-clock-wrap">
-        <span class="home-clock-date">${dateStr}</span>
-        <span class="home-clock-divider"></span>
-        <span class="home-clock-time">${hh}<span class="home-clock-colon">:</span>${mm}<span class="home-clock-colon">:</span>${ss}</span>
-        <span class="home-clock-ampm">${ampm}</span>
-      </div>`;
-  }
-  _tickClock();
-  if (window._clockTimer) clearInterval(window._clockTimer);
-  window._clockTimer = setInterval(_tickClock, 1000);
+  /* 날짜 */
+  const de = $('home-date');
+  if (de) de.textContent = new Date().toLocaleDateString('ko-KR', {year:'numeric',month:'long',day:'numeric',weekday:'short'});
 
   /* 최근 작업 2건 — Before/After 나란히 + 큰 이미지 */
   const mr = $('home-mini-row');
@@ -1895,35 +1878,70 @@ async function deleteMemo(id) {
 /* =====================================================
    ⑯ 연간 로드맵
 ===================================================== */
-function renderRoadmap() {
-  const yg=$('rm-year-grid');
-  if(yg) yg.innerHTML=Array.from({length:12},(_,i)=>i+1).map(m=>{
-    const sl=schedules.filter(s=>s.month===m);
-    const types=[...new Set(sl.map(s=>s.type))];
-    const active=m===S.activeMonth;
-    return `<div class="rm-month-chip${active?' rm-month-active':sl.length?' rm-month-has':''}" onclick="setRmMonth(${m})">
-      <span class="rm-chip-label">${MONTH_NAMES[m]}</span>
-      ${sl.length?`<span class="rm-chip-count">${sl.length}</span>`:''}
-      <div class="rm-chip-dots">
-        ${types.includes('법정')?'<span class="rm-dot" style="background:var(--red)"></span>'  :''}
-        ${types.includes('정기')?'<span class="rm-dot" style="background:var(--blue)"></span>' :''}
-        ${types.includes('계절')?'<span class="rm-dot" style="background:var(--green)"></span>':''}
-      </div>
-    </div>`;
-  }).join('');
+function renderRoadmap(dir) {
+  /* ── 연도 셀렉터 ── */
+  const yw = $('rm-year-selector');
+  if (yw) {
+    yw.innerHTML = `
+      <button class="rm-year-btn" onclick="setRmYear(${S.activeYear-1},'left')">‹</button>
+      <span class="rm-year-label" id="rm-year-label">${S.activeYear}</span>
+      <button class="rm-year-btn" onclick="setRmYear(${S.activeYear+1},'right')">›</button>`;
+  }
 
-  const mt=$('rm-month-tabs');
-  if(mt) mt.innerHTML=Array.from({length:12},(_,i)=>i+1).map(m=>{
-    const has=schedules.some(s=>s.month===m); const active=m===S.activeMonth;
+  /* ── 연도 필터된 일정 ── */
+  const yearSchedules = schedules.filter(s => {
+    if (s.year) return Number(s.year) === S.activeYear;
+    return true; /* year 필드 없는 기존 데이터는 모두 표시 */
+  });
+
+  /* ── 12칸 월별 그리드 ── */
+  const yg = $('rm-year-grid');
+  const gridEl = yg?.closest('.rm-minimap-body') || yg;
+  if (yg) {
+    const newHtml = Array.from({length:12},(_,i)=>i+1).map(m=>{
+      const sl = yearSchedules.filter(s=>s.month===m);
+      const types = [...new Set(sl.map(s=>s.type))];
+      const active = m===S.activeMonth;
+      return `<div class="rm-month-chip${active?' rm-month-active':sl.length?' rm-month-has':''}" onclick="setRmMonth(${m})">
+        <span class="rm-chip-label">${MONTH_NAMES[m]}</span>
+        ${sl.length?`<span class="rm-chip-count">${sl.length}</span>`:''}
+        <div class="rm-chip-dots">
+          ${types.includes('법정')?'<span class="rm-dot" style="background:var(--red)"></span>'  :''}
+          ${types.includes('정기')?'<span class="rm-dot" style="background:var(--blue)"></span>' :''}
+          ${types.includes('계절')?'<span class="rm-dot" style="background:var(--green)"></span>':''}
+        </div>
+      </div>`;
+    }).join('');
+    /* 슬라이드 애니메이션 */
+    if (dir) {
+      yg.classList.add(dir==='right' ? 'rm-slide-out-left' : 'rm-slide-out-right');
+      setTimeout(()=>{
+        yg.innerHTML = newHtml;
+        yg.classList.remove('rm-slide-out-left','rm-slide-out-right');
+        yg.classList.add(dir==='right' ? 'rm-slide-in-right' : 'rm-slide-in-left');
+        setTimeout(()=>yg.classList.remove('rm-slide-in-right','rm-slide-in-left'), 300);
+      }, 180);
+    } else {
+      yg.innerHTML = newHtml;
+    }
+  }
+
+  /* ── 월 탭 ── */
+  const mt = $('rm-month-tabs');
+  if (mt) mt.innerHTML = Array.from({length:12},(_,i)=>i+1).map(m=>{
+    const has = yearSchedules.some(s=>s.month===m);
+    const active = m===S.activeMonth;
     return `<button class="rm-tab${active?' rm-tab-active':has?' rm-tab-has':''}" onclick="setRmMonth(${m})">${MONTH_NAMES[m]}</button>`;
   }).join('');
 
-  const list=schedules.filter(s=>s.month===S.activeMonth);
-  const lc=$('rm-list-count'); if(lc) lc.textContent=MONTH_NAMES[S.activeMonth]+' 일정 '+list.length+'건';
-  const ll=$('rm-list'); if(!ll) return;
+  /* ── 선택 월 일정 목록 ── */
+  const list = yearSchedules.filter(s=>s.month===S.activeMonth);
+  const lc = $('rm-list-count');
+  if (lc) lc.textContent = S.activeYear+'년 '+MONTH_NAMES[S.activeMonth]+' 일정 '+list.length+'건';
+  const ll = $('rm-list'); if (!ll) return;
 
   ll.innerHTML = list.length ? list.map(s=>{
-    const ts=SCH_TYPE_STYLE[s.type]||{bg:'rgba(255,255,255,.07)',border:'rgba(255,255,255,.12)',color:'var(--t3)'};
+    const ts = SCH_TYPE_STYLE[s.type]||{bg:'rgba(255,255,255,.07)',border:'rgba(255,255,255,.12)',color:'var(--t3)'};
     return `<div class="gc rm-sch-card">
       <div class="rm-sch-type" style="background:${ts.bg};border:1px solid ${ts.border};color:${ts.color}">${esc(s.type)}</div>
       <div class="rm-sch-body">
@@ -1938,12 +1956,24 @@ function renderRoadmap() {
   }).join('') :
   `<div class="gc" style="padding:48px;text-align:center;color:var(--t4)">
     <div style="font-size:36px;opacity:.3;margin-bottom:12px">📭</div>
-    <div style="font-size:15px">이번 달 일정이 없습니다</div>
+    <div style="font-size:15px">일정이 없습니다</div>
     <button class="btn-o" style="margin:16px auto 0;display:flex" onclick="openSchModal()">＋ 일정 추가</button>
   </div>`;
 }
 
 function setRmMonth(m){ S.activeMonth=m; renderRoadmap(); }
+function setRmYear(y, dir){
+  S.activeYear=y;
+  /* 연도 숫자 롤링 애니메이션 */
+  const lbl=$('rm-year-label');
+  if(lbl){
+    lbl.classList.add(dir==='right'?'rm-year-roll-up':'rm-year-roll-down');
+    setTimeout(()=>{
+      lbl.classList.remove('rm-year-roll-up','rm-year-roll-down');
+    },350);
+  }
+  renderRoadmap(dir);
+}
 
 function openSchModal(id) {
   S.editSchId=id||null;
@@ -2287,6 +2317,7 @@ window.setLogCat        = setLogCat;
 window.setLogStatus     = setLogStatus;
 window.setMemoFilter    = setMemoFilter;
 window.setRmMonth       = setRmMonth;
+window.setRmYear        = setRmYear;
 window.openSchModal     = openSchModal;
 window.saveSchedule     = saveSchedule;
 window.deleteSchedule   = deleteSchedule;
