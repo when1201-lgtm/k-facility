@@ -944,7 +944,7 @@
           </div>
 
           <div class="fpf-body">
-            <!-- 기본 정보 -->
+            <!-- 기본 정보 + 대표 사진 -->
             <div class="fpf-card">
               <div class="fpf-section-title">🗂 기본 정보</div>
               <div class="lf-row">
@@ -971,6 +971,16 @@
                   <label class="lf-label">태그 (쉼표 구분)</label>
                   <textarea class="lf-textarea" id="mf-tags" rows="3" placeholder="MCB, 차단기, 전기"></textarea>
                 </div>
+              </div>
+              <!-- 대표 사진 (개요 아래) -->
+              <div class="lf-group" style="margin-top:4px">
+                <label class="lf-label">📷 대표 사진 (최대 10장)</label>
+                <div id="mf-photo-preview" class="photo-preview-wrap"></div>
+                <div class="photo-btn-row" style="margin-top:8px">
+                  <label class="photo-add-btn">📷 카메라<input type="file" accept="image/*" capture="environment" class="hidden" onchange="handleManualPhoto(event)"/></label>
+                  <label class="photo-add-btn">🖼 갤러리<input type="file" accept="image/*" multiple class="hidden" onchange="handleManualPhoto(event)"/></label>
+                </div>
+                <p class="photo-hint">800px 자동 압축 · Firebase Storage 저장</p>
               </div>
             </div>
 
@@ -1025,16 +1035,6 @@
               </div>
             </div>
 
-            <!-- 대표 사진 -->
-            <div class="fpf-card">
-              <div class="fpf-section-title">📷 매뉴얼 대표 사진</div>
-              <div id="mf-photo-preview" class="photo-preview-wrap"></div>
-              <div class="photo-btn-row">
-                <label class="photo-add-btn">📷 카메라<input type="file" accept="image/*" capture="environment" class="hidden" onchange="handleManualPhoto(event)"/></label>
-                <label class="photo-add-btn">🖼 갤러리<input type="file" accept="image/*" multiple class="hidden" onchange="handleManualPhoto(event)"/></label>
-              </div>
-              <p class="photo-hint">800px 자동 압축 · Firebase Storage 저장</p>
-            </div>
           </div>
 
           <div class="fpf-sticky-bar">
