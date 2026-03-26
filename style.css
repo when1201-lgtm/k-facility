@@ -3373,17 +3373,37 @@ body.light-mode .md-stat {
   font-weight: 600 !important;
   padding: 5px 14px !important;
 }
-/* 개요 섹션 라벨 추가 */
-.md-overview::before {
-  content: '📝 개요';
-  display: block;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  color: var(--t4);
-  margin-bottom: 8px;
+/* ── 개요 / 준비물 폰트 크기 강화 ── */
+/* 개요 타이틀 (md-overview-title) */
+body.light-mode .md-overview .md-sec-title,
+.md-overview .md-sec-title {
+  font-size: 18px !important;
+  font-weight: 800 !important;
+  margin-bottom: 14px !important;
+  padding-bottom: 14px !important;
+  border-bottom: 2px solid #E5E7EB !important;
 }
-body.light-mode .md-overview::before {
-  color: #9ca3af !important;
+/* 개요 본문 */
+body.light-mode .md-overview p,
+.md-overview p {
+  font-size: 18px !important;
+  font-weight: 400 !important;
+  line-height: 1.85 !important;
+  color: #374151 !important;
+  letter-spacing: -0.02em !important;
 }
+/* 준비물 타이틀 — md-overview 안에 없는 일반 md-sec-title */
+body.light-mode #md-supplies-wrap .md-sec-title,
+#md-supplies-wrap .md-sec-title {
+  font-size: 18px !important;
+  font-weight: 800 !important;
+}
+/* 준비물 아이템 텍스트 */
+body.light-mode .supply-name,
+.supply-name {
+  font-size: 17px !important;
+  font-weight: 600 !important;
+}
+
+/* 개요 섹션 라벨 — ::before 제거 (HTML title 사용) */
+.md-overview::before { display: none !important; content: none !important; }
