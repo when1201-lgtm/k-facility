@@ -3625,3 +3625,109 @@ body.light-mode .tool-card__photo {
   .tool-card__photo  { height: 110px; }
   .tool-card--more   { flex: 0 0 130px !important; width: 130px !important; }
 }
+
+/* ═══════════════════════════════════════════════════
+   공구 도감 — 풀페이지 & 폼 추가 스타일
+═══════════════════════════════════════════════════ */
+
+/* ── 슬라이더 헤더 버튼 정렬 수정 ── */
+.tools-slider-header {
+  align-items: center;
+  gap: 12px;
+}
+.tools-slider-title {
+  flex: 1;
+}
+
+/* ── 히어로 아이콘 (풀페이지) ── */
+.tool-hero-icon {
+  width: 52px; height: 52px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px;
+  flex-shrink: 0;
+}
+
+/* ── 검색창 ── */
+.tool-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 1.25rem !important;
+  height: 52px;
+  margin: 1.25rem 0 1rem;
+  border-radius: 14px !important;
+}
+.tool-search-icon {
+  font-size: 15px;
+  color: var(--t4);
+  flex-shrink: 0;
+}
+.tool-search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 15px;
+  color: var(--t1);
+  font-family: inherit;
+}
+.tool-search-input::placeholder { color: var(--t4); }
+
+body.light-mode .tool-search-wrap {
+  background: #FFFFFF !important;
+  border: 2px solid #D1D5DB !important;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,.06) !important;
+}
+body.light-mode .tool-search-input { color: #111827 !important; }
+
+/* ── 풀페이지 카드 그리드 ── */
+.tools-full-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.25rem;
+  margin-top: 0;
+}
+
+/* ── 풀페이지에서 .tool-card 는 슬라이더와 동일 클래스
+   단, flex shrink 해제 + 카드 폭 auto ── */
+.tools-full-grid .tool-card {
+  flex: none !important;
+  width: auto !important;
+}
+
+/* ── 카드 액션 버튼 ── */
+.tool-card__actions {
+  position: absolute;
+  top: 8px; right: 8px;
+  display: flex; gap: 4px;
+  opacity: 0;
+  transition: opacity .18s;
+}
+.tool-card:hover .tool-card__actions { opacity: 1; }
+.tool-card { position: relative; }   /* actions absolute 기준 */
+
+/* ── 현장 이름 (nickname) ── */
+.tool-card__nick {
+  font-size: 11px;
+  color: var(--t4);
+  margin: -3px 0 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+body.light-mode .tool-card__nick { color: #9ca3af !important; }
+
+/* ── 공구 폼 사진 미리보기 ── */
+.tool-photo-preview-wrap {
+  min-height: 8px;
+}
+
+/* ── 반응형 풀그리드 ── */
+@media (max-width: 800px) {
+  .tools-full-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem; }
+}
+@media (max-width: 480px) {
+  .tools-full-grid { grid-template-columns: repeat(2, 1fr); gap: .75rem; }
+}
