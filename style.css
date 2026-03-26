@@ -234,7 +234,7 @@ body.light-mode .rtxt,
 body.light-mode .ct,
 body.light-mode .memo-content-box,
 body.light-mode .md-overview p,
-body.light-mode .supply-name        { color: #111827 !important; font-weight: 400 !important; text-shadow: none !important; }
+body.light-mode .supply-name        { color: #111827 !important; font-weight: 500 !important; text-shadow: none !important; }
 
 /* 3단계: 서브 텍스트 */
 body.light-mode .hero-sub,
@@ -657,19 +657,16 @@ body.light-mode .step-card-head {
 }
 body.light-mode .step-title {
   color: #111827 !important;
-  font-size: 15px !important;
-  font-weight: 600 !important;
+  font-size: 17px !important;
+  font-weight: 700 !important;
   text-shadow: none !important;
-  line-height: 1.8 !important;
-  letter-spacing: -0.02em !important;
-  margin-bottom: 8px !important;
+  margin-bottom: 10px !important;
 }
 body.light-mode .step-desc {
   color: #1f2937 !important;
-  font-size: 15px !important;
-  font-weight: 400 !important;
-  line-height: 1.8 !important;
-  letter-spacing: -0.02em !important;
+  font-size: 16px !important;
+  font-weight: 500 !important;
+  line-height: 1.85 !important;
 }
 
 /* ── 준비물 그리드 아이템 더 선명하게 ── */
@@ -786,11 +783,10 @@ body.light-mode .detail-title {
   margin-top: 20px !important;
 }
 body.light-mode .detail-desc {
-  color: #1f2937 !important;
-  font-size: 15px !important;
-  font-weight: 400 !important;
-  line-height: 1.8 !important;
-  letter-spacing: -0.02em !important;
+  color: #111827 !important;
+  font-size: 16px !important;
+  font-weight: 500 !important;
+  line-height: 1.9 !important;
   white-space: pre-wrap !important;
 }
 body.light-mode .detail-desc-wrap {
@@ -804,11 +800,11 @@ body.light-mode .memo-content-box {
   background: #FFFFFF !important;
   border: 2px solid #D1D5DB !important;
   color: #111827 !important;
-  font-size: 15px !important;
-  font-weight: 400 !important;
-  line-height: 1.8 !important;
+  font-size: 16px !important;
+  font-weight: 500 !important;
+  line-height: 1.9 !important;
   border-radius: 14px !important;
-  padding: 22px 26px !important;
+  padding: 2rem !important;
   box-shadow: 0 4px 12px rgba(0,0,0,.07) !important;
 }
 body.light-mode .memo-tags-row { gap: 8px !important; margin-bottom: 20px !important; }
@@ -1119,19 +1115,16 @@ body.light-mode .step-card-head {
 }
 body.light-mode .step-title {
   color: #111827 !important;
-  font-size: 15px !important;
-  font-weight: 600 !important;
+  font-weight: 700 !important;
+  font-size: 17px !important;
   text-shadow: none !important;
-  line-height: 1.8 !important;
-  letter-spacing: -0.02em !important;
-  margin-bottom: 8px !important;
+  margin-bottom: 10px !important;
 }
 body.light-mode .step-desc {
   color: #1f2937 !important;
-  font-size: 15px !important;
-  font-weight: 400 !important;
-  line-height: 1.8 !important;
-  letter-spacing: -0.02em !important;
+  font-weight: 500 !important;
+  font-size: 16px !important;
+  line-height: 2.0 !important;
 }
 body.light-mode .step-num-circle {
   background: #4f46e5 !important;
@@ -1200,10 +1193,9 @@ body.light-mode .detail-desc-wrap {
 }
 body.light-mode .detail-desc {
   color: #1f2937 !important;
-  font-size: 15px !important;
-  font-weight: 400 !important;
-  line-height: 1.8 !important;
-  letter-spacing: -0.02em !important;
+  font-size: 16px !important;
+  font-weight: 500 !important;
+  line-height: 2.0 !important;
   white-space: pre-wrap !important;
 }
 body.light-mode .detail-photos-wrap {
@@ -1364,12 +1356,12 @@ body.light-mode .memo-content-box {
   background: #FFFFFF !important;
   border: 2px solid #D1D5DB !important;
   box-shadow: 0 10px 15px -3px rgba(0,0,0,.08) !important;
-  border-radius: 18px !important;
+  border-radius: 14px !important;
   color: #1f2937 !important;
-  font-size: 15px !important;
-  font-weight: 400 !important;
-  line-height: 1.8 !important;
-  padding: 22px 26px !important;
+  font-size: 18px !important;
+  font-weight: 500 !important;
+  line-height: 2.2 !important;
+  padding: 2.5rem !important;
 }
 
 /* ══════════════════════════════════════════
@@ -1730,6 +1722,7 @@ body.light-mode .fpf-add-step-btn {
   display: flex;
   gap: 12px;
   padding: 16px 36px 20px;
+  padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
   border-top: 2px solid rgba(255,255,255,.16);
   background: linear-gradient(to top, rgba(14,22,42,.95) 60%, transparent);
 }
@@ -1764,7 +1757,11 @@ body.light-mode .fpf-sticky-bar {
   .fpf-back-btn   { padding: 9px 14px; font-size: 14px; }
   .fpf-body       { padding: 16px 16px 12px; gap: 14px; }
   .fpf-card       { padding: 20px 18px !important; }
-  .fpf-sticky-bar { padding: 14px 16px 18px; gap: 10px; }
+  .fpf-sticky-bar {
+    padding: 14px 16px 18px;
+    padding-bottom: max(18px, calc(14px + env(safe-area-inset-bottom, 0px)));
+    gap: 10px;
+  }
   .fpf-save-btn   { font-size: 16px; min-height: 50px; }
   .fpf-cancel-btn { min-height: 50px; }
   .lf-row         { grid-template-columns: 1fr !important; }
@@ -1773,7 +1770,10 @@ body.light-mode .fpf-sticky-bar {
 @media (max-width: 900px) {
   .fpf-header { padding: 18px 24px 14px; }
   .fpf-body   { padding: 20px 24px 12px; }
-  .fpf-sticky-bar { padding: 14px 24px 18px; }
+  .fpf-sticky-bar {
+    padding: 14px 24px 18px;
+    padding-bottom: max(18px, calc(14px + env(safe-area-inset-bottom, 0px)));
+  }
 }
 
 /* ── RESET ── */
@@ -2043,7 +2043,7 @@ a { color: inherit; text-decoration: none; }
 .hero-title { font-size: 18px; font-weight: 700; color: var(--t1); }
 .hero-sub   { font-size: 13px; color: var(--t3); }
 .detail-title { font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 16px; line-height: 1.3; }
-.detail-desc  { font-size: 15px; font-weight: 400; color: #eef2ff; line-height: 1.8; white-space: pre-wrap; letter-spacing: -0.02em; word-break: break-word; }
+.detail-desc  { font-size: 20px; font-weight: 400; color: #eef2ff; line-height: 2.2; white-space: pre-wrap; letter-spacing: 0em; }
 .empty-state { text-align: center; padding: 48px 20px; color: var(--t4); }
 .empty-state__icon { font-size: 32px; margin-bottom: 12px; opacity: .3; }
 .empty-state__text { font-size: 15px; }
@@ -2124,7 +2124,14 @@ textarea::selection { background: rgba(224,92,10,.35); color: #fff; }
 textarea { caret-color: var(--orange); }
 
 /* ── PHOTO PREVIEW ── */
-.photo-preview-wrap { display: flex; gap: 10px; flex-wrap: wrap; padding: 8px 0; }
+.photo-preview-wrap {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 8px 0;
+  min-height: 44px;        /* 빈 상태에도 영역 확보 */
+  align-items: flex-start;
+}
 .photo-preview-item { position: relative; display: inline-block; }
 .photo-preview-item img {
   width: 80px; height: 80px;
@@ -2374,8 +2381,8 @@ textarea { caret-color: var(--orange); }
 .step-connector { width: 2px; flex: 1; background: rgba(255,255,255,.12); margin-top: 6px; min-height: 16px; border-radius: 1px; }
 .step-card { flex: 1; overflow: hidden; }
 .step-card-head { padding: 16px 18px; }
-.step-title { font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 8px; text-shadow: none; white-space: pre-wrap; word-break: break-word; line-height: 1.8; letter-spacing: -0.02em; }
-.step-desc  { font-size: 15px; font-weight: 400; color: rgba(255,255,255,.85); line-height: 1.8; white-space: pre-wrap; word-break: break-word; letter-spacing: -0.02em; }
+.step-title { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 10px; text-shadow: 0 1px 3px rgba(0,0,0,.5); white-space: pre-wrap; word-break: break-word; line-height: 1.7; }
+.step-desc  { font-size: 17px; font-weight: 500; color: rgba(255,255,255,.9); line-height: 2.05; white-space: pre-wrap; word-break: break-word; }
 /* ═══════════════════════════════════════════════
    상세 작업 절차 — #step-container 렌더링
    데이터: steps: [{text, imgUrl}]
@@ -2434,23 +2441,21 @@ textarea { caret-color: var(--orange); }
   gap: 0;
 }
 .step-title {
-  font-size: 15px; font-weight: 600;
+  font-size: 18px; font-weight: 700;
   color: #fff;
-  margin-bottom: 8px;
-  line-height: 1.8;
-  text-shadow: none;
+  margin-bottom: 10px;
+  line-height: 1.7;
+  text-shadow: 0 1px 3px rgba(0,0,0,.5);
   white-space: pre-wrap;
   word-break: break-word;
-  letter-spacing: -0.02em;
 }
 .step-desc {
-  font-size: 15px;
+  font-size: 18px;
   font-weight: 400;
   color: #dde4ff;
-  line-height: 1.8;
+  line-height: 2.2;
   white-space: pre-wrap;
   word-break: break-word;
-  letter-spacing: -0.02em;
 }
 
 /* ★ 절차 사진 — 글 바로 아래, 화면 밖 방지 */
@@ -2569,7 +2574,7 @@ textarea { caret-color: var(--orange); }
 .memo-card-preview { font-size: 13.5px; color: var(--t3); line-height: 1.7; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
 .memo-tags { display: flex; gap: 5px; flex-wrap: wrap; }
 .memo-tags-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
-.memo-content-box { font-size: 15px; font-weight: 400; color: #eef2ff; line-height: 1.8; padding: 22px 26px; border-radius: 14px; background: rgba(16,22,44,.70); border: 1px solid rgba(255,255,255,.14); white-space: pre-wrap; font-family: inherit; min-height: 200px; letter-spacing: -0.02em; word-break: break-word; }
+.memo-content-box { font-size: 20px; font-weight: 400; color: #eef2ff; line-height: 2.2; padding: 28px 32px; border-radius: 14px; background: rgba(16,22,44,.70); border: 1px solid rgba(255,255,255,.14); white-space: pre-wrap; font-family: inherit; min-height: 200px; letter-spacing: -0.01em; }
 
 /* ── ROADMAP ── */
 .rm-hero { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 20px; margin-bottom: 16px; flex-wrap: wrap; }
