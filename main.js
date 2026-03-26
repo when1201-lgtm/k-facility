@@ -40,6 +40,7 @@ let _unsubLogs     = null;
 let _unsubMemos    = null;
 let _unsubSch      = null;
 let _unsubManuals  = null;
+let _unsubTools    = null;
 
 /* =====================================================
    ② GLOBAL STATE
@@ -81,6 +82,7 @@ let memos     = [];
 let schedules = [];
 let contacts  = [];
 let manuals   = { electric:[], mechanical:[], construction:[], fire:[] };
+let tools     = [];
 
 /* ── 게스트용 샘플 데이터 ── */
 const SAMPLE_LOGS = [
@@ -130,6 +132,17 @@ const SAMPLE_CONTACTS = [
   {id:'c2', name:'김철수',       role:'기계 담당',  company:'K-Facility', phone:'010-2345-6789', email:'kim@kfacility.com'},
   {id:'c3', name:'LS전기 AS센터',role:'전기 협력사', company:'LS산전',     phone:'1588-1234',    email:''},
   {id:'c4', name:'삼보소방',     role:'소방 점검',   company:'삼보소방',   phone:'02-555-7890',  email:''},
+];
+
+const SAMPLE_TOOLS = [
+  { id:'tool1', title:'드라이버 (+) #2',    usage:'나사 체결 / 분리',   size:'#2 × 150mm',    location:'1F 공구함 A', cat:'전기', photoUrl:'', createdAt: Date.now()-500000 },
+  { id:'tool2', title:'절연 장갑',          usage:'전기 작업 보호구',   size:'L (내전압 7kV)', location:'1F 공구함 A', cat:'전기', photoUrl:'', createdAt: Date.now()-400000 },
+  { id:'tool3', title:'검전기 (비접촉)',     usage:'활선·무전압 확인',   size:'AC 12~1000V',   location:'1F 공구함 B', cat:'전기', photoUrl:'', createdAt: Date.now()-300000 },
+  { id:'tool4', title:'멀티미터',           usage:'전압·전류·저항 측정', size:'600V CAT III',  location:'전기실',      cat:'전기', photoUrl:'', createdAt: Date.now()-200000 },
+  { id:'tool5', title:'파이프 렌치',        usage:'배관 체결 / 분리',   size:'14인치',         location:'기계실',      cat:'기계', photoUrl:'', createdAt: Date.now()-100000 },
+  { id:'tool6', title:'토크 렌치',          usage:'볼트 정밀 체결',     size:'20~110 N·m',    location:'기계실',      cat:'기계', photoUrl:'', createdAt: Date.now()-50000  },
+  { id:'tool7', title:'소화기 압력계',      usage:'소화기 압력 점검',   size:'범용',           location:'소방 창고',   cat:'소방', photoUrl:'', createdAt: Date.now()-20000  },
+  { id:'tool8', title:'줄자 (5m)',          usage:'현장 치수 측정',     size:'5m × 19mm',     location:'1F 공구함 C', cat:'영선', photoUrl:'', createdAt: Date.now()-10000  },
 ];
 
 const SAMPLE_MANUALS = {
@@ -373,6 +386,7 @@ function loadGuestData() {
   schedules = [...SAMPLE_SCHEDULES];
   contacts  = [...SAMPLE_CONTACTS];
   manuals   = JSON.parse(JSON.stringify(SAMPLE_MANUALS));
+  tools     = [...SAMPLE_TOOLS];
 }
 
 /* =====================================================
@@ -467,11 +481,26 @@ function subscribeFirestore() {
     if (S.currentPage === 'contacts') renderContacts();
   });
 
+  /* ★ 공구 도감 — createdAt 내림차순 (JS 정렬) */
+  _unsubTools = db.collection('tools')
+    .onSnapshot(snap => {
+      console.log('[K-Facility] tools 수신:', snap.size + '건');
+      if (snap.empty) {
+        tools = [];
+      } else {
+        tools = snap.docs
+          .map(d => ({ id: d.id, ...d.data() }))
+          .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      }
+      if (S.currentPage === 'home')          renderToolsSlider();
+      if (S.currentPage === 'tools-catalog') renderToolsCatalog();
+    }, e => console.error('[tools 구독 오류]', e));
+
   goto('home');
 }
 
 function unsubAll() {
-  [_unsubLogs, _unsubMemos, _unsubSch, _unsubManuals].forEach(fn => fn && fn());
+  [_unsubLogs, _unsubMemos, _unsubSch, _unsubManuals, _unsubTools].forEach(fn => fn && fn());
 }
 
 /* =====================================================
@@ -555,6 +584,7 @@ function goto(pageId) {
     case 'stats':        renderStats();                   break;
     case 'manual-detail':renderManualDetail();            break;
     case 'search':       /* input focus로 트리거 */       break;
+    case 'tools-catalog':renderToolsCatalog();            break;
   }
 }
 
@@ -699,6 +729,9 @@ function renderHome() {
     }
   });
   updateHomeProgress();
+
+  /* 공구 도감 슬라이더 */
+  renderToolsSlider();
 }
 
 function updateHomeProgress() {
@@ -711,8 +744,118 @@ function updateHomeProgress() {
 }
 
 /* =====================================================
-   ⑫ 매뉴얼 카테고리 목록
+   공구 도감 슬라이더 (대시보드 홈)
 ===================================================== */
+function renderToolsSlider() {
+  const el = $('tools-slider');
+  if (!el) return;
+
+  /* 게스트일 때도 SAMPLE_TOOLS 사용 */
+  const list = tools.length ? tools : (S.isGuest ? SAMPLE_TOOLS : []);
+
+  if (!list.length) {
+    el.innerHTML = `
+      <div class="tool-card glass" style="flex:0 0 200px;display:flex;flex-direction:column;
+           align-items:center;justify-content:center;min-height:200px;gap:10px;padding:1.5rem!important">
+        <div style="font-size:2.5rem;opacity:.35">🔧</div>
+        <div style="font-size:13px;color:var(--t4);text-align:center">
+          등록된 공구 없음<br>
+          <button class="btn-o" style="margin:12px auto 0;display:flex;font-size:12px;padding:7px 14px"
+            onclick="goto('tool-form')">＋ 첫 공구 등록</button>
+        </div>
+      </div>`;
+    return;
+  }
+
+  const CAT_COLORS = {
+    전기:'#f59e0b', 기계:'#3b82f6', 영선:'#10b981', 소방:'#ef4444',
+  };
+
+  const cardsHtml = list.map(t => {
+    const photoHtml = t.photoUrl
+      ? `<img src="${esc(t.photoUrl)}" alt="${esc(t.title)}">`
+      : '';
+    const catColor = CAT_COLORS[t.cat] || '#6366f1';
+    return `
+    <div class="tool-card glass" onclick="openToolDetail('${esc(t.id)}')">
+      <div class="tool-card__photo${t.photoUrl ? '' : ' tool-card__photo--empty'}">
+        ${photoHtml}
+        <span class="tool-card__badge" style="background:${catColor}dd">${esc(t.cat||'기타')}</span>
+      </div>
+      <div class="tool-card__body">
+        <div class="tool-card__name">${esc(t.title)}</div>
+        <div class="tool-card__meta">
+          ${t.usage    ? `<span>📌 ${esc(t.usage)}</span>`    : ''}
+          ${t.size     ? `<span>📐 ${esc(t.size)}</span>`     : ''}
+          ${t.location ? `<span>📦 ${esc(t.location)}</span>` : ''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  /* 맨 끝 "전체 보기" 카드 */
+  const moreCard = `
+    <div class="tool-card tool-card--more" onclick="goto('tools-catalog')">
+      <div class="tool-card--more__icon">🗂️</div>
+      <div class="tool-card--more__text">전체 도감<br>보기 →</div>
+    </div>`;
+
+  el.innerHTML = cardsHtml + moreCard;
+}
+
+/* =====================================================
+   공구 도감 풀페이지 (placeholder — 다음 단계에서 완성)
+===================================================== */
+function renderToolsCatalog() {
+  /* 풀페이지 완성 전까지는 슬라이더 데이터 그대로 재활용 */
+  console.log('[K-Facility] tools-catalog 페이지 (준비 중):', tools.length + '건');
+}
+
+/* =====================================================
+   공구 상세 모달 (간단 미리보기 — 풀페이지 전 임시)
+===================================================== */
+function openToolDetail(toolId) {
+  const t = tools.find(x => x.id === toolId) ||
+            SAMPLE_TOOLS.find(x => x.id === toolId);
+  if (!t) return;
+
+  const CAT_COLORS = {
+    전기:'#f59e0b', 기계:'#3b82f6', 영선:'#10b981', 소방:'#ef4444',
+  };
+  const catColor = CAT_COLORS[t.cat] || '#6366f1';
+
+  const photoHtml = t.photoUrl
+    ? `<img src="${esc(t.photoUrl)}" style="width:100%;height:200px;object-fit:cover;
+         border-radius:16px;margin-bottom:1.25rem">`
+    : `<div style="width:100%;height:140px;border-radius:16px;margin-bottom:1.25rem;
+         background:linear-gradient(135deg,rgba(99,102,241,.12),rgba(139,92,246,.10));
+         display:flex;align-items:center;justify-content:center;font-size:3.5rem">🔧</div>`;
+
+  const rows = [
+    ['📌 용도',     t.usage],
+    ['📐 사이즈',   t.size],
+    ['📦 보관 위치', t.location],
+  ].filter(([,v]) => v);
+
+  openModal(`
+    <div style="padding:1.5rem;max-width:360px">
+      ${photoHtml}
+      <div style="display:inline-block;padding:3px 12px;border-radius:99px;
+           font-size:11px;font-weight:700;margin-bottom:.75rem;
+           background:${catColor}22;color:${catColor};border:1px solid ${catColor}44">
+        ${esc(t.cat||'기타')}
+      </div>
+      <h3 style="font-size:18px;font-weight:800;color:var(--t1);margin:0 0 1rem">${esc(t.title)}</h3>
+      ${rows.map(([label, val]) => `
+        <div style="display:flex;gap:8px;align-items:baseline;padding:8px 0;
+             border-bottom:1px solid rgba(255,255,255,.08)">
+          <span style="font-size:12px;color:var(--t4);width:84px;flex-shrink:0">${label}</span>
+          <span style="font-size:14px;font-weight:600;color:var(--t1)">${esc(val)}</span>
+        </div>`).join('')}
+      <button class="btn-o" style="width:100%;margin-top:1.25rem;justify-content:center"
+        onclick="closeModal();goto('tools-catalog')">전체 도감 보기 →</button>
+    </div>`);
+}
 function renderManualCat(catKey) {
   const list = manuals[catKey] || [];
   const cnt  = $(catKey + '-count'); if (cnt) cnt.textContent = '매뉴얼 ' + list.length + '건';
@@ -2648,3 +2791,6 @@ window.openContactModal = openContactModal;
 window.exportData       = exportData;
 window.clearLocalData   = clearLocalData;
 window.doSearch         = doSearch;
+window.renderToolsSlider  = renderToolsSlider;
+window.renderToolsCatalog = renderToolsCatalog;
+window.openToolDetail     = openToolDetail;
