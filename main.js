@@ -60,6 +60,11 @@ const S = {
   /* 현재 보고 있는 매뉴얼 */
   viewManualCat:    null,
   viewManualId:     null,
+  /* 공구 도감 */
+  editToolId:       null,
+  toolPhotoBlob:    null,
+  toolPhotoExist:   '',
+  _prevToolPage:    'tools-catalog',
   /* 필터 */
   logCatFilter:     '전체',
   logStatusFilter:  '전체',
@@ -486,10 +491,27 @@ function subscribeFirestore() {
     .onSnapshot(snap => {
       console.log('[K-Facility] tools 수신:', snap.size + '건');
       if (snap.empty) {
-        tools = [];
+        /* 빈 컬렉션 → 샘플 데이터 시드 (schedules/manuals와 동일 패턴) */
+        const b = db.batch();
+        SAMPLE_TOOLS.forEach(t => b.set(db.collection('tools').doc(t.id), {
+          standardName:     t.title,
+          nickname:         '',
+          purpose:          t.usage,
+          size:             t.size,
+          storageLocation:  t.location,
+          comparisonMemo:   '',
+          cat:              t.cat,
+          photoURL:         t.photoUrl || '',
+          createdAt:        t.createdAt,
+        }));
+        b.commit();
+        tools = SAMPLE_TOOLS.map(t => _normTool({ id: t.id,
+          standardName: t.title, purpose: t.usage, size: t.size,
+          storageLocation: t.location, cat: t.cat,
+          photoURL: '', createdAt: t.createdAt }));
       } else {
         tools = snap.docs
-          .map(d => ({ id: d.id, ...d.data() }))
+          .map(d => _normTool({ id: d.id, ...d.data() }))
           .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
       }
       if (S.currentPage === 'home')          renderToolsSlider();
@@ -585,6 +607,7 @@ function goto(pageId) {
     case 'manual-detail':renderManualDetail();            break;
     case 'search':       /* input focus로 트리거 */       break;
     case 'tools-catalog':renderToolsCatalog();            break;
+    case 'tool-form':    /* openToolForm()에서 주입 */    break;
   }
 }
 
@@ -744,14 +767,74 @@ function updateHomeProgress() {
 }
 
 /* =====================================================
+   공구 도감 — 헬퍼 & 공용 상수
+===================================================== */
+const TOOL_CAT_COLORS = {
+  전기:'#f59e0b', 기계:'#3b82f6', 영선:'#10b981', 소방:'#ef4444', 공통:'#6366f1',
+};
+
+/* Firestore 문서를 앱 내부 표현으로 정규화 */
+function _normTool(d) {
+  return {
+    id:            d.id,
+    title:         d.standardName || d.title || '',
+    nickname:      d.nickname      || '',
+    usage:         d.purpose       || d.usage || '',
+    size:          d.size          || '',
+    location:      d.storageLocation || d.location || '',
+    memo:          d.comparisonMemo  || d.memo || '',
+    cat:           d.cat           || '공통',
+    photoUrl:      d.photoURL      || d.photoUrl || '',
+    createdAt:     d.createdAt     || Date.now(),
+    /* 검색 인덱스용 합성 텍스트 */
+    _idx: ((d.standardName||'') + ' ' + (d.nickname||'') + ' ' +
+           (d.purpose||'') + ' ' + (d.size||'')).toLowerCase(),
+  };
+}
+
+/* 단일 tool-card HTML 생성 (슬라이더 + 풀페이지 공용) */
+function _toolCardHtml(t, { showActions = false } = {}) {
+  const cc = TOOL_CAT_COLORS[t.cat] || '#6366f1';
+  const photoHtml = t.photoUrl
+    ? `<img src="${esc(t.photoUrl)}" alt="${esc(t.title)}">`
+    : '';
+  const actionsHtml = showActions ? `
+    <div class="tool-card__actions" onclick="event.stopPropagation()">
+      <button class="lc-btn lc-btn-edit" onclick="openToolForm('${esc(t.id)}')">✏️</button>
+      <button class="lc-btn lc-btn-del"  onclick="deleteTool('${esc(t.id)}')">🗑</button>
+    </div>` : '';
+  return `
+  <div class="tool-card glass" onclick="openToolDetail('${esc(t.id)}')">
+    <div class="tool-card__photo${t.photoUrl ? '' : ' tool-card__photo--empty'}">
+      ${photoHtml}
+      <span class="tool-card__badge" style="background:${cc}dd">${esc(t.cat||'기타')}</span>
+    </div>
+    <div class="tool-card__body">
+      <div class="tool-card__name">${esc(t.title)}</div>
+      ${t.nickname ? `<div class="tool-card__nick">${esc(t.nickname)}</div>` : ''}
+      <div class="tool-card__meta">
+        ${t.usage    ? `<span>📌 ${esc(t.usage)}</span>`    : ''}
+        ${t.size     ? `<span>📐 ${esc(t.size)}</span>`     : ''}
+        ${t.location ? `<span>📦 ${esc(t.location)}</span>` : ''}
+      </div>
+    </div>
+    ${actionsHtml}
+  </div>`;
+}
+
+/* =====================================================
    공구 도감 슬라이더 (대시보드 홈)
 ===================================================== */
 function renderToolsSlider() {
   const el = $('tools-slider');
   if (!el) return;
 
-  /* 게스트일 때도 SAMPLE_TOOLS 사용 */
-  const list = tools.length ? tools : (S.isGuest ? SAMPLE_TOOLS : []);
+  /* 로그인 여부와 무관하게 빈 배열이면 SAMPLE_TOOLS 폴백 */
+  const list = tools.length ? tools
+    : SAMPLE_TOOLS.map(t => _normTool({ id: t.id,
+        standardName: t.title, purpose: t.usage, size: t.size,
+        storageLocation: t.location, cat: t.cat,
+        photoURL: '', createdAt: t.createdAt }));
 
   if (!list.length) {
     el.innerHTML = `
@@ -761,40 +844,14 @@ function renderToolsSlider() {
         <div style="font-size:13px;color:var(--t4);text-align:center">
           등록된 공구 없음<br>
           <button class="btn-o" style="margin:12px auto 0;display:flex;font-size:12px;padding:7px 14px"
-            onclick="goto('tool-form')">＋ 첫 공구 등록</button>
+            onclick="openToolForm()">＋ 첫 공구 등록</button>
         </div>
       </div>`;
     return;
   }
 
-  const CAT_COLORS = {
-    전기:'#f59e0b', 기계:'#3b82f6', 영선:'#10b981', 소방:'#ef4444',
-  };
-
-  const cardsHtml = list.map(t => {
-    const photoHtml = t.photoUrl
-      ? `<img src="${esc(t.photoUrl)}" alt="${esc(t.title)}">`
-      : '';
-    const catColor = CAT_COLORS[t.cat] || '#6366f1';
-    return `
-    <div class="tool-card glass" onclick="openToolDetail('${esc(t.id)}')">
-      <div class="tool-card__photo${t.photoUrl ? '' : ' tool-card__photo--empty'}">
-        ${photoHtml}
-        <span class="tool-card__badge" style="background:${catColor}dd">${esc(t.cat||'기타')}</span>
-      </div>
-      <div class="tool-card__body">
-        <div class="tool-card__name">${esc(t.title)}</div>
-        <div class="tool-card__meta">
-          ${t.usage    ? `<span>📌 ${esc(t.usage)}</span>`    : ''}
-          ${t.size     ? `<span>📐 ${esc(t.size)}</span>`     : ''}
-          ${t.location ? `<span>📦 ${esc(t.location)}</span>` : ''}
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-
-  /* 맨 끝 "전체 보기" 카드 */
-  const moreCard = `
+  const cardsHtml = list.map(t => _toolCardHtml(t)).join('');
+  const moreCard  = `
     <div class="tool-card tool-card--more" onclick="goto('tools-catalog')">
       <div class="tool-card--more__icon">🗂️</div>
       <div class="tool-card--more__text">전체 도감<br>보기 →</div>
@@ -804,57 +861,244 @@ function renderToolsSlider() {
 }
 
 /* =====================================================
-   공구 도감 풀페이지 (placeholder — 다음 단계에서 완성)
+   공구 도감 풀페이지 (검색 포함)
 ===================================================== */
 function renderToolsCatalog() {
-  /* 풀페이지 완성 전까지는 슬라이더 데이터 그대로 재활용 */
-  console.log('[K-Facility] tools-catalog 페이지 (준비 중):', tools.length + '건');
+  const el    = $('tools-full-list');
+  const cnt   = $('tools-list-count');
+  if (!el) return;
+
+  /* 검색어 필터링 */
+  const q = ($('tool-search-input') || {}).value || '';
+  const kw = q.trim().toLowerCase();
+  const list = (tools.length ? tools
+    : SAMPLE_TOOLS.map(t => _normTool({ id: t.id,
+        standardName: t.title, purpose: t.usage, size: t.size,
+        storageLocation: t.location, cat: t.cat,
+        photoURL: '', createdAt: t.createdAt }))
+  ).filter(t => !kw || t._idx.includes(kw) || t.location.toLowerCase().includes(kw));
+
+  if (cnt) cnt.textContent = list.length + '건';
+
+  if (!list.length) {
+    el.innerHTML = `
+      <div class="glass" style="padding:3rem;text-align:center;grid-column:1/-1">
+        <div style="font-size:2.5rem;opacity:.3;margin-bottom:12px">🔧</div>
+        <div style="font-size:15px;color:var(--t4)">
+          ${kw ? `"${esc(q)}"에 대한 결과 없음` : '등록된 공구가 없습니다'}
+        </div>
+        ${!kw ? `<button class="btn-o" style="margin:16px auto 0;display:flex" onclick="openToolForm()">＋ 첫 공구 추가</button>` : ''}
+      </div>`;
+    return;
+  }
+
+  el.innerHTML = list.map(t => _toolCardHtml(t, { showActions: true })).join('');
 }
 
 /* =====================================================
-   공구 상세 모달 (간단 미리보기 — 풀페이지 전 임시)
+   공구 상세 모달
 ===================================================== */
 function openToolDetail(toolId) {
-  const t = tools.find(x => x.id === toolId) ||
-            SAMPLE_TOOLS.find(x => x.id === toolId);
+  const allTools = tools.length ? tools
+    : SAMPLE_TOOLS.map(t => _normTool({ id: t.id,
+        standardName: t.title, purpose: t.usage, size: t.size,
+        storageLocation: t.location, cat: t.cat,
+        photoURL: '', createdAt: t.createdAt }));
+  const t = allTools.find(x => x.id === toolId);
   if (!t) return;
 
-  const CAT_COLORS = {
-    전기:'#f59e0b', 기계:'#3b82f6', 영선:'#10b981', 소방:'#ef4444',
-  };
-  const catColor = CAT_COLORS[t.cat] || '#6366f1';
-
+  const cc = TOOL_CAT_COLORS[t.cat] || '#6366f1';
   const photoHtml = t.photoUrl
     ? `<img src="${esc(t.photoUrl)}" style="width:100%;height:200px;object-fit:cover;
-         border-radius:16px;margin-bottom:1.25rem">`
-    : `<div style="width:100%;height:140px;border-radius:16px;margin-bottom:1.25rem;
+         border-radius:14px;margin-bottom:1.25rem;display:block">`
+    : `<div style="width:100%;height:130px;border-radius:14px;margin-bottom:1.25rem;
          background:linear-gradient(135deg,rgba(99,102,241,.12),rgba(139,92,246,.10));
          display:flex;align-items:center;justify-content:center;font-size:3.5rem">🔧</div>`;
 
   const rows = [
-    ['📌 용도',     t.usage],
-    ['📐 사이즈',   t.size],
+    ['📌 용도',      t.usage],
+    ['📐 사이즈',    t.size],
     ['📦 보관 위치', t.location],
-  ].filter(([,v]) => v);
+    ['💬 메모',      t.memo],
+  ].filter(([, v]) => v);
 
   openModal(`
-    <div style="padding:1.5rem;max-width:360px">
+    <div style="padding:1.5rem;max-width:360px;width:90vw">
       ${photoHtml}
-      <div style="display:inline-block;padding:3px 12px;border-radius:99px;
+      <span style="display:inline-block;padding:3px 12px;border-radius:99px;
            font-size:11px;font-weight:700;margin-bottom:.75rem;
-           background:${catColor}22;color:${catColor};border:1px solid ${catColor}44">
-        ${esc(t.cat||'기타')}
-      </div>
-      <h3 style="font-size:18px;font-weight:800;color:var(--t1);margin:0 0 1rem">${esc(t.title)}</h3>
+           background:${cc}22;color:${cc};border:1px solid ${cc}44">
+        ${esc(t.cat || '기타')}
+      </span>
+      <h3 style="font-size:18px;font-weight:800;color:var(--t1);margin:0">${esc(t.title)}</h3>
+      ${t.nickname ? `<div style="font-size:13px;color:var(--t4);margin:.25rem 0 .75rem">"${esc(t.nickname)}"</div>` : '<div style="margin-bottom:.75rem"></div>'}
       ${rows.map(([label, val]) => `
-        <div style="display:flex;gap:8px;align-items:baseline;padding:8px 0;
-             border-bottom:1px solid rgba(255,255,255,.08)">
-          <span style="font-size:12px;color:var(--t4);width:84px;flex-shrink:0">${label}</span>
+        <div style="display:flex;gap:8px;align-items:baseline;padding:9px 0;
+             border-bottom:1px solid rgba(0,0,0,.06)">
+          <span style="font-size:12px;color:var(--t4);width:86px;flex-shrink:0">${label}</span>
           <span style="font-size:14px;font-weight:600;color:var(--t1)">${esc(val)}</span>
         </div>`).join('')}
-      <button class="btn-o" style="width:100%;margin-top:1.25rem;justify-content:center"
-        onclick="closeModal();goto('tools-catalog')">전체 도감 보기 →</button>
+      <div style="display:flex;gap:8px;margin-top:1.25rem">
+        <button class="btn-o" style="flex:1;justify-content:center"
+          onclick="closeModal();openToolForm('${esc(t.id)}')">✏️ 수정</button>
+        <button class="btn-gh" style="flex:1;justify-content:center"
+          onclick="closeModal();goto('tools-catalog')">목록 보기</button>
+      </div>
     </div>`);
+}
+
+/* =====================================================
+   공구 추가 / 수정 폼 열기
+===================================================== */
+function openToolForm(toolId) {
+  S.editToolId     = toolId || null;
+  S.toolPhotoBlob  = null;
+  S.toolPhotoExist = '';
+
+  const isEdit = !!toolId;
+  const titleEl = $('form-tool-title');
+  if (titleEl) titleEl.textContent = isEdit ? '공구 수정' : '공구 추가';
+
+  /* 폼 초기화 */
+  ['tf-title','tf-nickname','tf-size','tf-usage','tf-location','tf-memo'].forEach(id => {
+    const el = $(id); if (el) el.value = '';
+  });
+  const catEl = $('tf-cat'); if (catEl) catEl.value = '전기';
+  _renderToolPhotoPreview(null);
+
+  if (isEdit) {
+    const allTools = tools.length ? tools
+      : SAMPLE_TOOLS.map(t => _normTool({ id: t.id,
+          standardName: t.title, purpose: t.usage, size: t.size,
+          storageLocation: t.location, cat: t.cat,
+          photoURL: '', createdAt: t.createdAt }));
+    const t = allTools.find(x => x.id === toolId);
+    if (t) {
+      ['title','nickname','size','usage','location','memo'].forEach(k => {
+        const el = $('tf-' + k); if (el) el.value = t[k] || '';
+      });
+      if (catEl) catEl.value = t.cat || '전기';
+      if (t.photoUrl) {
+        S.toolPhotoExist = t.photoUrl;
+        _renderToolPhotoPreview(t.photoUrl);
+      }
+    }
+  }
+
+  goto('tool-form');
+}
+
+/* 공구 사진 핸들러 */
+function handleToolPhoto(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  S.toolPhotoBlob = file;
+  const url = URL.createObjectURL(file);
+  _renderToolPhotoPreview(url);
+}
+
+function _renderToolPhotoPreview(url) {
+  const wrap = $('tf-photo-preview');
+  if (!wrap) return;
+  if (!url) { wrap.innerHTML = ''; return; }
+  wrap.innerHTML = `
+    <div style="position:relative;display:inline-block;margin-top:8px">
+      <img src="${url}" style="width:160px;height:120px;object-fit:cover;
+           border-radius:12px;border:2px solid var(--gborder);display:block">
+      <button onclick="S.toolPhotoBlob=null;S.toolPhotoExist='';_renderToolPhotoPreview(null)"
+        style="position:absolute;top:-8px;right:-8px;background:#ef4444;color:#fff;
+               border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;
+               font-size:14px;line-height:24px;text-align:center">×</button>
+    </div>`;
+}
+
+/* =====================================================
+   공구 저장 (추가 & 수정)
+===================================================== */
+async function saveTool() {
+  const title    = ($('tf-title')    || {}).value.trim();
+  if (!title) { toast('⚠️ 표준 명칭을 입력하세요'); return; }
+
+  const btn = $('btn-save-tool');
+  if (btn) { btn.disabled = true; btn.textContent = '저장 중...'; }
+
+  try {
+    /* 사진 업로드 */
+    let photoURL = S.toolPhotoExist || '';
+    if (S.toolPhotoBlob && storage) {
+      const path  = `tools/${S.editToolId || genId()}_${Date.now()}.jpg`;
+      const result = await uploadPhoto(S.toolPhotoBlob, path);
+      photoURL = result.url;
+      /* 기존 사진 삭제 */
+      if (S.toolPhotoExist) await deleteStorageFile(S.toolPhotoExist);
+    }
+
+    const data = {
+      standardName:    title,
+      nickname:        ($('tf-nickname')  || {}).value.trim(),
+      purpose:         ($('tf-usage')     || {}).value.trim(),
+      size:            ($('tf-size')      || {}).value.trim(),
+      storageLocation: ($('tf-location')  || {}).value.trim(),
+      comparisonMemo:  ($('tf-memo')      || {}).value.trim(),
+      cat:             ($('tf-cat')       || {}).value || '전기',
+      photoURL,
+    };
+
+    if (S.fbReady && !S.isGuest) {
+      if (S.editToolId) {
+        await db.collection('tools').doc(S.editToolId).update(data);
+        toast('✅ 공구 정보가 수정됐습니다');
+      } else {
+        data.createdAt = Date.now();
+        await db.collection('tools').add(data);
+        toast('✅ 공구가 등록됐습니다');
+      }
+    } else {
+      /* 게스트 모드 — 로컬 메모리 */
+      const norm = _normTool({ id: S.editToolId || genId(), ...data,
+        createdAt: Date.now() });
+      if (S.editToolId) {
+        const idx = tools.findIndex(x => x.id === S.editToolId);
+        if (idx >= 0) tools[idx] = norm; else tools.unshift(norm);
+      } else {
+        tools.unshift(norm);
+      }
+      renderToolsSlider();
+      renderToolsCatalog();
+      toast('✅ 저장됐습니다 (게스트 모드)');
+    }
+
+    formBack('tool');
+  } catch (err) {
+    console.error('[saveTool]', err);
+    toast('⚠️ 저장 실패: ' + err.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '💾 저장'; }
+  }
+}
+
+/* =====================================================
+   공구 삭제
+===================================================== */
+async function deleteTool(toolId) {
+  if (!confirm('이 공구를 삭제할까요?')) return;
+  try {
+    const t = tools.find(x => x.id === toolId);
+    if (t && t.photoUrl && storage) await deleteStorageFile(t.photoUrl);
+
+    if (S.fbReady && !S.isGuest) {
+      await db.collection('tools').doc(toolId).delete();
+      toast('🗑 삭제됐습니다');
+    } else {
+      tools = tools.filter(x => x.id !== toolId);
+      renderToolsSlider();
+      renderToolsCatalog();
+      toast('🗑 삭제됐습니다 (게스트 모드)');
+    }
+  } catch (err) {
+    console.error('[deleteTool]', err);
+    toast('⚠️ 삭제 실패: ' + err.message);
+  }
 }
 function renderManualCat(catKey) {
   const list = manuals[catKey] || [];
@@ -2707,6 +2951,7 @@ function formBack(type) {
   else if (type === 'memo')     goto('memo');
   else if (type === 'manual')   goto(S.editManualCat || 'electric');
   else if (type === 'schedule') goto('roadmap');
+  else if (type === 'tool')     goto(S._prevToolPage || 'tools-catalog');
   else goto('home');
 }
 
@@ -2794,3 +3039,8 @@ window.doSearch         = doSearch;
 window.renderToolsSlider  = renderToolsSlider;
 window.renderToolsCatalog = renderToolsCatalog;
 window.openToolDetail     = openToolDetail;
+window.openToolForm       = openToolForm;
+window.handleToolPhoto    = handleToolPhoto;
+window._renderToolPhotoPreview = _renderToolPhotoPreview;
+window.saveTool           = saveTool;
+window.deleteTool         = deleteTool;
