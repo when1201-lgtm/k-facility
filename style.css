@@ -1722,7 +1722,6 @@ body.light-mode .fpf-add-step-btn {
   display: flex;
   gap: 12px;
   padding: 16px 36px 20px;
-  padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
   border-top: 2px solid rgba(255,255,255,.16);
   background: linear-gradient(to top, rgba(14,22,42,.95) 60%, transparent);
 }
@@ -1757,11 +1756,7 @@ body.light-mode .fpf-sticky-bar {
   .fpf-back-btn   { padding: 9px 14px; font-size: 14px; }
   .fpf-body       { padding: 16px 16px 12px; gap: 14px; }
   .fpf-card       { padding: 20px 18px !important; }
-  .fpf-sticky-bar {
-    padding: 14px 16px 18px;
-    padding-bottom: max(18px, calc(14px + env(safe-area-inset-bottom, 0px)));
-    gap: 10px;
-  }
+  .fpf-sticky-bar { padding: 14px 16px 18px; gap: 10px; }
   .fpf-save-btn   { font-size: 16px; min-height: 50px; }
   .fpf-cancel-btn { min-height: 50px; }
   .lf-row         { grid-template-columns: 1fr !important; }
@@ -1770,10 +1765,7 @@ body.light-mode .fpf-sticky-bar {
 @media (max-width: 900px) {
   .fpf-header { padding: 18px 24px 14px; }
   .fpf-body   { padding: 20px 24px 12px; }
-  .fpf-sticky-bar {
-    padding: 14px 24px 18px;
-    padding-bottom: max(18px, calc(14px + env(safe-area-inset-bottom, 0px)));
-  }
+  .fpf-sticky-bar { padding: 14px 24px 18px; }
 }
 
 /* ── RESET ── */
@@ -2124,14 +2116,7 @@ textarea::selection { background: rgba(224,92,10,.35); color: #fff; }
 textarea { caret-color: var(--orange); }
 
 /* ── PHOTO PREVIEW ── */
-.photo-preview-wrap {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  padding: 8px 0;
-  min-height: 44px;        /* 빈 상태에도 영역 확보 */
-  align-items: flex-start;
-}
+.photo-preview-wrap { display: flex; gap: 10px; flex-wrap: wrap; padding: 8px 0; }
 .photo-preview-item { position: relative; display: inline-block; }
 .photo-preview-item img {
   width: 80px; height: 80px;
@@ -3334,4 +3319,34 @@ body.light-mode .sch-month-btn.on {
   border-color: #4f46e5 !important;
   color: #fff !important;
   box-shadow: 0 4px 12px rgba(79,70,229,.35) !important;
+}
+
+/* ── 매뉴얼 상세 — 대표 사진 ── */
+.md-thumb-wrap {
+  margin: 14px 0 6px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.12);
+  max-height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,.15);
+}
+.md-thumb-img {
+  width: 100%;
+  max-height: 320px;
+  object-fit: cover;
+  display: block;
+  cursor: zoom-in;
+  transition: transform .2s;
+}
+.md-thumb-img:hover { transform: scale(1.02); }
+body.light-mode .md-thumb-wrap {
+  border: 1.5px solid #E5E7EB !important;
+  background: #F9FAFB !important;
+}
+@media (max-width: 640px) {
+  .md-thumb-wrap { max-height: 220px; }
+  .md-thumb-img  { max-height: 220px; }
 }
