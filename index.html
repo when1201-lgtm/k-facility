@@ -375,7 +375,6 @@
           </div>
           <!-- 개요 -->
           <div class="glass md-overview hidden" id="md-overview-wrap">
-            <div class="md-sec-title md-overview-title"><span>📝</span> 개요</div>
             <p id="md-overview-text"></p>
           </div>
           <!-- 준비물 -->
@@ -610,6 +609,48 @@
           <div class="rm-month-tabs" id="rm-month-tabs"></div>
           <div class="slbl slbl--mb" id="rm-list-count">0건</div>
           <div class="rm-list" id="rm-list"></div>
+        </div>
+      </section>
+
+      <!-- ===== 일정 상세 ===== -->
+      <section id="page-schedule-detail" class="page">
+        <div class="pi">
+          <div class="breadcrumb">
+            <span class="bc-ico bc-link" data-goto="home">🏠</span>
+            <span class="bc-sep">/</span>
+            <span class="bc-link" data-goto="roadmap">연간 로드맵</span>
+            <span class="bc-sep">/</span>
+            <span class="bc-cur" id="sd-bread-title">일정 상세</span>
+            <span class="bc-date"></span>
+          </div>
+
+          <!-- 헤더 카드 -->
+          <div class="glass sd-header-card">
+            <div class="sd-type-badge" id="sd-type-badge"></div>
+            <h2 class="sd-main-title" id="sd-title">-</h2>
+            <div class="sd-meta-row">
+              <span class="sd-meta-item"><span class="sd-meta-icon">📅</span><span id="sd-month"></span></span>
+              <span class="sd-meta-item"><span class="sd-meta-icon">🏷️</span><span id="sd-type-text"></span></span>
+            </div>
+          </div>
+
+          <!-- 사진 섹션 -->
+          <div class="glass sd-section hidden" id="sd-photos-wrap">
+            <div class="md-sec-title"><span>📷</span> 사진</div>
+            <div class="sd-photos-grid" id="sd-photos-grid"></div>
+          </div>
+
+          <!-- 설명 카드 -->
+          <div class="glass sd-section hidden" id="sd-desc-wrap">
+            <div class="md-sec-title"><span>📋</span> 상세 내용</div>
+            <p class="sd-desc-text" id="sd-desc"></p>
+          </div>
+
+          <!-- 수정/삭제 버튼 -->
+          <div class="detail-actions">
+            <button class="btn-o detail-actions__edit" id="sd-edit-btn">✏️ 수정하기</button>
+            <button class="btn-gh detail-actions__del" id="sd-del-btn">🗑 삭제</button>
+          </div>
         </div>
       </section>
 
@@ -923,6 +964,17 @@
                 <label class="lf-label">설명</label>
                 <textarea class="lf-textarea fpf-textarea" id="sm-desc" rows="5" placeholder="세부 내용, 준비사항..."></textarea>
               </div>
+            </div>
+
+            <!-- 사진 섹션 (신규) -->
+            <div class="fpf-card">
+              <div class="fpf-section-title">📷 사진 (최대 10장)</div>
+              <div id="sm-photo-preview" class="photo-preview-wrap"></div>
+              <div class="photo-btn-row" style="margin-top:8px">
+                <label class="photo-add-btn">📷 카메라<input type="file" accept="image/*" capture="environment" multiple class="hidden" onchange="handleSchPhoto(event)"/></label>
+                <label class="photo-add-btn">🖼 갤러리<input type="file" accept="image/*" multiple class="hidden" onchange="handleSchPhoto(event)"/></label>
+              </div>
+              <p class="photo-hint">800px 자동 압축 · Firebase Storage 저장</p>
             </div>
           </div>
 
