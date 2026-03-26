@@ -3398,7 +3398,7 @@ body.light-mode .md-overview::before {
 .sd-meta-item   { display:flex; align-items:center; gap:6px; font-size:14px; color:var(--t3); font-weight:500; }
 .sd-meta-icon   { font-size:15px; }
 .sd-section     { padding:1.5rem 2rem; margin-bottom:1.5rem; border-radius:16px; }
-.sd-desc-text   { font-size:16px; line-height:1.8; color:var(--t2); margin:0; white-space:pre-wrap; }
+.sd-desc-text   { font-size:20px; line-height:2.1; color:var(--t2); margin:0; white-space:pre-wrap; }
 .sd-photos-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(110px,1fr)); gap:10px; margin-top:4px; }
 .sd-photo-thumb { width:100%; aspect-ratio:1; object-fit:cover; border-radius:12px; cursor:zoom-in; border:2px solid rgba(255,255,255,.15); transition:transform .2s; }
 .sd-photo-thumb:hover { transform:scale(1.04); }
