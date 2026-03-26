@@ -3361,10 +3361,10 @@ body.light-mode .md-tags-row {
 }
 /* 라이트모드: 개요 박스 — 배경으로 구분 */
 body.light-mode .md-overview p {
-  font-size: 18px !important;
+  font-size: 20px !important;
   font-weight: 400 !important;
   line-height: 2.1 !important;
-  color: #374151 !important;
+  color: #000000 !important;
   letter-spacing: -0.02em !important;
 }
 /* stat 배지 크기 개선 */
