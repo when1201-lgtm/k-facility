@@ -332,8 +332,8 @@ body.light-mode .lf-select,
 body.light-mode .lf-textarea {
   background: #FFFFFF !important;
   border: 2px solid #D1D5DB !important;
-  color: #111827 !important;
-  font-size: 17px !important;
+  color: #000000 !important;
+  font-size: 20px !important;
 }
 body.light-mode .lf-input:focus,
 body.light-mode .lf-select:focus,
