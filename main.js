@@ -53,6 +53,7 @@ const S = {
   editLogId:        null,
   editMemoId:       null,
   editSchId:        null,
+  viewSchId:        null,
   editManualCat:    null,
   editManualId:     null,
   /* 현재 보고 있는 매뉴얼 */
@@ -548,6 +549,7 @@ function goto(pageId) {
     case 'memo':         renderMemo();                    break;
     case 'memo-detail':  /* openMemoDetail에서 주입 */    break;
     case 'roadmap':      renderRoadmap();                 break;
+    case 'schedule-detail': renderSchDetail();             break;
     case 'form-schedule': /* openSchForm에서 주입 */      break;
     case 'contacts':     renderContacts();                break;
     case 'stats':        renderStats();                   break;
@@ -2005,11 +2007,13 @@ function renderRoadmap(dir) {
 
   ll.innerHTML = list.length ? list.map(s=>{
     const ts = SCH_TYPE_STYLE[s.type]||{bg:'rgba(255,255,255,.07)',border:'rgba(255,255,255,.12)',color:'var(--t3)'};
-    return `<div class="gc rm-sch-card">
+    const hasPhotos = (s.imageUrls||[]).length > 0;
+    return `<div class="gc rm-sch-card" style="cursor:pointer" onclick="openSchDetail('${s.id}')">
       <div class="rm-sch-type" style="background:${ts.bg};border:1px solid ${ts.border};color:${ts.color}">${esc(s.type)}</div>
       <div class="rm-sch-body">
         <div class="rm-sch-title">${esc(s.title)}</div>
         ${s.desc?`<div class="rm-sch-desc">${esc(s.desc)}</div>`:''}
+        ${hasPhotos?`<div class="rm-sch-photo-hint">📷 사진 ${s.imageUrls.length}장</div>`:''}
       </div>
       <div class="rm-sch-acts" onclick="event.stopPropagation()">
         <button class="lc-btn lc-btn-edit" onclick="openSchForm('${s.id}')">✏️</button>
@@ -2070,6 +2074,18 @@ function openSchForm(id) {
   setVal('sm-title', s?.title || '');
   setVal('sm-desc',  s?.desc  || '');
 
+  /* 기존 사진 로드 */
+  S.uploadPhotos = S.uploadPhotos.filter(p => p.side !== 'sch');
+  if (s) {
+    const existingUrls  = s.imageUrls  && s.imageUrls.length  ? s.imageUrls  : (s.imageUrl  ? [s.imageUrl]  : []);
+    const existingPaths = s.imageStoragePaths && s.imageStoragePaths.length ? s.imageStoragePaths : (s.imageStoragePath ? [s.imageStoragePath] : []);
+    existingUrls.forEach((url, i) => {
+      S.uploadPhotos.push({ file: null, url, existing: true, side: 'sch', storagePath: existingPaths[i] || '' });
+    });
+  }
+  /* 프리뷰 초기화는 DOM 준비 후 */
+  setTimeout(() => _refreshSchPhotoPreview(), 50);
+
   goto('form-schedule');
 }
 
@@ -2110,9 +2126,41 @@ async function saveSchedule() {
   const btn = $('btn-save-sch');
   if (btn) { btn.disabled = true; btn.textContent = '저장 중...'; }
 
+  /* ── 사진 업로드 ── */
+  const imageUrls         = [];
+  const imageStoragePaths = [];
+  const uid_  = S.user?.uid || 'guest';
+  const docId = S.editSchId || (db ? db.collection('schedules').doc().id : 'local_'+genId());
+  const photoBuf = S.uploadPhotos.filter(p => p.side === 'sch');
+
+  for (const p of photoBuf) {
+    if (p.existing) {
+      imageUrls.push(p.url);
+      imageStoragePaths.push(p.storagePath || '');
+    } else if (S.fbReady && !S.isGuest && storage && p.file) {
+      try {
+        const fname = `sch_${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
+        const spath = `schedules/${uid_}/${docId}/${fname}`;
+        const result = await uploadPhoto(p.file, spath);
+        imageUrls.push(result.url);
+        imageStoragePaths.push(result.storagePath);
+      } catch(uploadErr) {
+        console.warn('[일정 사진 업로드 실패]', uploadErr.message);
+        toast('⚠️ 사진 업로드 실패 (일부 제외됨)');
+      }
+    } else {
+      imageUrls.push(p.url);
+      imageStoragePaths.push('');
+    }
+  }
+
   const data = {
     month, type, title,
     desc: $('sm-desc')?.value.trim() || '',
+    imageUrl:          imageUrls[0] || '',
+    imageUrls:         imageUrls,
+    imageStoragePath:  imageStoragePaths[0] || '',
+    imageStoragePaths: imageStoragePaths,
     updatedAt: new Date().toISOString(),
   };
   try {
@@ -2129,6 +2177,7 @@ async function saveSchedule() {
       renderRoadmap();
     }
     S.activeMonth = month;
+    S.uploadPhotos = S.uploadPhotos.filter(p => p.side !== 'sch');
     S.editSchId = null;
     toast('✅ 저장됐습니다');
     goto('roadmap');
@@ -2144,7 +2193,121 @@ async function deleteSchedule(id) {
     if(S.fbReady&&!S.isGuest&&db){ await db.collection('schedules').doc(String(id)).delete(); }
     else{ schedules=schedules.filter(s=>String(s.id)!==String(id)); renderRoadmap(); }
     toast('🗑 삭제됐습니다');
+    if (S.currentPage === 'schedule-detail') goto('roadmap');
   } catch(e){ toast('⚠️ 삭제 실패: '+e.message); }
+}
+
+/* =====================================================
+   일정 상세 페이지
+===================================================== */
+function openSchDetail(id) {
+  S.viewSchId = id;
+  goto('schedule-detail');
+}
+
+function renderSchDetail() {
+  const id = S.viewSchId;
+  if (!id) return;
+  const s = schedules.find(x => String(x.id) === String(id));
+  if (!s) { goto('roadmap'); return; }
+
+  /* 빵가루 */
+  const bt = $('sd-bread-title'); if (bt) bt.textContent = s.title;
+
+  /* 타입 배지 */
+  const ts = SCH_TYPE_STYLE[s.type] || {bg:'rgba(255,255,255,.07)',border:'rgba(255,255,255,.12)',color:'var(--t3)'};
+  const badge = $('sd-type-badge');
+  if (badge) {
+    badge.textContent = s.type || '';
+    badge.style.background = ts.bg;
+    badge.style.border = `1px solid ${ts.border}`;
+    badge.style.color = ts.color;
+  }
+
+  /* 제목 */
+  const titleEl = $('sd-title'); if (titleEl) titleEl.textContent = s.title || '';
+
+  /* 메타 정보 */
+  const monthEl = $('sd-month'); if (monthEl) monthEl.textContent = (s.year||S.activeYear)+'년 ' + MONTH_NAMES[s.month] || '';
+  const typeEl  = $('sd-type-text'); if (typeEl) typeEl.textContent = s.type || '';
+
+  /* 사진 */
+  const photosWrap = $('sd-photos-wrap');
+  const photosGrid = $('sd-photos-grid');
+  const imgUrls = s.imageUrls && s.imageUrls.length ? s.imageUrls : (s.imageUrl ? [s.imageUrl] : []);
+  if (photosWrap && photosGrid) {
+    if (imgUrls.length) {
+      photosWrap.classList.remove('hidden');
+      photosGrid.innerHTML = imgUrls.map(url =>
+        `<img class="sd-photo-thumb" src="${url}" alt="사진" onclick="previewPhoto('${url}')">`
+      ).join('');
+    } else {
+      photosWrap.classList.add('hidden');
+      photosGrid.innerHTML = '';
+    }
+  }
+
+  /* 설명 */
+  const descWrap = $('sd-desc-wrap');
+  const descEl   = $('sd-desc');
+  if (descWrap) {
+    if (s.desc) {
+      descWrap.classList.remove('hidden');
+      if (descEl) descEl.textContent = s.desc;
+    } else {
+      descWrap.classList.add('hidden');
+    }
+  }
+
+  /* 수정/삭제 버튼 */
+  const editBtn = $('sd-edit-btn');
+  const delBtn  = $('sd-del-btn');
+  if (editBtn) editBtn.onclick = () => openSchForm(id);
+  if (delBtn)  delBtn.onclick  = () => deleteSchedule(id);
+}
+
+/* ── 일정 폼 사진 핸들러 ── */
+function handleSchPhoto(e) {
+  const files = [...e.target.files];
+  if (!files.length) return;
+  const MAX = 10;
+  files.forEach(file => {
+    const schPhotos = S.uploadPhotos.filter(p => p.side === 'sch');
+    if (schPhotos.length >= MAX) { toast('사진은 최대 ' + MAX + '장까지 등록 가능합니다'); return; }
+    const reader = new FileReader();
+    reader.onload = ev => {
+      S.uploadPhotos.push({ file, url: ev.target.result, existing: false, side: 'sch', storagePath: '' });
+      _refreshSchPhotoPreview();
+    };
+    reader.readAsDataURL(file);
+  });
+  e.target.value = '';
+}
+
+function removeSchPhoto(idx) {
+  let cnt = 0;
+  S.uploadPhotos = S.uploadPhotos.filter(p => {
+    if (p.side !== 'sch') return true;
+    return cnt++ !== idx;
+  });
+  _refreshSchPhotoPreview();
+}
+
+function _refreshSchPhotoPreview() {
+  const wrap = $('sm-photo-preview');
+  if (!wrap) return;
+  const list = S.uploadPhotos.filter(p => p.side === 'sch');
+  if (!list.length) {
+    wrap.innerHTML = '<div style="font-size:12px;color:var(--t4);padding:6px 0">사진 없음</div>';
+    return;
+  }
+  wrap.innerHTML = list.map((p, i) => `
+    <div class="photo-preview-item">
+      <img src="${p.url}" onclick="previewPhoto('${p.url}')"
+        style="width:80px;height:80px;object-fit:cover;border-radius:10px;
+               border:1px solid rgba(255,255,255,.15);cursor:zoom-in">
+      <button class="photo-preview-del" onclick="removeSchPhoto(${i})">×</button>
+    </div>`).join('');
 }
 
 /* =====================================================
@@ -2378,7 +2541,10 @@ function formBack(type) {
   if (type === 'log')      goto('records');
   else if (type === 'memo')     goto('memo');
   else if (type === 'manual')   goto(S.editManualCat || 'electric');
-  else if (type === 'schedule') goto('roadmap');
+  else if (type === 'schedule') {
+    S.uploadPhotos = S.uploadPhotos.filter(p => p.side !== 'sch');
+    goto('roadmap');
+  }
   else goto('home');
 }
 
@@ -2452,10 +2618,13 @@ window.setRmMonth       = setRmMonth;
 window.setRmYear        = setRmYear;
 window.openSchModal     = openSchModal;
 window.openSchForm      = openSchForm;
+window.openSchDetail    = openSchDetail;
 window.schSelectType    = schSelectType;
 window.schSelectMonth   = schSelectMonth;
 window.saveSchedule     = saveSchedule;
 window.deleteSchedule   = deleteSchedule;
+window.handleSchPhoto   = handleSchPhoto;
+window.removeSchPhoto   = removeSchPhoto;
 window.openContactModal = openContactModal;
 window.exportData       = exportData;
 window.clearLocalData   = clearLocalData;
