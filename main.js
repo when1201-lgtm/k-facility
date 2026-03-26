@@ -1066,22 +1066,21 @@ function removeStepPhoto(stepIdx, photoIdx) {
 /* 매뉴얼 전용 사진 핸들러 — 모달 내 input에서 직접 호출 */
 function handleManualPhoto(e) {
   const files = [...e.target.files];
+  e.target.value = '';          /* 선택 즉시 초기화 — files는 이미 복사됨 */
   if (!files.length) return;
-  const MAX = 3;  /* 매뉴얼 대표 사진 최대 3장 */
-  files.slice(0, MAX).forEach(file => {
+  const MAX = 3;
+  files.forEach(file => {
+    const cur = S.uploadPhotos.filter(p => p.side === 'main');
+    if (cur.length >= MAX) { toast('사진은 최대 ' + MAX + '장까지 등록 가능합니다'); return; }
     const reader = new FileReader();
     reader.onload = ev => {
-      const cur = S.uploadPhotos.filter(p => p.side === 'main');
-      if (cur.length >= MAX) {
-        toast('사진은 최대 ' + MAX + '장까지 등록 가능합니다');
-        return;
-      }
+      /* 중복 체크: 이미 MAX 채웠으면 스킵 */
+      if (S.uploadPhotos.filter(p => p.side === 'main').length >= MAX) return;
       S.uploadPhotos.push({ file, url: ev.target.result, existing: false, side: 'main', storagePath: '' });
       _refreshManualPhotoPreview();
     };
     reader.readAsDataURL(file);
   });
-  e.target.value = '';
 }
 
 function removeManualPhoto(idx) {
@@ -1250,7 +1249,6 @@ async function saveManual() {
       renderManualCat(catKey);
     }
     S.uploadPhotos = [];
-    if (btn) { btn.disabled=false; btn.textContent='💾 저장'; }
     toast('✅ 저장됐습니다');
     goto(catKey);           /* ★ 저장 후 해당 카테고리 목록으로 이동 */
   } catch(e) {
@@ -1556,20 +1554,21 @@ function removeUploadPhoto(i) {
 /** 사진 선택 핸들러 (inline label+input 전용) */
 function handleFormPhoto(e, side, previewId) {
   const files = [...e.target.files];
+  e.target.value = '';          /* 선택 즉시 초기화 */
   if (!files.length) return;
   const MAX = 3;
   const cur = S.uploadPhotos.filter(p => p.side === side).length;
-  if (cur >= MAX) { toast('사진은 최대 ' + MAX + '장까지 등록 가능합니다'); e.target.value=''; return; }
+  if (cur >= MAX) { toast('사진은 최대 ' + MAX + '장까지 등록 가능합니다'); return; }
 
   files.slice(0, MAX - cur).forEach(file => {
     const reader = new FileReader();
     reader.onload = ev => {
+      if (S.uploadPhotos.filter(p => p.side === side).length >= MAX) return;
       S.uploadPhotos.push({ file, url: ev.target.result, existing: false, side, storagePath: '' });
       renderFormPhotoPreview(previewId, side);
     };
     reader.readAsDataURL(file);
   });
-  e.target.value = '';
 }
 
 /** 미리보기 렌더링 */
@@ -1668,7 +1667,6 @@ async function saveLog() {
     }
 
     S.editLogId = null;
-    if (btn) { btn.disabled=false; btn.textContent='💾 저장'; }
     toast('✅ 저장됐습니다');
     goto('records');        /* ★ 무조건 목록으로 이동 */
 
@@ -1889,7 +1887,6 @@ async function saveMemo() {
     }
     S.editMemoId  = null;
     S.uploadPhotos = [];
-    if (btn) { btn.disabled=false; btn.textContent='💾 저장'; }
     toast('✅ 저장됐습니다');
     goto('memo');
   } catch(e) {
@@ -2100,7 +2097,6 @@ async function saveSchedule() {
     }
     S.activeMonth = month;
     S.editSchId = null;
-    if (btn) { btn.disabled = false; btn.textContent = '💾 저장'; }
     toast('✅ 저장됐습니다');
     goto('roadmap');
   } catch(e) {
