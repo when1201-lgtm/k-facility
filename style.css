@@ -3321,34 +3321,31 @@ body.light-mode .sch-month-btn.on {
   box-shadow: 0 4px 12px rgba(79,70,229,.35) !important;
 }
 
-/* ── 매뉴얼 상세 — 대표 사진 ── */
+/* ── 매뉴얼 상세 — 대표 사진 (다중, 최대 10장) ── */
 .md-thumb-wrap {
-  margin: 14px 0 6px;
-  border-radius: 14px;
-  overflow: hidden;
-  border: 1px solid rgba(255,255,255,.12);
-  max-height: 220px;
-  max-width: 320px;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0,0,0,.15);
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 14px 0 6px;
 }
 .md-thumb-img {
-  width: 100%;
-  max-height: 220px;
-  max-width: 320px;
+  width: 160px;
+  height: 120px;
   object-fit: cover;
-  display: block;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.12);
   cursor: zoom-in;
-  transition: transform .2s;
+  transition: transform .2s, box-shadow .2s;
+  display: block;
+  flex-shrink: 0;
 }
-.md-thumb-img:hover { transform: scale(1.02); }
-body.light-mode .md-thumb-wrap {
+.md-thumb-img:hover {
+  transform: scale(1.04);
+  box-shadow: 0 6px 20px rgba(0,0,0,.4);
+}
+body.light-mode .md-thumb-img {
   border: 1.5px solid #E5E7EB !important;
-  background: #F9FAFB !important;
 }
 @media (max-width: 640px) {
-  .md-thumb-wrap { max-height: 160px; max-width: 100%; }
-  .md-thumb-img  { max-height: 160px; }
+  .md-thumb-img { width: 110px; height: 82px; }
 }
