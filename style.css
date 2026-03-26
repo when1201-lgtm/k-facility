@@ -1194,10 +1194,10 @@ body.light-mode .detail-desc-wrap {
   margin-bottom: 1.5rem !important;
 }
 body.light-mode .detail-desc {
-  color: #1f2937 !important;
-  font-size: 16px !important;
+  color: #000000 !important;
+  font-size: 20px !important;
   font-weight: 500 !important;
-  line-height: 2.0 !important;
+  line-height: 2.1 !important;
   white-space: pre-wrap !important;
 }
 body.light-mode .detail-photos-wrap {
