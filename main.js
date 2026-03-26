@@ -2009,7 +2009,7 @@ function renderRoadmap(dir) {
     const ts = SCH_TYPE_STYLE[s.type]||{bg:'rgba(255,255,255,.07)',border:'rgba(255,255,255,.12)',color:'var(--t3)'};
     const hasPhotos = (s.imageUrls||[]).length > 0;
     return `<div class="gc rm-sch-card" style="cursor:pointer" onclick="openSchDetail('${s.id}')">
-      <div class="rm-sch-type" style="background:${ts.bg};border:1px solid ${ts.border};color:${ts.color}">${esc(s.type)}</div>
+      <div class="rm-sch-type" style="background:${ts.bg};border:1px solid ${ts.border};color:${ts.color}">${esc(s.type||'')}</div>
       <div class="rm-sch-body">
         <div class="rm-sch-title">${esc(s.title)}</div>
         ${s.desc?`<div class="rm-sch-desc">${esc(s.desc)}</div>`:''}
@@ -2074,19 +2074,22 @@ function openSchForm(id) {
   setVal('sm-title', s?.title || '');
   setVal('sm-desc',  s?.desc  || '');
 
+  /* ★ type 스냅샷: goto 이전에 반드시 기록 — 사진 async 중 유실 방지 */
+  S._schTypeSnap = activeType;
+
   /* 기존 사진 로드 */
   S.uploadPhotos = S.uploadPhotos.filter(p => p.side !== 'sch');
   if (s) {
-    const existingUrls  = s.imageUrls  && s.imageUrls.length  ? s.imageUrls  : (s.imageUrl  ? [s.imageUrl]  : []);
-    const existingPaths = s.imageStoragePaths && s.imageStoragePaths.length ? s.imageStoragePaths : (s.imageStoragePath ? [s.imageStoragePath] : []);
+    const existingUrls  = s.imageUrls?.length  ? s.imageUrls  : (s.imageUrl  ? [s.imageUrl]  : []);
+    const existingPaths = s.imageStoragePaths?.length ? s.imageStoragePaths : (s.imageStoragePath ? [s.imageStoragePath] : []);
     existingUrls.forEach((url, i) => {
-      S.uploadPhotos.push({ file: null, url, existing: true, side: 'sch', storagePath: existingPaths[i] || '' });
+      S.uploadPhotos.push({ file: null, url, existing: true, side: 'sch', storagePath: existingPaths[i]||'' });
     });
   }
-  /* 프리뷰 초기화는 DOM 준비 후 */
-  setTimeout(() => _refreshSchPhotoPreview(), 50);
 
   goto('form-schedule');
+  /* DOM이 활성화된 뒤 프리뷰 업데이트 */
+  setTimeout(() => _refreshSchPhotoPreview(), 30);
 }
 
 /* 내부: 유형 칩 클래스 적용 */
@@ -2116,12 +2119,22 @@ async function saveSchedule() {
   const title = $('sm-title')?.value.trim();
   if (!title) { toast('⚠️ 제목을 입력하세요'); $('sm-title')?.focus(); return; }
 
-  /* 월: 그리드에서 .on 버튼 → fallback: activeMonth */
+  /* 월: .on 버튼 → fallback: activeMonth */
   const onMonthBtn = document.querySelector('.sch-month-btn.on');
   const month = onMonthBtn ? parseInt(onMonthBtn.dataset.month) : S.activeMonth;
 
-  /* 유형: hidden input */
-  const type = $('sm-type-hidden')?.value || '정기';
+  /* ★ 유형 — 3중 보호:
+     ① 현재 선택된 칩 data-type (가장 신뢰)
+     ② sm-type-hidden value
+     ③ 저장 전 스냅샷 S._schTypeSnap
+     ④ fallback '정기' */
+  const selectedChip = document.querySelector(
+    '.sch-type-chip.on--legal, .sch-type-chip.on--regular, .sch-type-chip.on--season'
+  );
+  const type = (selectedChip?.dataset?.type)
+    || ($('sm-type-hidden')?.value || '')
+    || (S._schTypeSnap || '')
+    || '정기';
 
   const btn = $('btn-save-sch');
   if (btn) { btn.disabled = true; btn.textContent = '저장 중...'; }
@@ -2130,7 +2143,7 @@ async function saveSchedule() {
   const imageUrls         = [];
   const imageStoragePaths = [];
   const uid_  = S.user?.uid || 'guest';
-  const docId = S.editSchId || (db ? db.collection('schedules').doc().id : 'local_'+genId());
+  const docId = S.editSchId || (db ? db.collection('schedules').doc().id : 'local_' + genId());
   const photoBuf = S.uploadPhotos.filter(p => p.side === 'sch');
 
   for (const p of photoBuf) {
@@ -2149,40 +2162,55 @@ async function saveSchedule() {
         toast('⚠️ 사진 업로드 실패 (일부 제외됨)');
       }
     } else {
+      /* 게스트: base64 그대로 */
       imageUrls.push(p.url);
       imageStoragePaths.push('');
     }
   }
 
   const data = {
-    month, type, title,
-    desc: $('sm-desc')?.value.trim() || '',
+    month,
+    year:  S.activeYear,   /* ★ year 필드 추가 */
+    type,                   /* ★ 3중 보호된 type */
+    title,
+    desc:              $('sm-desc')?.value.trim() || '',
     imageUrl:          imageUrls[0] || '',
     imageUrls:         imageUrls,
     imageStoragePath:  imageStoragePaths[0] || '',
     imageStoragePaths: imageStoragePaths,
-    updatedAt: new Date().toISOString(),
+    updatedAt:         new Date().toISOString(),
   };
+
   try {
     if (S.fbReady && !S.isGuest && db) {
-      if (S.editSchId) { await db.collection('schedules').doc(S.editSchId).update(data); }
-      else { data.createdAt = new Date().toISOString(); await db.collection('schedules').add(data); }
+      if (S.editSchId) {
+        await db.collection('schedules').doc(S.editSchId).update(data);
+      } else {
+        data.createdAt = new Date().toISOString();
+        await db.collection('schedules').add(data);
+      }
     } else {
       data.id = S.editSchId || genId();
       if (S.editSchId) {
         const idx = schedules.findIndex(x => String(x.id) === String(S.editSchId));
-        if (idx !== -1) schedules[idx] = data; else schedules.push(data);
-      } else { schedules.push(data); }
+        if (idx !== -1) schedules[idx] = { ...schedules[idx], ...data };
+        else schedules.push(data);
+      } else {
+        schedules.push(data);
+      }
       S.activeMonth = month;
       renderRoadmap();
     }
     S.activeMonth = month;
     S.uploadPhotos = S.uploadPhotos.filter(p => p.side !== 'sch');
+    S._schTypeSnap = null;
     S.editSchId = null;
+    if (btn) { btn.disabled = false; btn.textContent = '💾 저장'; }
     toast('✅ 저장됐습니다');
     goto('roadmap');
   } catch(e) {
-    toastError('저장 실패: ' + e.message, saveSchedule);
+    console.error('[saveSchedule]', e);
+    toast('⚠️ 저장 실패: ' + e.message);
     if (btn) { btn.disabled = false; btn.textContent = '💾 저장'; }
   }
 }
@@ -2197,9 +2225,9 @@ async function deleteSchedule(id) {
   } catch(e){ toast('⚠️ 삭제 실패: '+e.message); }
 }
 
-/* =====================================================
+/* ─────────────────────────────────────────
    일정 상세 페이지
-===================================================== */
+───────────────────────────────────────── */
 function openSchDetail(id) {
   S.viewSchId = id;
   goto('schedule-detail');
@@ -2211,30 +2239,25 @@ function renderSchDetail() {
   const s = schedules.find(x => String(x.id) === String(id));
   if (!s) { goto('roadmap'); return; }
 
-  /* 빵가루 */
   const bt = $('sd-bread-title'); if (bt) bt.textContent = s.title;
 
-  /* 타입 배지 */
   const ts = SCH_TYPE_STYLE[s.type] || {bg:'rgba(255,255,255,.07)',border:'rgba(255,255,255,.12)',color:'var(--t3)'};
   const badge = $('sd-type-badge');
   if (badge) {
-    badge.textContent = s.type || '';
+    badge.textContent  = s.type || '';
     badge.style.background = ts.bg;
     badge.style.border = `1px solid ${ts.border}`;
-    badge.style.color = ts.color;
+    badge.style.color  = ts.color;
   }
 
-  /* 제목 */
   const titleEl = $('sd-title'); if (titleEl) titleEl.textContent = s.title || '';
-
-  /* 메타 정보 */
-  const monthEl = $('sd-month'); if (monthEl) monthEl.textContent = (s.year||S.activeYear)+'년 ' + MONTH_NAMES[s.month] || '';
+  const monthEl = $('sd-month'); if (monthEl) monthEl.textContent = (s.year || S.activeYear) + '년 ' + (MONTH_NAMES[s.month] || '');
   const typeEl  = $('sd-type-text'); if (typeEl) typeEl.textContent = s.type || '';
 
   /* 사진 */
   const photosWrap = $('sd-photos-wrap');
   const photosGrid = $('sd-photos-grid');
-  const imgUrls = s.imageUrls && s.imageUrls.length ? s.imageUrls : (s.imageUrl ? [s.imageUrl] : []);
+  const imgUrls = s.imageUrls?.length ? s.imageUrls : (s.imageUrl ? [s.imageUrl] : []);
   if (photosWrap && photosGrid) {
     if (imgUrls.length) {
       photosWrap.classList.remove('hidden');
@@ -2259,11 +2282,8 @@ function renderSchDetail() {
     }
   }
 
-  /* 수정/삭제 버튼 */
-  const editBtn = $('sd-edit-btn');
-  const delBtn  = $('sd-del-btn');
-  if (editBtn) editBtn.onclick = () => openSchForm(id);
-  if (delBtn)  delBtn.onclick  = () => deleteSchedule(id);
+  const editBtn = $('sd-edit-btn'); if (editBtn) editBtn.onclick = () => openSchForm(id);
+  const delBtn  = $('sd-del-btn');  if (delBtn)  delBtn.onclick  = () => deleteSchedule(id);
 }
 
 /* ── 일정 폼 사진 핸들러 ── */
@@ -2272,8 +2292,10 @@ function handleSchPhoto(e) {
   if (!files.length) return;
   const MAX = 10;
   files.forEach(file => {
-    const schPhotos = S.uploadPhotos.filter(p => p.side === 'sch');
-    if (schPhotos.length >= MAX) { toast('사진은 최대 ' + MAX + '장까지 등록 가능합니다'); return; }
+    if (S.uploadPhotos.filter(p => p.side === 'sch').length >= MAX) {
+      toast('사진은 최대 ' + MAX + '장까지 등록 가능합니다');
+      return;
+    }
     const reader = new FileReader();
     reader.onload = ev => {
       S.uploadPhotos.push({ file, url: ev.target.result, existing: false, side: 'sch', storagePath: '' });
@@ -2541,10 +2563,7 @@ function formBack(type) {
   if (type === 'log')      goto('records');
   else if (type === 'memo')     goto('memo');
   else if (type === 'manual')   goto(S.editManualCat || 'electric');
-  else if (type === 'schedule') {
-    S.uploadPhotos = S.uploadPhotos.filter(p => p.side !== 'sch');
-    goto('roadmap');
-  }
+  else if (type === 'schedule') goto('roadmap');
   else goto('home');
 }
 
