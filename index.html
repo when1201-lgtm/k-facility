@@ -1111,7 +1111,7 @@
         </div>
       </section>
 
-      <!-- ===== 공구 도감 (플레이스홀더 — 2단계 이후 풀페이지 완성 예정) ===== -->
+      <!-- ===== 공구 도감 풀페이지 ===== -->
       <section id="page-tools-catalog" class="page">
         <div class="pi">
           <div class="breadcrumb">
@@ -1120,20 +1120,114 @@
             <span class="bc-cur">공구 도감</span>
             <span class="bc-date"></span>
           </div>
+
+          <!-- 히어로 -->
           <div class="glass log-hero">
             <div class="log-hero-left">
-              <div class="log-hero-icon" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);font-size:26px;display:flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:14px;">🔧</div>
+              <div class="tool-hero-icon">🔧</div>
               <div>
                 <div class="hero-title">공구 도감</div>
                 <div class="hero-sub">현장 공구 목록 &amp; 보관 위치</div>
               </div>
             </div>
-            <button class="btn-o" onclick="goto('tool-form')">＋ 공구 추가</button>
+            <button class="btn-o" onclick="openToolForm()">＋ 공구 추가</button>
           </div>
-          <div class="glass empty-state-card" style="margin-top:1.5rem;padding:3rem;text-align:center">
-            <div class="empty-state__icon">🔧</div>
-            <div class="empty-state__text" style="margin-top:.5rem">공구 도감 풀페이지는 다음 단계에서 완성됩니다</div>
-            <p style="font-size:13px;color:var(--t4);margin-top:.5rem">슬라이더에서 공구 카드를 클릭하면 상세 정보를 볼 수 있어요</p>
+
+          <!-- 검색창 -->
+          <div class="glass tool-search-wrap">
+            <i class="fa-solid fa-magnifying-glass tool-search-icon"></i>
+            <input id="tool-search-input" type="search"
+              class="tool-search-input"
+              placeholder="공구명, 용도, 사이즈 검색..."
+              autocomplete="off"
+              oninput="renderToolsCatalog()"/>
+          </div>
+
+          <!-- 카운트 -->
+          <div class="slbl slbl--mb" id="tools-list-count">0건</div>
+
+          <!-- 카드 그리드 (풀페이지용) -->
+          <div class="tools-full-grid" id="tools-full-list"></div>
+        </div>
+      </section>
+
+      <!-- ===== 공구 추가 / 수정 폼 풀페이지 ===== -->
+      <section id="page-tool-form" class="page">
+        <div class="fullpage-form-wrap">
+          <div class="fpf-header">
+            <button class="fpf-back-btn" onclick="formBack('tool')">
+              <span class="fpf-back-icon">←</span>
+              <span class="fpf-back-label">뒤로</span>
+            </button>
+            <h1 class="fpf-title" id="form-tool-title">공구 추가</h1>
+          </div>
+
+          <div class="fpf-body">
+            <!-- 기본 정보 -->
+            <div class="fpf-card">
+              <div class="fpf-section-title">🔧 기본 정보</div>
+              <div class="lf-row">
+                <div class="lf-group">
+                  <label class="lf-label">표준 명칭 *</label>
+                  <input class="lf-input" id="tf-title" type="text" placeholder="예: 드라이버 (+) #2"/>
+                </div>
+                <div class="lf-group">
+                  <label class="lf-label">현장 이름</label>
+                  <input class="lf-input" id="tf-nickname" type="text" placeholder="예: 큰 드라이버"/>
+                </div>
+              </div>
+              <div class="lf-row">
+                <div class="lf-group">
+                  <label class="lf-label">카테고리</label>
+                  <select class="lf-select" id="tf-cat">
+                    <option value="전기">⚡ 전기</option>
+                    <option value="기계">⚙️ 기계</option>
+                    <option value="영선">🔨 영선</option>
+                    <option value="소방">🔥 소방</option>
+                    <option value="공통">🛠️ 공통</option>
+                  </select>
+                </div>
+                <div class="lf-group">
+                  <label class="lf-label">사이즈 / 규격</label>
+                  <input class="lf-input" id="tf-size" type="text" placeholder="예: #2 × 150mm"/>
+                </div>
+              </div>
+              <div class="lf-group">
+                <label class="lf-label">용도</label>
+                <input class="lf-input" id="tf-usage" type="text" placeholder="예: 나사 체결 / 분리"/>
+              </div>
+              <div class="lf-group" style="margin-top:12px">
+                <label class="lf-label">보관 위치</label>
+                <input class="lf-input" id="tf-location" type="text" placeholder="예: 1F 공구함 A"/>
+              </div>
+              <div class="lf-group" style="margin-top:12px">
+                <label class="lf-label">비교 메모</label>
+                <textarea class="lf-textarea fpf-textarea" id="tf-memo" rows="4"
+                  placeholder="유사 공구와의 차이점, 주의사항, 구매처 등 자유 메모..."></textarea>
+              </div>
+            </div>
+
+            <!-- 사진 업로드 -->
+            <div class="fpf-card">
+              <div class="fpf-section-title">📷 공구 사진 (최대 1장)</div>
+              <div id="tf-photo-preview" class="tool-photo-preview-wrap"></div>
+              <div class="photo-btn-row" style="margin-top:10px">
+                <label class="photo-add-btn">📷 카메라
+                  <input type="file" accept="image/*" capture="environment" class="hidden"
+                    onchange="handleToolPhoto(event)"/>
+                </label>
+                <label class="photo-add-btn">🖼 갤러리
+                  <input type="file" accept="image/*" class="hidden"
+                    onchange="handleToolPhoto(event)"/>
+                </label>
+              </div>
+              <p class="photo-hint">800px 자동 압축 · Firebase Storage 저장</p>
+            </div>
+          </div>
+
+          <div class="fpf-sticky-bar">
+            <button class="btn-gh fpf-cancel-btn" onclick="formBack('tool')">취소</button>
+            <button class="btn-o  fpf-save-btn" id="btn-save-tool" onclick="saveTool()">💾 저장</button>
           </div>
         </div>
       </section>
