@@ -780,6 +780,19 @@ function renderManualDetail() {
   sv('md-stat-checklist', '체크리스트 ' + (m.checklist ||[]).length + '항목');
   const tagsEl = $('md-tags'); if (tagsEl) tagsEl.innerHTML = (m.tags||[]).map(t=>`<span class="m-tag">${esc(t)}</span>`).join('');
 
+  /* 대표 사진 */
+  const thumbWrap = $('md-thumb-wrap');
+  const thumbImg  = $('md-thumb-img');
+  const thumbUrl  = m.imageUrl || (m.steps||[]).find(s=>s.imgUrls?.[0])?.imgUrls[0] || '';
+  if (thumbWrap && thumbImg) {
+    if (thumbUrl) {
+      thumbImg.src = thumbUrl;
+      thumbWrap.classList.remove('hidden');
+    } else {
+      thumbWrap.classList.add('hidden');
+    }
+  }
+
   /* 개요 */
   const ow = $('md-overview-wrap');
   if (ow) {
@@ -1066,21 +1079,22 @@ function removeStepPhoto(stepIdx, photoIdx) {
 /* 매뉴얼 전용 사진 핸들러 — 모달 내 input에서 직접 호출 */
 function handleManualPhoto(e) {
   const files = [...e.target.files];
-  e.target.value = '';          /* 선택 즉시 초기화 — files는 이미 복사됨 */
   if (!files.length) return;
-  const MAX = 3;
-  files.forEach(file => {
-    const cur = S.uploadPhotos.filter(p => p.side === 'main');
-    if (cur.length >= MAX) { toast('사진은 최대 ' + MAX + '장까지 등록 가능합니다'); return; }
+  const MAX = 3;  /* 매뉴얼 대표 사진 최대 3장 */
+  files.slice(0, MAX).forEach(file => {
     const reader = new FileReader();
     reader.onload = ev => {
-      /* 중복 체크: 이미 MAX 채웠으면 스킵 */
-      if (S.uploadPhotos.filter(p => p.side === 'main').length >= MAX) return;
+      const cur = S.uploadPhotos.filter(p => p.side === 'main');
+      if (cur.length >= MAX) {
+        toast('사진은 최대 ' + MAX + '장까지 등록 가능합니다');
+        return;
+      }
       S.uploadPhotos.push({ file, url: ev.target.result, existing: false, side: 'main', storagePath: '' });
       _refreshManualPhotoPreview();
     };
     reader.readAsDataURL(file);
   });
+  e.target.value = '';
 }
 
 function removeManualPhoto(idx) {
@@ -1554,21 +1568,20 @@ function removeUploadPhoto(i) {
 /** 사진 선택 핸들러 (inline label+input 전용) */
 function handleFormPhoto(e, side, previewId) {
   const files = [...e.target.files];
-  e.target.value = '';          /* 선택 즉시 초기화 */
   if (!files.length) return;
   const MAX = 3;
   const cur = S.uploadPhotos.filter(p => p.side === side).length;
-  if (cur >= MAX) { toast('사진은 최대 ' + MAX + '장까지 등록 가능합니다'); return; }
+  if (cur >= MAX) { toast('사진은 최대 ' + MAX + '장까지 등록 가능합니다'); e.target.value=''; return; }
 
   files.slice(0, MAX - cur).forEach(file => {
     const reader = new FileReader();
     reader.onload = ev => {
-      if (S.uploadPhotos.filter(p => p.side === side).length >= MAX) return;
       S.uploadPhotos.push({ file, url: ev.target.result, existing: false, side, storagePath: '' });
       renderFormPhotoPreview(previewId, side);
     };
     reader.readAsDataURL(file);
   });
+  e.target.value = '';
 }
 
 /** 미리보기 렌더링 */
