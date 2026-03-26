@@ -780,16 +780,23 @@ function renderManualDetail() {
   sv('md-stat-checklist', '체크리스트 ' + (m.checklist ||[]).length + '항목');
   const tagsEl = $('md-tags'); if (tagsEl) tagsEl.innerHTML = (m.tags||[]).map(t=>`<span class="m-tag">${esc(t)}</span>`).join('');
 
-  /* 대표 사진 */
+  /* 대표 사진 (다중) */
   const thumbWrap = $('md-thumb-wrap');
-  const thumbImg  = $('md-thumb-img');
-  const thumbUrl  = m.imageUrl || (m.steps||[]).find(s=>s.imgUrls?.[0])?.imgUrls[0] || '';
-  if (thumbWrap && thumbImg) {
-    if (thumbUrl) {
-      thumbImg.src = thumbUrl;
+  const allThumbUrls = (m.imageUrls && m.imageUrls.length)
+    ? m.imageUrls
+    : (m.imageUrl ? [m.imageUrl] : []);
+  const fallbackUrl = (m.steps||[]).find(s=>s.imgUrls?.[0])?.imgUrls[0] || '';
+  const thumbUrls = allThumbUrls.length ? allThumbUrls : (fallbackUrl ? [fallbackUrl] : []);
+
+  if (thumbWrap) {
+    if (thumbUrls.length) {
       thumbWrap.classList.remove('hidden');
+      thumbWrap.innerHTML = thumbUrls.map(url =>
+        `<img class="md-thumb-img" src="${url}" alt="대표 사진" onclick="previewPhoto('${url}')">`
+      ).join('');
     } else {
       thumbWrap.classList.add('hidden');
+      thumbWrap.innerHTML = '';
     }
   }
 
@@ -948,8 +955,13 @@ function openManualForm(catKey, id) {
   /* 대표 사진 미리보기 초기화 */
   const prevEl = document.getElementById('mf-photo-preview');
   if (prevEl) prevEl.innerHTML = '';
-  if (m?.imageUrl) {
-    S.uploadPhotos = [{ url: m.imageUrl, existing: true, side: 'main', storagePath: m.imageStoragePath||'', file: null }];
+  /* 기존 대표 사진 복원 (다중) */
+  const existingUrls  = (m?.imageUrls && m.imageUrls.length) ? m.imageUrls : (m?.imageUrl ? [m.imageUrl] : []);
+  const existingPaths = m?.imageStoragePaths || (m?.imageStoragePath ? [m.imageStoragePath] : []);
+  if (existingUrls.length) {
+    S.uploadPhotos = existingUrls.map((url, i) => ({
+      url, existing: true, side: 'main', storagePath: existingPaths[i] || '', file: null
+    }));
     _refreshManualPhotoPreview();
   }
 
@@ -1080,7 +1092,7 @@ function removeStepPhoto(stepIdx, photoIdx) {
 function handleManualPhoto(e) {
   const files = [...e.target.files];
   if (!files.length) return;
-  const MAX = 3;  /* 매뉴얼 대표 사진 최대 3장 */
+  const MAX = 10;  /* 매뉴얼 대표 사진 최대 10장 */
   files.slice(0, MAX).forEach(file => {
     const reader = new FileReader();
     reader.onload = ev => {
@@ -1194,34 +1206,37 @@ async function saveManual() {
   const caution = $('mf-tip-caution')?.value.trim() || $('mf-tip')?.value.trim() || '';
   const tip     = $('mf-tip')?.value.trim() || '';
 
-  /* ── ② 대표 사진 Storage 업로드 ── */
-  let imageUrl         = '';
-  let imageStoragePath = '';
+  /* ── ② 대표 사진 Storage 업로드 (최대 10장) ── */
+  const imageUrls        = [];
+  const imageStoragePaths = [];
   const photoBuf = S.uploadPhotos.filter(p => p.side === 'main');
+  const uid_  = S.user?.uid || 'guest';
+  const docId = S.editManualId || (db ? db.collection('manuals').doc().id : 'local_'+genId());
 
-  if (photoBuf.length) {
-    const p = photoBuf[0];
+  for (const p of photoBuf) {
     if (p.existing) {
-      imageUrl         = p.url;
-      imageStoragePath = p.storagePath || '';
+      imageUrls.push(p.url);
+      imageStoragePaths.push(p.storagePath || '');
     } else if (S.fbReady && !S.isGuest && storage && p.file) {
       try {
-        const uid_  = S.user?.uid || 'guest';
-        const docId = S.editManualId || (db ? db.collection('manuals').doc().id : 'local_'+genId());
-        const fname = `manual_${Date.now()}.jpg`;
+        const fname = `manual_${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
         const spath = `manuals/${uid_}/${docId}/${fname}`;
         const result = await uploadPhoto(p.file, spath);
-        imageUrl         = result.url;
-        imageStoragePath = result.storagePath;
+        imageUrls.push(result.url);
+        imageStoragePaths.push(result.storagePath);
       } catch(uploadErr) {
         console.warn('[매뉴얼 사진 업로드 실패]', uploadErr.message);
-        toast('⚠️ 사진 업로드 실패 (텍스트만 저장)');
+        toast('⚠️ 사진 업로드 실패 (일부 사진 제외됨)');
       }
     } else {
       /* 게스트: base64 그대로 */
-      imageUrl = p.url;
+      imageUrls.push(p.url);
+      imageStoragePaths.push('');
     }
   }
+  /* 하위 호환: 첫 번째 URL을 imageUrl에도 유지 */
+  const imageUrl         = imageUrls[0] || '';
+  const imageStoragePath = imageStoragePaths[0] || '';
 
   /* ── ③ Firestore 저장 객체 구성 ── */
   const data = {
@@ -1236,9 +1251,11 @@ async function saveManual() {
     checklist,         /* 체크리스트 배열 */
     caution,           /* 최종 주의 (한 줄) */
     tip,               /* Tip (한 줄) */
-    /* ★ 대표 사진 — steps[0].imgUrl 또는 별도 업로드 */
-    imageUrl:         imageUrl || (steps[0]?.imgUrl || ''),
-    imageStoragePath: imageStoragePath || (steps[0]?.imgPath || ''),
+    /* ★ 대표 사진 — 다중(최대 10장) */
+    imageUrl:          imageUrl || (steps[0]?.imgUrl || ''),          /* 하위 호환용 첫 번째 URL */
+    imageUrls:         imageUrls.length ? imageUrls : (imageUrl ? [imageUrl] : []),
+    imageStoragePath:  imageStoragePath || (steps[0]?.imgPath || ''),
+    imageStoragePaths: imageStoragePaths,
     updatedAt: new Date().toISOString(),
   };
 
