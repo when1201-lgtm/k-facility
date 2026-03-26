@@ -3411,7 +3411,7 @@ body.light-mode .sd-section {
   box-shadow:0 10px 15px -3px rgba(0,0,0,.08) !important;
 }
 body.light-mode .sd-main-title  { color:#111827 !important; }
-body.light-mode .sd-desc-text   { color:#374151 !important; }
+body.light-mode .sd-desc-text   { color:#000000 !important; }
 body.light-mode .sd-photo-thumb { border-color:#E5E7EB !important; }
 
 @media (max-width:600px) {
