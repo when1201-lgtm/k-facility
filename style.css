@@ -446,7 +446,7 @@ body.light-mode .alert-tip {
 body.light-mode .rb-done    { background: #dcfce7 !important; color: #15803d !important; border: 2px solid #86efac !important; font-weight: 700 !important; }
 body.light-mode .rb-prog    { background: #eef2ff !important; color: #4338ca !important; border: 2px solid #c7d2fe !important; font-weight: 700 !important; }
 body.light-mode .rb-todo    { background: #F9FAFB !important; color: #374151 !important; border: 2px solid #D1D5DB !important; font-weight: 700 !important; }
-body.light-mode .m-tag      { background: #eef2ff !important; border: 2px solid #c7d2fe !important; color: #4338ca !important; font-weight: 600 !important; }
+body.light-mode .m-tag      { background: #eef2ff !important; border: 2px solid #c7d2fe !important; color: #4338ca !important; font-weight: 700 !important; font-size: 13px !important; padding: 4px 12px !important; }
 body.light-mode .status-badge { background: #F9FAFB !important; border: 1.5px solid #E5E7EB !important; color: #374151 !important; font-weight: 600 !important; }
 body.light-mode .spill      { background: #dcfce7 !important; border: 1.5px solid #86efac !important; }
 
@@ -723,10 +723,11 @@ body.light-mode .md-sec-title {
   margin-bottom: 16px !important;
 }
 body.light-mode .md-overview p {
-  color: #1f2937 !important;
-  font-size: 16px !important;
-  font-weight: 500 !important;
-  line-height: 1.85 !important;
+  color: #374151 !important;
+  font-size: 15px !important;
+  font-weight: 400 !important;
+  line-height: 1.8 !important;
+  letter-spacing: -0.02em !important;
 }
 
 /* ── 섹션 사이 구분선 강화 ── */
@@ -1053,7 +1054,7 @@ body.light-mode .md-stat {
   color: #374151 !important;
   font-weight: 600 !important;
 }
-body.light-mode .md-tags-row .m-tag { font-size: 13px !important; }
+body.light-mode .md-tags-row .m-tag { font-size: 13px !important; font-weight: 700 !important; padding: 4px 12px !important; }
 
 /* 섹션 카드들 (개요, 준비물, 절차, 체크리스트 등) */
 body.light-mode .md-overview,
@@ -1067,10 +1068,11 @@ body.light-mode .md-section {
   border-top: 2px solid #D1D5DB !important;
 }
 body.light-mode .md-overview p {
-  color: #1f2937 !important;
-  font-size: 16px !important;
-  font-weight: 500 !important;
-  line-height: 2.0 !important;
+  color: #374151 !important;
+  font-size: 15px !important;
+  font-weight: 400 !important;
+  line-height: 1.8 !important;
+  letter-spacing: -0.02em !important;
 }
 body.light-mode .md-sec-title {
   color: #111827 !important;
@@ -2242,7 +2244,7 @@ textarea { caret-color: var(--orange); }
 .rb-done { background: rgba(16,185,129,.15); color: #6ee7b7; border: 1px solid rgba(16,185,129,.25); }
 .rb-prog { background: rgba(224,92,10,.15);  color: #fba87a; border: 1px solid rgba(224,92,10,.25); }
 .rb-todo { background: rgba(255,255,255,.07); color: var(--t3); border: 1px solid rgba(255,255,255,.10); }
-.m-tag { font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 99px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12); color: var(--t3); }
+.m-tag { font-size: 13px; font-weight: 700; padding: 4px 12px; border-radius: 99px; background: rgba(129,140,248,.18); border: 1.5px solid rgba(129,140,248,.35); color: #a5b4fc; letter-spacing: .01em; }
 .status-badge { font-size: 11px; background: rgba(255,255,255,.07); padding: 4px 12px; border-radius: 99px; color: var(--t3); }
 
 /* ── HOME BENTO ── */
@@ -2341,10 +2343,10 @@ textarea { caret-color: var(--orange); }
 .md-cat-badge { font-size: 12.5px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; margin-bottom: 10px; }
 .md-main-title { font-size: clamp(20px,2.2vw,26px); font-weight: 800; color: #fff; letter-spacing: -0.02em; line-height: 1.3; margin-bottom: 12px; text-shadow: 0 1px 4px rgba(0,0,0,.5); }
 .md-stat-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
-.md-stat { font-size: 12.5px; color: var(--t3); background: rgba(255,255,255,.07); padding: 4px 12px; border-radius: 99px; border: 1px solid rgba(255,255,255,.1); }
-.md-tags-row { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 5px; }
+.md-stat { font-size: 13px; font-weight: 600; color: var(--t2); background: rgba(255,255,255,.07); padding: 5px 14px; border-radius: 99px; border: 1px solid rgba(255,255,255,.14); }
+.md-tags-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.08); }
 .md-overview { padding: 18px 20px; margin-bottom: 16px; }
-.md-overview p { font-size: 18px; font-weight: 500; color: var(--t1); line-height: 2.0; }
+.md-overview p { font-size: 15px; font-weight: 400; color: var(--t2); line-height: 1.8; letter-spacing: -0.02em; }
 .md-section { padding: 20px; margin-bottom: 16px; }
 .md-sec-title { display: flex; align-items: center; gap: 9px; font-size: 14px; font-weight: 700; color: var(--t1); margin-bottom: 16px; }
 .md-sec-count { margin-left: auto; font-size: 12.5px; color: var(--t3); background: rgba(255,255,255,.07); padding: 3px 10px; border-radius: 99px; border: 1px solid rgba(255,255,255,.1); }
@@ -3348,4 +3350,40 @@ body.light-mode .md-thumb-img {
 }
 @media (max-width: 640px) {
   .md-thumb-img { width: 110px; height: 82px; }
+}
+
+/* ── 매뉴얼 상세 — 태그/개요 구분 강화 ── */
+/* 라이트모드: 태그 행 구분선 */
+body.light-mode .md-tags-row {
+  border-top: 1.5px solid #E5E7EB !important;
+  padding-top: 10px !important;
+  margin-top: 10px !important;
+}
+/* 라이트모드: 개요 박스 — 배경으로 구분 */
+body.light-mode .md-overview p {
+  font-size: 15px !important;
+  font-weight: 400 !important;
+  line-height: 1.8 !important;
+  color: #374151 !important;
+  letter-spacing: -0.02em !important;
+}
+/* stat 배지 크기 개선 */
+body.light-mode .md-stat {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  padding: 5px 14px !important;
+}
+/* 개요 섹션 라벨 추가 */
+.md-overview::before {
+  content: '📝 개요';
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--t4);
+  margin-bottom: 8px;
+}
+body.light-mode .md-overview::before {
+  color: #9ca3af !important;
 }
