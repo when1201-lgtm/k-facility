@@ -106,7 +106,7 @@
 
     <!-- 헤더 -->
     <header id="hdr">
-      <div class="h-logo"><a href="index.html">K-<em>Facility</em></a></div>
+      <div class="h-logo"><a href="/">K-<em>Facility</em></a></div>
       <div class="srch">
         <i class="fa-solid fa-magnifying-glass"></i>
         <input type="search" id="si" placeholder="작업기록, 장비, 메모 검색..." autocomplete="off"/>
@@ -364,6 +364,10 @@
           <div class="glass md-header-card">
             <div class="md-cat-badge" id="md-cat-badge"></div>
             <h2 class="md-main-title" id="md-title">-</h2>
+            <!-- 대표 사진 -->
+            <div id="md-thumb-wrap" class="md-thumb-wrap hidden">
+              <img id="md-thumb-img" class="md-thumb-img" src="" alt="대표 사진" onclick="previewPhoto(this.src)"/>
+            </div>
             <div class="md-stat-row">
               <span class="md-stat" id="md-stat-steps">단계 0</span>
               <span class="md-stat" id="md-stat-supplies">준비물 0</span>
