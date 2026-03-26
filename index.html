@@ -89,6 +89,9 @@
     <button class="nb" data-p="roadmap">
       <i class="fa-solid fa-calendar-days"></i><span class="tip">연간로드맵</span>
     </button>
+    <button class="nb" data-p="tools">
+      <i class="fa-solid fa-screwdriver-wrench"></i><span class="tip">공구도감</span>
+    </button>
     <div class="s-div s-div--push"></div>
     <button class="nb" data-p="contacts">
       <i class="fa-solid fa-address-book"></i><span class="tip">연락처</span>
@@ -106,7 +109,7 @@
 
     <!-- 헤더 -->
     <header id="hdr">
-      <div class="h-logo"><a href="index.html">K-<em>Facility</em></a></div>
+      <div class="h-logo"><a href="/">K-<em>Facility</em></a></div>
       <div class="srch">
         <i class="fa-solid fa-magnifying-glass"></i>
         <input type="search" id="si" placeholder="작업기록, 장비, 메모 검색..." autocomplete="off"/>
@@ -149,6 +152,23 @@
                   <div class="ml">불러오는 중</div>
                   <div class="mv">-</div>
                   <div class="md">-</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 공구 도감 홈 위젯 -->
+            <div class="glass tcard">
+              <div class="card-head">
+                <div>
+                  <div class="slbl">공구 도감</div>
+                  <div class="ctitle">등록된 현장 공구</div>
+                </div>
+                <button class="btn-b" data-goto="tools">전체 보기 →</button>
+              </div>
+              <div id="home-tools-row" class="tools-home-scroll">
+                <div class="tools-home-empty">
+                  <span style="font-size:28px;opacity:.3">🔧</span>
+                  <span>공구를 추가해보세요</span>
                 </div>
               </div>
             </div>
@@ -248,6 +268,13 @@
                   <div class="mc-wide-body">
                     <div class="mn">연간 로드맵</div>
                     <div class="ms">2025년 전체 계획</div>
+                  </div>
+                </div>
+                <div class="gc mc mc-wide" data-goto="tools">
+                  <div class="mi mi--tools">🔧</div>
+                  <div class="mc-wide-body">
+                    <div class="mn">공구 도감</div>
+                    <div class="ms">현장 공구 관리</div>
                   </div>
                 </div>
               </div>
@@ -612,36 +639,206 @@
         </div>
       </section>
 
-      <!-- ===== 일정 상세 ===== -->
-      <section id="page-schedule-detail" class="page">
+      <!-- ===== 공구 도감 ===== -->
+      <section id="page-tools" class="page">
         <div class="pi">
           <div class="breadcrumb">
             <span class="bc-ico bc-link" data-goto="home">🏠</span>
             <span class="bc-sep">/</span>
-            <span class="bc-link" data-goto="roadmap">연간 로드맵</span>
-            <span class="bc-sep">/</span>
-            <span class="bc-cur" id="sd-bread-title">일정 상세</span>
+            <span class="bc-cur">공구 도감</span>
             <span class="bc-date"></span>
           </div>
-          <div class="glass sd-header-card">
-            <div class="sd-type-badge" id="sd-type-badge"></div>
-            <h2 class="sd-main-title" id="sd-title">-</h2>
-            <div class="sd-meta-row">
-              <span class="sd-meta-item"><span class="sd-meta-icon">📅</span><span id="sd-month"></span></span>
-              <span class="sd-meta-item"><span class="sd-meta-icon">🏷️</span><span id="sd-type-text"></span></span>
+
+          <!-- 히어로 헤더 -->
+          <div class="glass tools-hero">
+            <div class="tools-hero-left">
+              <div class="tools-hero-icon">🔧</div>
+              <div>
+                <div class="hero-title">공구 도감</div>
+                <div class="hero-sub">현장 공구 사진 · 용도 · 보관위치 관리</div>
+              </div>
+            </div>
+            <button class="btn-o" onclick="openToolForm()">＋ 공구 추가</button>
+          </div>
+
+          <!-- 검색 + 필터 바 -->
+          <div class="glass tools-search-bar">
+            <div class="tools-search-inner">
+              <i class="fa-solid fa-magnifying-glass tools-search-icon"></i>
+              <input id="tools-search-input" type="search"
+                placeholder="공구 이름, 용도, 보관위치 검색..."
+                class="tools-search-input"
+                oninput="doToolSearch(this.value)"/>
+            </div>
+            <div class="tools-filter-chips" id="tools-size-filters">
+              <!-- JS가 동적으로 사이즈 칩 생성 -->
             </div>
           </div>
-          <div class="glass sd-section hidden" id="sd-photos-wrap">
-            <div class="md-sec-title"><span>📷</span> 사진</div>
-            <div class="sd-photos-grid" id="sd-photos-grid"></div>
+
+          <!-- 공구 카운트 -->
+          <div class="slbl slbl--mb" id="tools-list-count">공구 0개</div>
+
+          <!-- 카드 그리드 (세로 스크롤) -->
+          <div class="tools-grid" id="tools-grid">
+            <!-- 빈 상태 -->
+            <div class="tools-empty-state" id="tools-empty">
+              <div class="tools-empty-icon">🔧</div>
+              <div class="tools-empty-title">등록된 공구가 없습니다</div>
+              <div class="tools-empty-sub">현장에서 사용하는 공구를 등록해보세요</div>
+              <button class="btn-o" style="margin-top:16px" onclick="openToolForm()">＋ 첫 공구 등록</button>
+            </div>
           </div>
-          <div class="glass sd-section hidden" id="sd-desc-wrap">
-            <div class="md-sec-title"><span>📋</span> 상세 내용</div>
-            <p class="sd-desc-text" id="sd-desc"></p>
+        </div>
+      </section>
+
+      <!-- ===== 공구 상세 ===== -->
+      <section id="page-tool-detail" class="page">
+        <div class="pi">
+          <div class="breadcrumb">
+            <span class="bc-ico bc-link" data-goto="home">🏠</span>
+            <span class="bc-sep">/</span>
+            <span class="bc-link" data-goto="tools">공구 도감</span>
+            <span class="bc-sep">/</span>
+            <span class="bc-cur" id="td-bread-title">공구 상세</span>
+            <span class="bc-date"></span>
           </div>
+
+          <!-- 대표 사진 슬라이더 -->
+          <div class="td-photo-wrap" id="td-photo-wrap">
+            <div class="td-photo-slot td-photo-placeholder" id="td-photo-main">
+              <span style="font-size:64px;opacity:.3">🔧</span>
+            </div>
+            <div class="td-photo-thumbs" id="td-photo-thumbs"></div>
+          </div>
+
+          <!-- 기본 정보 카드 -->
+          <div class="glass td-info-card">
+            <div class="td-tool-name" id="td-name">-</div>
+            <div class="td-badges-row">
+              <span class="td-badge td-badge--location" id="td-location-badge"></span>
+              <span class="td-badge td-badge--size" id="td-size-badge"></span>
+            </div>
+            <div class="td-info-grid">
+              <div class="td-info-item hidden" id="td-field-name">
+                <div class="td-info-label">📌 표준 명칭</div>
+                <div class="td-info-value" id="td-name-official"></div>
+              </div>
+              <div class="td-info-item hidden" id="td-field-site">
+                <div class="td-info-label">🏗️ 현장 이름</div>
+                <div class="td-info-value" id="td-site-name"></div>
+              </div>
+              <div class="td-info-item hidden" id="td-field-purpose">
+                <div class="td-info-label">⚙️ 용도</div>
+                <div class="td-info-value" id="td-purpose"></div>
+              </div>
+              <div class="td-info-item hidden" id="td-field-size">
+                <div class="td-info-label">📐 사이즈</div>
+                <div class="td-info-value" id="td-size"></div>
+              </div>
+              <div class="td-info-item hidden" id="td-field-location">
+                <div class="td-info-label">📍 보관 위치</div>
+                <div class="td-info-value" id="td-location"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 비교 메모 -->
+          <div class="glass td-memo-card hidden" id="td-memo-wrap">
+            <div class="md-sec-title"><span>💬</span> 비교 메모</div>
+            <p class="td-memo-text" id="td-memo"></p>
+          </div>
+
+          <!-- 수정/삭제 -->
           <div class="detail-actions">
-            <button class="btn-o detail-actions__edit" id="sd-edit-btn">✏️ 수정하기</button>
-            <button class="btn-gh detail-actions__del" id="sd-del-btn">🗑 삭제</button>
+            <button class="btn-o detail-actions__edit" id="td-edit-btn">✏️ 수정하기</button>
+            <button class="btn-gh detail-actions__del" id="td-del-btn">🗑 삭제</button>
+          </div>
+
+          <!-- 확장 영역 — 나중에 PDF/YouTube 등 추가 -->
+          <div class="glass td-ext-card hidden" id="td-ext-wrap">
+            <!-- 추후 사용 매뉴얼 PDF, 유튜브 링크 등 -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== 공구 작성/수정 폼 (풀페이지) ===== -->
+      <section id="page-form-tool" class="page">
+        <div class="fullpage-form-wrap">
+          <div class="fpf-header">
+            <button class="fpf-back-btn" onclick="formBack('tool')">
+              <span class="fpf-back-icon">←</span>
+              <span class="fpf-back-label">뒤로</span>
+            </button>
+            <h1 class="fpf-title" id="form-tool-title">공구 추가</h1>
+          </div>
+
+          <div class="fpf-body">
+
+            <!-- 대표 사진 (최상단, 가장 강조) -->
+            <div class="fpf-card tool-photo-card">
+              <div class="fpf-section-title">📷 공구 사진 (최대 10장)</div>
+              <div class="tool-photo-preview-large" id="tf-photo-large">
+                <div class="tool-photo-placeholder">
+                  <span style="font-size:48px;opacity:.3">📷</span>
+                  <span style="color:var(--t4);font-size:14px;margin-top:8px">사진을 추가하면 여기에 표시됩니다</span>
+                </div>
+              </div>
+              <div id="tf-photo-preview" class="photo-preview-wrap" style="margin-top:12px"></div>
+              <div class="photo-btn-row" style="margin-top:10px">
+                <label class="photo-add-btn">📷 카메라<input type="file" accept="image/*" capture="environment" multiple class="hidden" onchange="handleToolPhoto(event)"/></label>
+                <label class="photo-add-btn">🖼 갤러리<input type="file" accept="image/*" multiple class="hidden" onchange="handleToolPhoto(event)"/></label>
+              </div>
+              <p class="photo-hint">800px 자동 압축 · Firebase Storage 저장</p>
+            </div>
+
+            <!-- 기본 정보 -->
+            <div class="fpf-card">
+              <div class="fpf-section-title">🔧 기본 정보</div>
+              <div class="lf-group">
+                <label class="lf-label">표준 명칭 *</label>
+                <input class="lf-input" id="tf-name" type="text" placeholder="예: 스패너, 파이프 렌치, 토크 렌치"/>
+              </div>
+              <div class="lf-group" style="margin-top:14px">
+                <label class="lf-label">현장 이름 (별칭)</label>
+                <input class="lf-input" id="tf-site-name" type="text" placeholder="예: 몽키, 빠루, 볼트 죄는 거"/>
+              </div>
+              <div class="lf-row" style="margin-top:14px">
+                <div class="lf-group">
+                  <label class="lf-label">사이즈</label>
+                  <input class="lf-input" id="tf-size" type="text" placeholder="예: 13mm, 10인치, 대/중/소"/>
+                </div>
+                <div class="lf-group">
+                  <label class="lf-label">보관 위치</label>
+                  <input class="lf-input" id="tf-location" type="text" placeholder="예: 공구함 2번, 지하창고 A"/>
+                </div>
+              </div>
+            </div>
+
+            <!-- 용도 -->
+            <div class="fpf-card">
+              <div class="fpf-section-title">⚙️ 용도</div>
+              <div class="lf-group">
+                <label class="lf-label">어디에 쓰는 공구인가요?</label>
+                <textarea class="lf-textarea fpf-textarea" id="tf-purpose" rows="4"
+                  placeholder="예: 배관 연결부 조임, 볼트·너트 체결, 고압 배관 작업에 사용"></textarea>
+              </div>
+            </div>
+
+            <!-- 비교 메모 -->
+            <div class="fpf-card">
+              <div class="fpf-section-title">💬 비교 메모</div>
+              <div class="lf-group">
+                <label class="lf-label">비슷한 공구와 구분 방법, 이럴 땐 이걸 써야 함</label>
+                <textarea class="lf-textarea fpf-textarea" id="tf-memo" rows="5"
+                  placeholder="예: 몽키 스패너 — 너트 크기 조절 가능, 단 힘이 많이 들어감&#10;파이프 렌치 — 원형 파이프 전용, 강한 토크 필요할 때 사용&#10;→ 일반 볼트는 스패너, 배관 연결은 파이프 렌치"></textarea>
+              </div>
+            </div>
+
+          </div><!-- /fpf-body -->
+
+          <div class="fpf-sticky-bar">
+            <button class="btn-gh fpf-cancel-btn" onclick="formBack('tool')">취소</button>
+            <button class="btn-o fpf-save-btn" id="btn-save-tool" onclick="saveTool()">💾 저장</button>
           </div>
         </div>
       </section>
@@ -956,16 +1153,6 @@
                 <label class="lf-label">설명</label>
                 <textarea class="lf-textarea fpf-textarea" id="sm-desc" rows="5" placeholder="세부 내용, 준비사항..."></textarea>
               </div>
-            </div>
-
-            <div class="fpf-card">
-              <div class="fpf-section-title">📷 사진 (최대 10장)</div>
-              <div id="sm-photo-preview" class="photo-preview-wrap"></div>
-              <div class="photo-btn-row" style="margin-top:8px">
-                <label class="photo-add-btn">📷 카메라<input type="file" accept="image/*" capture="environment" multiple class="hidden" onchange="handleSchPhoto(event)"/></label>
-                <label class="photo-add-btn">🖼 갤러리<input type="file" accept="image/*" multiple class="hidden" onchange="handleSchPhoto(event)"/></label>
-              </div>
-              <p class="photo-hint">800px 자동 압축 · Firebase Storage 저장</p>
             </div>
           </div>
 
