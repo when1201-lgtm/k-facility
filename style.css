@@ -3418,3 +3418,210 @@ body.light-mode .sd-photo-thumb { border-color:#E5E7EB !important; }
   .sd-main-title { font-size:20px; }
   .sd-photos-grid { grid-template-columns:repeat(3,1fr); }
 }
+
+/* ═══════════════════════════════════════════════════
+   공구 도감 슬라이더 (tools-catalog)
+   ─ 대시보드 홈 + 풀페이지 카드 스타일 통일
+═══════════════════════════════════════════════════ */
+
+/* ── 섹션 래퍼 ── */
+.tools-slider-section {
+  margin: 2rem 0 0;
+}
+.tools-slider-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+.tools-slider-title {
+  margin-bottom: 0 !important;
+}
+
+/* ── 스크롤 트랙 ── */
+.tools-slider-track-wrap {
+  position: relative;
+}
+.tools-slider-track {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: 4px;          /* 그림자 잘림 방지 */
+  padding-right: 4px;
+}
+.tools-slider-track::-webkit-scrollbar { display: none; }
+
+/* ── 공구 카드 공통 (대시보드 슬라이더 & 풀페이지 동일) ── */
+.tool-card {
+  flex: 0 0 200px;
+  width: 200px;
+  scroll-snap-align: start;
+  border-radius: 20px !important;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform .22s cubic-bezier(.34,1.56,.64,1), box-shadow .22s;
+  padding: 0 !important;        /* 이미지가 모서리까지 꽉 차도록 */
+}
+.tool-card:hover {
+  transform: translateY(-5px) scale(1.02);
+}
+
+/* ── 카드 사진 영역 (상단 65%) ── */
+.tool-card__photo {
+  width: 100%;
+  height: 135px;                /* 총 카드 높이 ~200px 기준 67% */
+  overflow: hidden;
+  position: relative;
+  background: linear-gradient(135deg,
+    rgba(99,102,241,.12) 0%,
+    rgba(139,92,246,.10) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.tool-card__photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform .3s;
+}
+.tool-card:hover .tool-card__photo img {
+  transform: scale(1.06);
+}
+.tool-card__photo--empty {
+  font-size: 3rem;
+}
+.tool-card__photo--empty::before {
+  content: '🔧';
+}
+/* 카테고리 배지 (사진 위 좌측) */
+.tool-card__badge {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  background: rgba(12,16,32,.65);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 99px;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  letter-spacing: .04em;
+}
+
+/* ── 카드 정보 영역 (하단 35%) ── */
+.tool-card__body {
+  padding: 12px 14px 14px;
+  background: transparent;
+}
+.tool-card__name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--t1);
+  margin-bottom: 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+}
+.tool-card__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 11px;
+  color: var(--t4);
+  line-height: 1.5;
+}
+.tool-card__meta span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── 스켈레톤 로딩 카드 ── */
+.tool-card--skeleton .tool-card__photo--empty {
+  animation: tc-pulse 1.5s ease-in-out infinite;
+}
+@keyframes tc-pulse {
+  0%, 100% { opacity: .4; }
+  50%       { opacity: .9; }
+}
+
+/* ── "전체 도감 보기" 카드 (슬라이더 맨 끝) ── */
+.tool-card--more {
+  flex: 0 0 160px !important;
+  width: 160px !important;
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  gap: 10px;
+  background: transparent !important;
+  border: 2px dashed rgba(99,102,241,.35) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+.tool-card--more:hover {
+  border-color: rgba(99,102,241,.7) !important;
+  background: rgba(99,102,241,.06) !important;
+}
+.tool-card--more__icon {
+  font-size: 2.2rem;
+  opacity: .7;
+}
+.tool-card--more__text {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--orange);
+  text-align: center;
+  line-height: 1.4;
+  padding: 0 12px;
+}
+
+/* ── 작은 버튼 variant ── */
+.btn-o--sm {
+  padding: 7px 14px !important;
+  font-size: 12px !important;
+  border-radius: 10px !important;
+}
+
+/* ═══════════════════════════════════════════════════
+   light-mode overrides — 공구 도감
+═══════════════════════════════════════════════════ */
+body.light-mode .tool-card {
+  background: #FFFFFF !important;
+  border: 2px solid #D1D5DB !important;
+  box-shadow: 0 10px 20px -5px rgba(0,0,0,.10), 0 4px 8px -2px rgba(0,0,0,.06) !important;
+}
+body.light-mode .tool-card:hover {
+  border-color: #6366f1 !important;
+  box-shadow: 0 18px 28px -5px rgba(79,70,229,.18), 0 8px 12px -3px rgba(79,70,229,.10) !important;
+}
+body.light-mode .tool-card__name  { color: #111827 !important; }
+body.light-mode .tool-card__meta  { color: #6b7280 !important; }
+body.light-mode .tool-card__badge {
+  background: rgba(17,24,39,.70) !important;
+}
+body.light-mode .tool-card--more {
+  border-color: rgba(99,102,241,.4) !important;
+  background: transparent !important;
+}
+body.light-mode .tool-card__photo {
+  background: linear-gradient(135deg,
+    rgba(99,102,241,.08) 0%,
+    rgba(139,92,246,.07) 100%) !important;
+}
+
+/* ── 반응형 ── */
+@media (max-width: 600px) {
+  .tool-card         { flex: 0 0 160px; width: 160px; }
+  .tool-card__photo  { height: 110px; }
+  .tool-card--more   { flex: 0 0 130px !important; width: 130px !important; }
+}
