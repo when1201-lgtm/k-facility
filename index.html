@@ -104,6 +104,63 @@
     </button>
   </nav>
 
+  <!-- ===== 모바일 하단 네비바 ===== -->
+  <nav id="mob-nav">
+    <button class="mbn active" data-p="home">
+      <i class="fa-solid fa-house"></i><span>홈</span>
+    </button>
+    <button class="mbn" data-p="search">
+      <i class="fa-solid fa-magnifying-glass"></i><span>검색</span>
+    </button>
+    <button class="mbn mbn--add" onclick="openLogForm()">
+      <i class="fa-solid fa-plus"></i><span>기록</span>
+    </button>
+    <button class="mbn" data-p="tools-catalog">
+      <i class="fa-solid fa-screwdriver-wrench"></i><span>공구</span>
+    </button>
+    <button class="mbn" id="mob-more-btn" onclick="toggleMobMore()">
+      <i class="fa-solid fa-bars"></i><span>더보기</span>
+    </button>
+  </nav>
+
+  <!-- 더보기 드로어 -->
+  <div id="mob-drawer-overlay" onclick="closeMobMore()"></div>
+  <div id="mob-drawer">
+    <div class="mob-drawer-handle"></div>
+    <div class="mob-drawer-grid">
+      <button class="mob-ditem" data-p="electric"      onclick="closeMobMore();goto('electric')">
+        <span class="mob-ditem__ico">⚡</span><span class="mob-ditem__lbl">전기</span>
+      </button>
+      <button class="mob-ditem" data-p="mechanical"    onclick="closeMobMore();goto('mechanical')">
+        <span class="mob-ditem__ico">⚙️</span><span class="mob-ditem__lbl">기계</span>
+      </button>
+      <button class="mob-ditem" data-p="construction"  onclick="closeMobMore();goto('construction')">
+        <span class="mob-ditem__ico">🔨</span><span class="mob-ditem__lbl">영선</span>
+      </button>
+      <button class="mob-ditem" data-p="fire"          onclick="closeMobMore();goto('fire')">
+        <span class="mob-ditem__ico">🔥</span><span class="mob-ditem__lbl">소방</span>
+      </button>
+      <button class="mob-ditem" data-p="records"       onclick="closeMobMore();goto('records')">
+        <span class="mob-ditem__ico">📋</span><span class="mob-ditem__lbl">작업기록</span>
+      </button>
+      <button class="mob-ditem" data-p="memo"          onclick="closeMobMore();goto('memo')">
+        <span class="mob-ditem__ico">📒</span><span class="mob-ditem__lbl">학습메모</span>
+      </button>
+      <button class="mob-ditem" data-p="roadmap"       onclick="closeMobMore();goto('roadmap')">
+        <span class="mob-ditem__ico">📅</span><span class="mob-ditem__lbl">로드맵</span>
+      </button>
+      <button class="mob-ditem" data-p="contacts"      onclick="closeMobMore();goto('contacts')">
+        <span class="mob-ditem__ico">📇</span><span class="mob-ditem__lbl">연락처</span>
+      </button>
+      <button class="mob-ditem" data-p="stats"         onclick="closeMobMore();goto('stats')">
+        <span class="mob-ditem__ico">📊</span><span class="mob-ditem__lbl">통계</span>
+      </button>
+      <button class="mob-ditem" data-p="settings"      onclick="closeMobMore();goto('settings')">
+        <span class="mob-ditem__ico">⚙️</span><span class="mob-ditem__lbl">설정</span>
+      </button>
+    </div>
+  </div>
+
   <!-- 메인 영역 -->
   <div id="main">
 
