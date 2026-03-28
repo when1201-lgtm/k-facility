@@ -826,11 +826,20 @@ function _toolCardHtml(t, { showActions = false } = {}) {
 }
 
 /* =====================================================
-   공구 도감 슬라이더 (대시보드 홈)
+   공구 도감 슬라이더 (대시보드 홈) + 자동재생
 ===================================================== */
+
+/* 자동재생 타이머 전역 변수 */
+let _toolsAutoplayTimer  = null;
+let _toolsAutoplayPaused = false;
+const TOOLS_AUTOPLAY_MS  = 3000; // 3초
+
 function renderToolsSlider() {
   const el = $('tools-slider');
   if (!el) return;
+
+  /* 기존 오토플레이 정리 */
+  _stopToolsAutoplay();
 
   /* 로그인 여부와 무관하게 빈 배열이면 SAMPLE_TOOLS 폴백 */
   const list = tools.length ? tools
@@ -861,6 +870,73 @@ function renderToolsSlider() {
     </div>`;
 
   el.innerHTML = cardsHtml + moreCard;
+
+  /* ── 인디케이터 도트 생성 ── */
+  const totalCards = list.length + 1; // +1 = 더보기 카드
+  const dotsEl = $('tools-slider-dots');
+  if (dotsEl) {
+    dotsEl.innerHTML = list.map((_, i) =>
+      `<div class="ts-dot${i === 0 ? ' active' : ''}" onclick="toolsSliderGoTo(${i})"></div>`
+    ).join('');
+  }
+
+  /* ── 자동재생 시작 ── */
+  _startToolsAutoplay(el, list.length);
+}
+
+/* 슬라이더 자동재생 내부 함수 */
+function _startToolsAutoplay(trackEl, cardCount) {
+  if (!trackEl || cardCount < 2) return;
+  _toolsAutoplayTimer = setInterval(() => {
+    if (_toolsAutoplayPaused) return;
+    _toolsSliderStep(trackEl, cardCount);
+  }, TOOLS_AUTOPLAY_MS);
+}
+
+function _stopToolsAutoplay() {
+  if (_toolsAutoplayTimer) {
+    clearInterval(_toolsAutoplayTimer);
+    _toolsAutoplayTimer = null;
+  }
+}
+
+function _toolsSliderStep(trackEl, cardCount) {
+  if (!trackEl) return;
+  const cardW  = trackEl.querySelector('.tool-card')?.offsetWidth || 216; // card + gap
+  const gap    = 16;
+  const step   = cardW + gap;
+  const maxScroll = trackEl.scrollWidth - trackEl.clientWidth;
+
+  /* 끝에 도달하면 처음으로 부드럽게 복귀 */
+  if (trackEl.scrollLeft + step >= maxScroll - 4) {
+    trackEl.scrollTo({ left: 0, behavior: 'smooth' });
+    _updateToolsDots(0);
+  } else {
+    trackEl.scrollBy({ left: step, behavior: 'smooth' });
+    /* 현재 인덱스 계산 */
+    const idx = Math.round((trackEl.scrollLeft + step) / step);
+    _updateToolsDots(Math.min(idx, cardCount - 1));
+  }
+}
+
+function _updateToolsDots(activeIdx) {
+  document.querySelectorAll('#tools-slider-dots .ts-dot').forEach((dot, i) => {
+    dot.classList.toggle('active', i === activeIdx);
+  });
+}
+
+/* 외부(HTML onmouseenter/leave)에서 호출 */
+function pauseToolsAutoplay()  { _toolsAutoplayPaused = true;  }
+function resumeToolsAutoplay() { _toolsAutoplayPaused = false; }
+
+/* 도트 클릭 → 해당 카드로 이동 */
+function toolsSliderGoTo(idx) {
+  const el = $('tools-slider');
+  if (!el) return;
+  const cardW = el.querySelector('.tool-card')?.offsetWidth || 200;
+  const gap   = 16;
+  el.scrollTo({ left: idx * (cardW + gap), behavior: 'smooth' });
+  _updateToolsDots(idx);
 }
 
 /* =====================================================
@@ -3049,6 +3125,9 @@ window.saveTool           = saveTool;
 window.deleteTool         = deleteTool;
 window.toggleMobMore      = toggleMobMore;
 window.closeMobMore       = closeMobMore;
+window.pauseToolsAutoplay  = pauseToolsAutoplay;
+window.resumeToolsAutoplay = resumeToolsAutoplay;
+window.toolsSliderGoTo     = toolsSliderGoTo;
 
 /* =====================================================
    모바일 더보기 드로어
