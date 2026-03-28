@@ -313,26 +313,29 @@
               </div>
             </div>
 
-          </div><!-- /bento-top -->
-
-          <!-- ===== 공구 도감 슬라이더 ===== -->
-          <div class="tools-slider-section">
-            <div class="tools-slider-header">
-              <div class="slbl tools-slider-title">🔧 공구 도감</div>
-              <button class="btn-o btn-o--sm" onclick="goto('tool-form')">＋ 공구 추가</button>
-            </div>
-            <div class="tools-slider-track-wrap">
-              <div class="tools-slider-track" id="tools-slider">
-                <div class="tool-card glass tool-card--skeleton">
-                  <div class="tool-card__photo tool-card__photo--empty"></div>
-                  <div class="tool-card__body">
-                    <div class="tool-card__name" style="opacity:.3">불러오는 중...</div>
+            <!-- ===== 공구 도감 슬라이더 (bento-top 내부, cols 1-2) ===== -->
+            <div class="tools-slider-section bento-tools">
+              <div class="tools-slider-header">
+                <div class="slbl tools-slider-title">🔧 공구 도감</div>
+                <button class="btn-o btn-o--sm" onclick="openToolForm()">＋ 공구 추가</button>
+              </div>
+              <div class="tools-slider-track-wrap"
+                   onmouseenter="pauseToolsAutoplay()"
+                   onmouseleave="resumeToolsAutoplay()">
+                <div class="tools-slider-track" id="tools-slider">
+                  <div class="tool-card glass tool-card--skeleton">
+                    <div class="tool-card__photo tool-card__photo--empty"></div>
+                    <div class="tool-card__body">
+                      <div class="tool-card__name" style="opacity:.3">불러오는 중...</div>
+                    </div>
                   </div>
                 </div>
+                <!-- 자동재생 인디케이터 -->
+                <div class="tools-slider-dots" id="tools-slider-dots"></div>
               </div>
             </div>
-          </div>
-          <!-- /공구 도감 슬라이더 -->
+
+          </div><!-- /bento-top -->
 
         </div>
       </section>
