@@ -586,6 +586,9 @@ function goto(pageId) {
   const target = $('page-' + pageId);
   if (target) { target.classList.add('active'); document.getElementById('pages').scrollTop = 0; }
   document.querySelectorAll('.nb').forEach(b => b.classList.toggle('active', b.dataset.p === pageId));
+  /* 모바일 하단 네비바 동기화 */
+  document.querySelectorAll('.mbn[data-p]').forEach(b => b.classList.toggle('active', b.dataset.p === pageId));
+  document.querySelectorAll('.mob-ditem[data-p]').forEach(b => b.classList.toggle('active', b.dataset.p === pageId));
   S.currentPage = pageId;
   /* 서브페이지 breadcrumb 시계 업데이트 */
   if (pageId !== 'home') _updateSubClock();
@@ -3044,3 +3047,29 @@ window.handleToolPhoto    = handleToolPhoto;
 window._renderToolPhotoPreview = _renderToolPhotoPreview;
 window.saveTool           = saveTool;
 window.deleteTool         = deleteTool;
+window.toggleMobMore      = toggleMobMore;
+window.closeMobMore       = closeMobMore;
+
+/* =====================================================
+   모바일 더보기 드로어
+===================================================== */
+function toggleMobMore() {
+  const drawer  = $('mob-drawer');
+  const overlay = $('mob-drawer-overlay');
+  if (!drawer) return;
+  const isOpen = drawer.classList.contains('open');
+  if (isOpen) {
+    closeMobMore();
+  } else {
+    drawer.classList.add('open');
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+}
+function closeMobMore() {
+  const drawer  = $('mob-drawer');
+  const overlay = $('mob-drawer-overlay');
+  if (drawer)  drawer.classList.remove('open');
+  if (overlay) overlay.classList.remove('open');
+  document.body.style.overflow = '';
+}
