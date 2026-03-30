@@ -1,1302 +1,3075 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
-  <title>K-Facility | 시설관리 대시보드</title>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
-  <link rel="stylesheet" href="style.css"/>
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
-</head>
-<body class="light-mode">
+/* =====================================================
+   K-Facility — main.js  v4.0  (완전판)
+   ─────────────────────────────────────────────────
+   ✅ Firebase initializeApp 실제 초기화
+   ✅ Firestore 실시간 구독 (onSnapshot)
+   ✅ 매뉴얼 추가/수정/삭제 → Firestore
+   ✅ 작업기록 추가/수정/삭제 → Firestore + Storage
+   ✅ 학습메모 추가/수정/삭제 → Firestore
+   ✅ 사진 업로드 → 800px 압축 → Storage → URL 저장
+   ✅ 삭제 시 Storage 파일 동시 삭제
+   ✅ 게스트 모드 → 로컬 메모리 fallback (샘플 데이터)
+   ─────────────────────────────────────────────────
+   수정 가이드
+     HTML 구조 → index.html
+     디자인    → style.css
+     로직      → main.js (여기)
+===================================================== */
 
-<!-- 인증 로딩 스피너 -->
-<div id="auth-loader">
-  <div class="auth-spinner"></div>
-  <span class="auth-label">K-Facility</span>
-</div>
+/* =====================================================
+   ① FIREBASE 설정
+   Firebase Console → 프로젝트 설정 → 웹 앱 → 구성 복사
+===================================================== */
+const FB_CFG = {
+  apiKey:            'AIzaSyCBCG_qBYywBUXBlF47Fg_xXX_nDZTz51Y',
+  authDomain:        'k-facility.firebaseapp.com',
+  projectId:         'k-facility',
+  storageBucket:     'k-facility.firebasestorage.app',
+  messagingSenderId: '709908883593',
+  appId:             '1:709908883593:web:a56d2220c227cd72783e58',
+  measurementId:     'G-CZHK5FQ4Q7',
+};
 
-<!-- 배경 오브 -->
-<div class="bg-layer">
-  <div class="orb o1"></div>
-  <div class="orb o2"></div>
-  <div class="orb o3"></div>
-  <div class="orb o4"></div>
-</div>
+/* Firebase 인스턴스 */
+let db      = null;
+let storage = null;
+let auth    = null;
 
-<!-- 로그인 오버레이 -->
-<div id="lov" class="hidden">
-  <div class="lcard">
-    <div class="ll">K-<em>Facility</em></div>
-    <p class="ls">시설관리 통합 대시보드에<br>오신 걸 환영합니다</p>
-    <button class="btn-google" id="btn-google">
-      <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
-        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-      </svg>
-      Google로 로그인
-    </button>
-    <div class="ldv">또는</div>
-    <button class="btn-guest" id="btn-guest">👤 게스트로 둘러보기</button>
-    <p class="ln">게스트 모드에서는 로컬에 임시 저장됩니다</p>
-  </div>
-</div>
+/* Firestore 실시간 구독 해제 함수 */
+let _unsubLogs     = null;
+let _unsubMemos    = null;
+let _unsubSch      = null;
+let _unsubManuals  = null;
+let _unsubTools    = null;
 
-<!-- 모달 오버레이 (openSchModal·previewPhoto 전용 — 삭제 금지) -->
-<div id="modal-overlay" onclick="if(event.target===this)closeModal()">
-  <div id="modal-box"></div>
-</div>
+/* =====================================================
+   ② GLOBAL STATE
+===================================================== */
+const S = {
+  currentPage:      'home',
+  user:             null,
+  isGuest:          false,
+  fbReady:          false,
+  /* 편집 중인 문서 ID */
+  editLogId:        null,
+  editMemoId:       null,
+  editSchId:        null,
+  viewSchId:        null,
+  editManualCat:    null,
+  editManualId:     null,
+  /* 현재 보고 있는 매뉴얼 */
+  viewManualCat:    null,
+  viewManualId:     null,
+  /* 공구 도감 */
+  editToolId:       null,
+  toolPhotoBlob:    null,
+  toolPhotoExist:   '',
+  _prevToolPage:    'tools-catalog',
+  /* 필터 */
+  logCatFilter:     '전체',
+  logStatusFilter:  '전체',
+  memoFilter:       '전체',
+  activeMonth:      new Date().getMonth() + 1,
+  activeYear:       new Date().getFullYear(),
+  /* 매뉴얼 체크리스트 (로컬) */
+  checklistState:   {},
+  /* 사진 업로드 버퍼: [{file, url, existing, storagePath}] */
+  uploadPhotos:     [],
+  /* 모달 현재 사진 input target */
+  photoTarget:      null,
+};
 
-<!-- 앱 쉘 -->
-<div id="app" class="hidden">
+/* =====================================================
+   ③ 메모리 데이터 (Firebase/게스트 모두 여기서 읽음)
+===================================================== */
+let logs      = [];
+let memos     = [];
+let schedules = [];
+let contacts  = [];
+let manuals   = { electric:[], mechanical:[], construction:[], fire:[] };
+let tools     = [];
 
-  <!-- 사이드바 -->
-  <nav id="sidebar">
-    <div class="s-logo">K-<em>F</em></div>
-    <div class="s-div"></div>
-    <button class="nb active" data-p="home">
-      <i class="fa-solid fa-house"></i><span class="tip">홈</span>
-    </button>
-    <button class="nb" data-p="search">
-      <i class="fa-solid fa-magnifying-glass"></i><span class="tip">검색</span>
-    </button>
-    <div class="s-div"></div>
-    <button class="nb" data-p="electric">
-      <i class="fa-solid fa-bolt"></i><span class="tip">전기</span>
-    </button>
-    <button class="nb" data-p="mechanical">
-      <i class="fa-solid fa-gear"></i><span class="tip">기계</span>
-    </button>
-    <button class="nb" data-p="construction">
-      <i class="fa-solid fa-hammer"></i><span class="tip">영선</span>
-    </button>
-    <button class="nb" data-p="fire">
-      <i class="fa-solid fa-fire-extinguisher"></i><span class="tip">소방</span>
-    </button>
-    <button class="nb" data-p="records">
-      <i class="fa-solid fa-clipboard-list"></i><span class="tip">작업기록</span>
-    </button>
-    <button class="nb" data-p="memo">
-      <i class="fa-solid fa-book-open"></i><span class="tip">학습메모</span>
-    </button>
-    <button class="nb" data-p="roadmap">
-      <i class="fa-solid fa-calendar-days"></i><span class="tip">연간로드맵</span>
-    </button>
-    <button class="nb" data-p="tools-catalog">
-      <i class="fa-solid fa-screwdriver-wrench"></i><span class="tip">공구 도감</span>
-    </button>
-    <div class="s-div s-div--push"></div>
-    <button class="nb" data-p="contacts">
-      <i class="fa-solid fa-address-book"></i><span class="tip">연락처</span>
-    </button>
-    <button class="nb" data-p="stats">
-      <i class="fa-solid fa-chart-bar"></i><span class="tip">통계</span>
-    </button>
-    <button class="nb" data-p="settings">
-      <i class="fa-solid fa-sliders"></i><span class="tip">설정</span>
-    </button>
-  </nav>
+/* ── 게스트용 샘플 데이터 ── */
+const SAMPLE_LOGS = [
+  { id:'sl1', title:'3F 전기패널 MCB 교체', cat:'전기', status:'완료', worker:'홍길동', date:'2025-03-19', desc:'분전반 MCB 과부하 트립 반복. B형 30A 차단기 교체 및 부하 재분배 처리.', photos:[], storagePaths:[] },
+  { id:'sl2', title:'냉각탑 필터 교체',     cat:'기계', status:'완료', worker:'김철수', date:'2025-03-15', desc:'냉각탑 필터 오염 심각. 신규 필터 교체 및 수질 점검 완료.',              photos:[], storagePaths:[] },
+  { id:'sl3', title:'소방 감지기 점검',     cat:'소방', status:'완료', worker:'이영희', date:'2025-03-10', desc:'전층 감지기 동작 시험 완료. 3개소 감도 불량 교체.',                    photos:[], storagePaths:[] },
+  { id:'sl4', title:'옥상 방수 균열 보수',  cat:'영선', status:'완료', worker:'홍길동', date:'2025-03-05', desc:'옥상 신축줄눈 균열 에폭시 주입 보수.',                                 photos:[], storagePaths:[] },
+  { id:'sl5', title:'보일러 점화 점검',     cat:'기계', status:'진행중',worker:'김철수', date:'2025-03-20', desc:'보일러 버너 점화 불량. 부품 교체 대기 중.',                           photos:[], storagePaths:[] },
+  { id:'sl6', title:'1F 화장실 누수 수리',  cat:'기계', status:'대기',  worker:'미정',   date:'2025-03-22', desc:'1F 남자화장실 세면대 배관 누수. 자재 구매 대기.',                     photos:[], storagePaths:[] },
+];
 
-  <!-- ===== 모바일 하단 네비바 ===== -->
-  <nav id="mob-nav">
-    <button class="mbn active" data-p="home">
-      <i class="fa-solid fa-house"></i><span>홈</span>
-    </button>
-    <button class="mbn" data-p="search">
-      <i class="fa-solid fa-magnifying-glass"></i><span>검색</span>
-    </button>
-    <button class="mbn mbn--add" onclick="openLogForm()">
-      <i class="fa-solid fa-plus"></i><span>기록</span>
-    </button>
-    <button class="mbn" data-p="tools-catalog">
-      <i class="fa-solid fa-screwdriver-wrench"></i><span>공구</span>
-    </button>
-    <button class="mbn" id="mob-more-btn" onclick="toggleMobMore()">
-      <i class="fa-solid fa-bars"></i><span>더보기</span>
-    </button>
-  </nav>
+const SAMPLE_MEMOS = [
+  { id:'sm1', title:'MCB 차단기 종류와 선정 기준', cat:'전기', date:'2025-03-10',
+    content:'B형: 일반 부하(모터 미포함), C형: 모터·변압기 포함 회로\n선정 기준: 부하전류 × 1.25 이상의 정격 선택\n설치 시 동일 규격의 차단기만 교체 가능',
+    tags:['MCB','차단기','전기기초'] },
+  { id:'sm2', title:'냉각탑 점검 주기 및 항목', cat:'기계', date:'2025-03-08',
+    content:'월간: 수질 검사(pH, 전기전도도), 필터 청소\n분기: 팬·모터 오일 보충, 벨트 장력 점검\n연간: 완전 청소·소독, 레지오넬라균 검사\n\n*여름철(6~9월)은 격주 수질 검사 권장',
+    tags:['냉각탑','기계설비','정기점검'] },
+  { id:'sm3', title:'소방 법정 점검 주기 정리', cat:'소방', date:'2025-03-05',
+    content:'작동기능점검: 연 1회 이상 (7~9월)\n종합정밀점검: 연 1회 이상 (1~6월)\n소화기 자체점검: 매월\n\n*소방시설법 제25조 기준',
+    tags:['소방법','정기점검','법정'] },
+  { id:'sm4', title:'균열 폭 기준 및 보수 방법', cat:'영선', date:'2025-03-01',
+    content:'0.2mm 미만: 표면 도포 보수\n0.2~0.5mm: 에폭시 주입 보수\n0.5mm 이상: 구조 전문가 진단 필수\n\n*콘크리트 균열 지침서(KCI) 기준',
+    tags:['균열','영선','보수'] },
+];
 
-  <!-- 더보기 드로어 -->
-  <div id="mob-drawer-overlay" onclick="closeMobMore()"></div>
-  <div id="mob-drawer">
-    <div class="mob-drawer-handle"></div>
-    <div class="mob-drawer-grid">
-      <button class="mob-ditem" data-p="electric"      onclick="closeMobMore();goto('electric')">
-        <span class="mob-ditem__ico">⚡</span><span class="mob-ditem__lbl">전기</span>
-      </button>
-      <button class="mob-ditem" data-p="mechanical"    onclick="closeMobMore();goto('mechanical')">
-        <span class="mob-ditem__ico">⚙️</span><span class="mob-ditem__lbl">기계</span>
-      </button>
-      <button class="mob-ditem" data-p="construction"  onclick="closeMobMore();goto('construction')">
-        <span class="mob-ditem__ico">🔨</span><span class="mob-ditem__lbl">영선</span>
-      </button>
-      <button class="mob-ditem" data-p="fire"          onclick="closeMobMore();goto('fire')">
-        <span class="mob-ditem__ico">🔥</span><span class="mob-ditem__lbl">소방</span>
-      </button>
-      <button class="mob-ditem" data-p="records"       onclick="closeMobMore();goto('records')">
-        <span class="mob-ditem__ico">📋</span><span class="mob-ditem__lbl">작업기록</span>
-      </button>
-      <button class="mob-ditem" data-p="memo"          onclick="closeMobMore();goto('memo')">
-        <span class="mob-ditem__ico">📒</span><span class="mob-ditem__lbl">학습메모</span>
-      </button>
-      <button class="mob-ditem" data-p="roadmap"       onclick="closeMobMore();goto('roadmap')">
-        <span class="mob-ditem__ico">📅</span><span class="mob-ditem__lbl">로드맵</span>
-      </button>
-      <button class="mob-ditem" data-p="contacts"      onclick="closeMobMore();goto('contacts')">
-        <span class="mob-ditem__ico">📇</span><span class="mob-ditem__lbl">연락처</span>
-      </button>
-      <button class="mob-ditem" data-p="stats"         onclick="closeMobMore();goto('stats')">
-        <span class="mob-ditem__ico">📊</span><span class="mob-ditem__lbl">통계</span>
-      </button>
-      <button class="mob-ditem" data-p="settings"      onclick="closeMobMore();goto('settings')">
-        <span class="mob-ditem__ico">⚙️</span><span class="mob-ditem__lbl">설정</span>
-      </button>
+const SAMPLE_SCHEDULES = [
+  {id:'ds1', month:1,  type:'법정', title:'소방 시설 정기 점검',           desc:'소방 완공검사 증명서, 작동기능점검표 보관 확인'},
+  {id:'ds2', month:1,  type:'계절', title:'동파 방지 순찰 강화',            desc:'노출 배관 단열재 점검, 수도 계량기함 보온 상태 확인'},
+  {id:'ds3', month:2,  type:'정기', title:'비상 발전기 월간 점검 및 시운전', desc:'냉각수·오일·배터리 상태 확인, 30분 이상 무부하 시운전'},
+  {id:'ds4', month:3,  type:'계절', title:'해빙기 건물 점검',               desc:'외벽 균열·누수·기초 침하 확인, 옥상 방수 상태 점검'},
+  {id:'ds5', month:3,  type:'법정', title:'승강기 정기 검사 준비',           desc:'관할 기관에 검사 신청, 검사 전 자체 점검 실시'},
+  {id:'ds6', month:4,  type:'계절', title:'냉방 설비 가동 전 점검',          desc:'냉각탑 청소, 냉동기 오일·냉매 충전량 확인'},
+  {id:'ds7', month:5,  type:'법정', title:'전기 안전 점검',                 desc:'수전설비, 변압기, 배전반 정밀 점검, 절연저항 측정'},
+  {id:'ds8', month:6,  type:'계절', title:'우기 대비 방수·배수 점검',        desc:'옥상·지하 방수 상태, 빗물 배수로·집수정 청소'},
+  {id:'ds9', month:7,  type:'정기', title:'냉각탑 레지오넬라균 검사 및 청소', desc:'냉각수 수질 검사, 냉각탑 청소·소독 실시'},
+  {id:'ds10',month:8,  type:'계절', title:'하절기 전력 피크 대비 점검',       desc:'수변전 설비 과부하 모니터링, 냉방 부하 분산 계획'},
+  {id:'ds11',month:9,  type:'계절', title:'난방 설비 가동 전 점검',          desc:'보일러 청소·연소 상태 확인, 온수 배관 밸브 점검'},
+  {id:'ds12',month:10, type:'법정', title:'소방 시설 종합 정밀 점검',        desc:'소방 펌프, 수신기, 유도등, 비상 방송 전체 점검'},
+  {id:'ds13',month:10, type:'법정', title:'승강기 자체 안전 점검',           desc:'승강기 안전 부품 점검표 작성 및 자체 점검 실시'},
+  {id:'ds14',month:11, type:'계절', title:'동파 방지 조치',                 desc:'노출 배관 보온재 설치, 동파 우려 배관 배수 처리'},
+  {id:'ds15',month:12, type:'정기', title:'연간 시설 점검 결과 보고서 작성', desc:'연간 점검 이력 정리, 다음 연도 예방 보수 계획 및 예산 요청'},
+];
+
+const SAMPLE_CONTACTS = [
+  {id:'c1', name:'홍길동',       role:'전기 담당',  company:'K-Facility', phone:'010-1234-5678', email:'hong@kfacility.com'},
+  {id:'c2', name:'김철수',       role:'기계 담당',  company:'K-Facility', phone:'010-2345-6789', email:'kim@kfacility.com'},
+  {id:'c3', name:'LS전기 AS센터',role:'전기 협력사', company:'LS산전',     phone:'1588-1234',    email:''},
+  {id:'c4', name:'삼보소방',     role:'소방 점검',   company:'삼보소방',   phone:'02-555-7890',  email:''},
+];
+
+const SAMPLE_TOOLS = [
+  { id:'tool1', title:'드라이버 (+) #2',    usage:'나사 체결 / 분리',   size:'#2 × 150mm',    location:'1F 공구함 A', cat:'전기', photoUrl:'', createdAt: Date.now()-500000 },
+  { id:'tool2', title:'절연 장갑',          usage:'전기 작업 보호구',   size:'L (내전압 7kV)', location:'1F 공구함 A', cat:'전기', photoUrl:'', createdAt: Date.now()-400000 },
+  { id:'tool3', title:'검전기 (비접촉)',     usage:'활선·무전압 확인',   size:'AC 12~1000V',   location:'1F 공구함 B', cat:'전기', photoUrl:'', createdAt: Date.now()-300000 },
+  { id:'tool4', title:'멀티미터',           usage:'전압·전류·저항 측정', size:'600V CAT III',  location:'전기실',      cat:'전기', photoUrl:'', createdAt: Date.now()-200000 },
+  { id:'tool5', title:'파이프 렌치',        usage:'배관 체결 / 분리',   size:'14인치',         location:'기계실',      cat:'기계', photoUrl:'', createdAt: Date.now()-100000 },
+  { id:'tool6', title:'토크 렌치',          usage:'볼트 정밀 체결',     size:'20~110 N·m',    location:'기계실',      cat:'기계', photoUrl:'', createdAt: Date.now()-50000  },
+  { id:'tool7', title:'소화기 압력계',      usage:'소화기 압력 점검',   size:'범용',           location:'소방 창고',   cat:'소방', photoUrl:'', createdAt: Date.now()-20000  },
+  { id:'tool8', title:'줄자 (5m)',          usage:'현장 치수 측정',     size:'5m × 19mm',     location:'1F 공구함 C', cat:'영선', photoUrl:'', createdAt: Date.now()-10000  },
+];
+
+const SAMPLE_MANUALS = {
+  electric: [
+    { id:'me1', title:'분전반 MCB 차단기 교체', tags:['MCB','차단기'],
+      overview:'과부하·단락으로 트립된 MCB를 안전하게 교체하는 절차입니다.',
+      supplies:['드라이버(+/-)','절연 장갑','검전기','교체용 MCB','절연 테이프'],
+      cautions:['주 차단기 OFF 후 작업','검전기로 무전압 확인','동일 용량 MCB 사용'],
+      steps:[
+        {title:'전원 차단 및 잠금', desc:'주 차단기를 OFF하고 LOTO를 적용합니다. 검전기로 무전압을 확인합니다.',   youtube:''},
+        {title:'기존 MCB 제거',    desc:'상·하단 전선을 순서대로 분리합니다. 단자 위치를 사진으로 기록해두세요.', youtube:''},
+        {title:'신규 MCB 설치',    desc:'동일 규격 MCB를 딘레일에 고정하고 전선을 원래 순서대로 재결선합니다.',   youtube:''},
+        {title:'투입 테스트',      desc:'주 차단기 투입 후 MCB를 ON 합니다. 정상 전압 공급 여부를 확인합니다.',  youtube:''},
+      ],
+      checklist:['주 차단기 OFF 확인','검전기 무전압 확인','MCB 사양 메모','결선 사진 촬영','신규 MCB 규격 확인','투입 후 전압 측정'],
+      caution:'활선 작업 절대 금지. 반드시 정전 확인 후 진행하십시오.',
+      tip:'MCB 교체 후 12시간 모니터링을 권장합니다.' },
+  ],
+  mechanical: [
+    { id:'mm1', title:'냉각탑 필터 청소 및 교체', tags:['냉각탑','필터'],
+      overview:'냉각탑 효율 유지를 위한 정기 필터 청소 및 교체 절차입니다.',
+      supplies:['고압 세척기','필터 교체품','방수 장갑','안전화'],
+      cautions:['냉각탑 전원 차단','고소 작업 시 안전대 착용'],
+      steps:[
+        {title:'전원 차단',      desc:'냉각탑 제어판에서 전원을 차단하고 잠금합니다.',                          youtube:''},
+        {title:'필터 탈거',      desc:'기존 필터를 탈거하고 오염 상태를 확인합니다.',                          youtube:''},
+        {title:'청소/교체',      desc:'오염이 경미하면 고압 세척, 심하면 신규 필터로 교체합니다.',              youtube:''},
+        {title:'재장착 및 기동', desc:'필터 재장착 후 전원을 투입하고 정상 운전을 확인합니다.',                 youtube:''},
+      ],
+      checklist:['전원 차단','필터 상태 확인','청소 또는 교체','재장착 완료','정상 운전 확인'],
+      caution:'냉각수 온도 확인 후 작업 진행.', tip:'필터는 3개월마다 점검을 권장합니다.' },
+  ],
+  construction: [
+    { id:'mc1', title:'벽면 균열 보수 (에폭시 주입)', tags:['균열','에폭시','방수'],
+      overview:'콘크리트 벽 균열에 에폭시를 주입하여 구조적 보강을 수행하는 절차입니다.',
+      supplies:['에폭시 주입기','믹서 노즐','표면 처리제','방진 마스크','보호 안경'],
+      cautions:['에폭시 피부 접촉 주의','환기 충분히 확보'],
+      steps:[
+        {title:'균열 정밀 조사', desc:'균열 길이·깊이·방향을 기록하고 사진을 촬영합니다.',                     youtube:''},
+        {title:'주입구 설치',   desc:'균열을 따라 20~30cm 간격으로 주입 패커를 설치합니다.',                   youtube:''},
+        {title:'표면 실링',     desc:'균열 표면을 에폭시 퍼티로 밀봉합니다.',                                  youtube:''},
+        {title:'에폭시 주입',   desc:'저압 주입기로 말단에서 순서대로 에폭시를 주입합니다.',                    youtube:''},
+        {title:'경화 및 마감',  desc:'24시간 이상 경화 후 패커를 제거하고 표면을 마감합니다.',                  youtube:''},
+      ],
+      checklist:['균열 촬영','주입구 간격 확인','표면 실링 완료','에폭시 주입 완료','경화 확인'],
+      caution:'기온 5°C 이하에서는 작업을 중단하십시오.', tip:'주입 전 균열에 이물질을 에어건으로 제거하세요.' },
+  ],
+  fire: [
+    { id:'mf1', title:'스프링클러 헤드 교체', tags:['스프링클러','소방'],
+      overview:'파손되거나 오작동한 스프링클러 헤드를 교체하는 절차입니다.',
+      supplies:['스프링클러 헤드 렌치','교체용 헤드 (동일 규격)','테플론 테이프'],
+      cautions:['소방 제어반에 작업 통보','급수 밸브 차단 필수'],
+      steps:[
+        {title:'소방 제어반 통보', desc:'작업 시작을 통보하고 해당 구역 급수 밸브를 차단합니다.',               youtube:''},
+        {title:'기존 헤드 제거',  desc:'스프링클러 렌치로 기존 헤드를 제거합니다.',                            youtube:''},
+        {title:'신규 헤드 설치',  desc:'나사산에 테플론 테이프를 감고 신규 헤드를 설치합니다.',                 youtube:''},
+        {title:'방수 시험',       desc:'급수 밸브를 천천히 열고 누수 여부를 확인합니다.',                       youtube:''},
+        {title:'복구 및 보고',    desc:'소방 제어반에 작업 완료를 통보하고 작업 일지를 작성합니다.',            youtube:''},
+      ],
+      checklist:['제어반 통보','급수 밸브 차단','헤드 규격 확인','테플론 테이프 적용','누수 없음 확인','제어반 복구 보고'],
+      caution:'소방 제어반 통보 없이 작업 시 오경보 발생 위험.', tip:'헤드 교체 후 반드시 방수 시험을 실시하세요.' },
+  ],
+};
+
+/* =====================================================
+   ④ HELPERS
+===================================================== */
+const $      = id  => document.getElementById(id);
+const esc    = s   => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const today  = ()  => new Date().toISOString().slice(0, 10);
+const genId  = ()  => Math.random().toString(36).slice(2, 9) + Date.now().toString(36);
+
+const MONTH_NAMES   = ['','1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+const CAT_ICON      = { 전기:'⚡', 기계:'⚙️', 영선:'🔨', 소방:'🔥', 기타:'📋' };
+const CAT_KEY_MAP   = { electric:'전기', mechanical:'기계', construction:'영선', fire:'소방' };
+const CAT_KEY_REV   = { 전기:'electric', 기계:'mechanical', 영선:'construction', 소방:'fire' };
+const STATUS_COLOR  = { 완료:'var(--green)', 진행중:'var(--blue)', 대기:'var(--amber)' };
+const SCH_TYPE_STYLE = {
+  법정:{ bg:'rgba(244,63,94,.15)',  border:'rgba(244,63,94,.3)',  color:'var(--red)'   },
+  정기:{ bg:'rgba(29,78,216,.15)',  border:'rgba(29,78,216,.3)',  color:'var(--blue)'  },
+  계절:{ bg:'rgba(16,185,129,.15)', border:'rgba(16,185,129,.3)', color:'var(--green)' },
+};
+const MEMO_COLORS = {
+  전기:'rgba(224,92,10,.2)', 기계:'rgba(29,78,216,.2)',
+  영선:'rgba(245,158,11,.2)', 소방:'rgba(244,63,94,.2)', 일반:'rgba(255,255,255,.1)',
+};
+const CONTACT_COLORS = ['#e05c0a','#1d4ed8','#10b981','#7c3aed','#f59e0b','#0d9488'];
+
+/* 토스트 */
+function toast(msg, dur = 2500) {
+  let t = $('kf-toast');
+  if (!t) { t = document.createElement('div'); t.id = 'kf-toast'; document.body.appendChild(t); }
+  t.textContent = msg;
+  t.style.cssText = 'position:fixed;bottom:88px;left:50%;transform:translateX(-50%) translateY(0);background:rgba(12,16,32,.96);color:#fff;padding:11px 22px;border-radius:99px;font-size:14px;font-weight:600;z-index:99999;opacity:1;transition:opacity .3s;white-space:nowrap;border:1px solid rgba(255,255,255,.15);pointer-events:none';
+  clearTimeout(t._t);
+  t._t = setTimeout(() => { t.style.opacity = '0'; }, dur);
+}
+
+/* ── 인증 로딩 스피너 제어 ──
+   페이지 진입 시 스피너만 보이다가
+   onAuthStateChanged 결과가 오면 정확한 화면으로 전환 */
+function hideAuthLoader() {
+  const loader = document.getElementById('auth-loader');
+  const app    = document.getElementById('app');
+  /* ★ class="hidden" 제거 + style 초기화 모두 적용 */
+  if (app) {
+    app.classList.remove('hidden');
+    app.style.display = '';
+  }
+  if (!loader || loader.style.display === 'none') return;
+  loader.style.opacity = '0';
+  setTimeout(() => { loader.style.display = 'none'; }, 260);
+}
+
+function showLoginScreen() {
+  const lov = document.getElementById('lov');
+  if (lov) {
+    lov.classList.remove('hidden');
+    lov.style.display = 'flex';
+  }
+}
+
+/* 라이트박스 */
+function previewPhoto(url) {
+  let ov = $('kf-lightbox');
+  if (!ov) { ov = document.createElement('div'); ov.id = 'kf-lightbox'; document.body.appendChild(ov); }
+  ov.className = 'open';
+  ov.innerHTML = `<img src="${url}">`;
+  ov.onclick = () => ov.className = '';
+}
+
+/* =====================================================
+   ⑤ FIREBASE 초기화
+===================================================== */
+function initFirebase() {
+  if (typeof firebase === 'undefined') {
+    console.info('[K-Facility] Firebase SDK 없음 → 게스트 모드로 동작');
+    hideAuthLoader();          /* SDK 없어도 스피너 반드시 해제 */
+    showLoginScreen();
+    loadGuestData();
+    return;
+  }
+  try {
+    if (!firebase.apps.length) firebase.initializeApp(FB_CFG);
+    db      = firebase.firestore();
+    storage = firebase.storage();
+    auth    = firebase.auth();
+    S.fbReady = true;
+
+    /* 오프라인 캐시 */
+    db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
+
+    /* ── onAuthStateChanged: 최초 1회 결과가 오면 스피너 숨기고 화면 결정 ── */
+    let _firstAuthCheck = true;   /* 첫 번째 콜백 여부 */
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        console.log('%c[K-Facility] ✅ 로그인 감지', 'color:#10b981;font-weight:bold',
+          user.displayName, user.uid);
+        hideAuthLoader();          /* 스피너 숨기고 #app 표시 */
+        doLogin(user, false);
+      } else {
+        console.log('%c[K-Facility] 👤 미로그인 (onAuthStateChanged null)', 'color:#f59e0b;font-weight:bold');
+        hideAuthLoader();          /* 스피너 숨기고 #app 표시 */
+        showLoginScreen();         /* 로그인 화면만 표시 */
+      }
+      _firstAuthCheck = false;
+    });
+
+    /* 설정 페이지 상태 표시 */
+    updateFbStatusUI(true);
+
+  } catch (e) {
+    console.error('[K-Facility] Firebase 초기화 실패:', e);
+    hideAuthLoader();          /* 실패해도 스피너 반드시 해제 */
+    showLoginScreen();         /* 로그인 화면 표시 */
+    loadGuestData();
+    updateFbStatusUI(false, e.message);
+  }
+}
+
+function updateFbStatusUI(ok, msg) {
+  const badge = $('fb-status-badge');
+  const desc  = $('fb-status');
+  if (badge) { badge.textContent = ok ? '연결됨' : '미연결'; badge.style.color = ok ? 'var(--green)' : 'var(--red)'; }
+  if (desc)  desc.textContent = ok ? 'Firestore & Storage 활성화' : (msg || 'SDK 미연결');
+}
+
+/* =====================================================
+   ⑥ 인증
+===================================================== */
+function loginGoogle() {
+  if (!S.fbReady) {
+    alert('FB_CFG 값을 입력하고 index.html SDK 4줄 주석을 해제하세요.');
+    return;
+  }
+  const p = new firebase.auth.GoogleAuthProvider();
+  firebase.auth().signInWithPopup(p)
+    .then(r => doLogin(r.user, false))
+    .catch(e => toast('⚠️ 로그인 실패: ' + e.message));
+}
+
+function loginGuest() {
+  hideAuthLoader();   /* 혹시 스피너가 남아있으면 제거 */
+  doLogin({ displayName:'게스트', uid:'guest', email:'' }, true);
+}
+
+function doLogin(user, isGuest) {
+  console.log('%c[K-Facility] doLogin 진입', 'color:#1d4ed8;font-weight:bold',
+    { name: user.displayName, guest: isGuest, fbReady: S.fbReady });
+  S.user    = user;
+  S.isGuest = isGuest;
+  const init = (user.displayName || 'U')[0].toUpperCase();
+  const ava  = $('ava');   if (ava)  { ava.textContent = init; if (isGuest) ava.style.background = 'linear-gradient(135deg,#64748b,#475569)'; }
+  const un   = $('uname'); if (un)   un.textContent = user.displayName || '사용자';
+  const em   = $('settings-user-email'); if (em) em.textContent = user.email || (isGuest ? '게스트 모드' : '');
+  /* 로그인 오버레이 닫기 */
+  const _lov = document.getElementById('lov');
+  if (_lov) { _lov.classList.add('hidden'); _lov.style.display = ''; }
+
+  if (S.fbReady && !isGuest) {
+    subscribeFirestore();
+  } else {
+    loadGuestData();
+    goto('home');
+  }
+}
+
+function logout() {
+  unsubAll();
+  if (S.fbReady && !S.isGuest && auth) {
+    firebase.auth().signOut().then(() => location.reload());
+  } else {
+    location.reload();
+  }
+}
+
+/* 게스트 / 오프라인: 샘플 데이터 로드 */
+function loadGuestData() {
+  logs      = [...SAMPLE_LOGS];
+  memos     = [...SAMPLE_MEMOS];
+  schedules = [...SAMPLE_SCHEDULES];
+  contacts  = [...SAMPLE_CONTACTS];
+  manuals   = JSON.parse(JSON.stringify(SAMPLE_MANUALS));
+  tools     = [...SAMPLE_TOOLS];
+}
+
+/* =====================================================
+   ⑦ FIRESTORE 실시간 구독
+   ★ 필수 색인 (Firebase Console → Firestore → 색인)
+     logs      → date 내림차순
+     memos     → date 내림차순
+     schedules → month 오름차순
+===================================================== */
+function subscribeFirestore() {
+  console.log('%c[K-Facility] Firestore 실시간 구독 시작 ✨', 'color:#7c3aed;font-weight:bold');
+
+  /* ★ 작업기록 — orderBy 없이 전체 구독 (색인 불필요)
+     JS 레벨에서 date 내림차순 정렬 */
+  _unsubLogs = db.collection('logs')
+    .onSnapshot(snap => {
+      logs = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+      console.log('[K-Facility] logs 수신:', logs.length + '건');
+      renderHome();
+      if (S.currentPage === 'records') renderRecords();
+    }, e => console.error('[logs 구독 오류]', e));
+
+  /* ★ 학습메모 — 동일하게 JS 정렬 */
+  _unsubMemos = db.collection('memos')
+    .onSnapshot(snap => {
+      memos = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+      console.log('[K-Facility] memos 수신:', memos.length + '건');
+      if (S.currentPage === 'memo') renderMemo();
+    }, e => console.error('[memos 구독 오류]', e));
+
+  /* ★ 연간 로드맵 — orderBy('month') 제거 → JS 정렬 */
+  _unsubSch = db.collection('schedules')
+    .onSnapshot(snap => {
+      console.log('[K-Facility] schedules 수신:', snap.size + '건');
+      if (snap.empty) {
+        const b = db.batch();
+        SAMPLE_SCHEDULES.forEach(s => b.set(db.collection('schedules').doc(s.id), s));
+        b.commit();
+        schedules = [...SAMPLE_SCHEDULES];
+      } else {
+        schedules = snap.docs
+          .map(d => ({ id: d.id, ...d.data() }))
+          .sort((a, b) => (a.month || 0) - (b.month || 0));
+      }
+      /* 이번 달 일정 디버그 */
+      const thisMonth = new Date().getMonth() + 1;
+      const thisMonthList = schedules.filter(s => s.month === thisMonth);
+      console.log('[K-Facility] 이번 달(' + thisMonth + '월) 일정:', thisMonthList.length + '건');
+      renderHome();
+      if (S.currentPage === 'roadmap') renderRoadmap();
+    }, e => console.error('[schedules 구독 오류]', e));
+
+  /* ★ 매뉴얼 — 그대로 (orderBy 없음, 정상) */
+  _unsubManuals = db.collection('manuals')
+    .onSnapshot(snap => {
+      console.log('[K-Facility] manuals 수신:', snap.size + '건');
+      if (snap.empty) {
+        const b = db.batch();
+        Object.entries(SAMPLE_MANUALS).forEach(([cat, list]) =>
+          list.forEach(m => b.set(db.collection('manuals').doc(m.id), { ...m, cat }))
+        );
+        b.commit();
+        manuals = JSON.parse(JSON.stringify(SAMPLE_MANUALS));
+      } else {
+        manuals = { electric:[], mechanical:[], construction:[], fire:[] };
+        snap.docs.forEach(d => {
+          const data = d.data();
+          const cat  = data.cat || 'electric';
+          if (manuals[cat]) manuals[cat].push({ id: d.id, ...data });
+        });
+      }
+      ['electric','mechanical','construction','fire'].forEach(c => {
+        if (S.currentPage === c) renderManualCat(c);
+      });
+    }, e => console.error('[manuals 구독 오류]', e));
+
+  /* ★ 연락처 */
+  db.collection('contacts').get().then(snap => {
+    console.log('[K-Facility] contacts 수신:', snap.size + '건');
+    if (snap.empty) {
+      const b = db.batch();
+      SAMPLE_CONTACTS.forEach(c => b.set(db.collection('contacts').doc(c.id), c));
+      b.commit();
+      contacts = [...SAMPLE_CONTACTS];
+    } else {
+      contacts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    }
+    if (S.currentPage === 'contacts') renderContacts();
+  });
+
+  /* ★ 공구 도감 — createdAt 내림차순 (JS 정렬) */
+  _unsubTools = db.collection('tools')
+    .onSnapshot(snap => {
+      console.log('[K-Facility] tools 수신:', snap.size + '건');
+      if (snap.empty) {
+        /* 빈 컬렉션 → 샘플 데이터 시드 (schedules/manuals와 동일 패턴) */
+        const b = db.batch();
+        SAMPLE_TOOLS.forEach(t => b.set(db.collection('tools').doc(t.id), {
+          standardName:     t.title,
+          nickname:         '',
+          purpose:          t.usage,
+          size:             t.size,
+          storageLocation:  t.location,
+          comparisonMemo:   '',
+          cat:              t.cat,
+          photoURL:         t.photoUrl || '',
+          createdAt:        t.createdAt,
+        }));
+        b.commit();
+        tools = SAMPLE_TOOLS.map(t => _normTool({ id: t.id,
+          standardName: t.title, purpose: t.usage, size: t.size,
+          storageLocation: t.location, cat: t.cat,
+          photoURL: '', createdAt: t.createdAt }));
+      } else {
+        tools = snap.docs
+          .map(d => _normTool({ id: d.id, ...d.data() }))
+          .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      }
+      if (S.currentPage === 'home')          renderToolsSlider();
+      if (S.currentPage === 'tools-catalog') renderToolsCatalog();
+    }, e => console.error('[tools 구독 오류]', e));
+
+  goto('home');
+}
+
+function unsubAll() {
+  [_unsubLogs, _unsubMemos, _unsubSch, _unsubManuals, _unsubTools].forEach(fn => fn && fn());
+}
+
+/* =====================================================
+   ⑧ 이미지 압축 (800px / JPEG 0.78)
+===================================================== */
+function compressImage(file, maxPx = 800, q = 0.78) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onerror = () => reject(new Error('파일 읽기 실패'));
+    r.onload  = ev => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('이미지 로드 실패'));
+      img.onload  = () => {
+        let w = img.width, h = img.height;
+        if (w > maxPx || h > maxPx) {
+          if (w >= h) { h = Math.round(h * maxPx / w); w = maxPx; }
+          else        { w = Math.round(w * maxPx / h); h = maxPx; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0, w, h);
+        canvas.toBlob(blob => {
+          if (!blob) { reject(new Error('압축 실패')); return; }
+          resolve(blob.size < file.size ? blob : file);
+        }, 'image/jpeg', q);
+      };
+      img.src = ev.target.result;
+    };
+    r.readAsDataURL(file);
+  });
+}
+
+/* Storage 업로드 → { url, storagePath } */
+async function uploadPhoto(file, storagePath) {
+  const blob = await compressImage(file);
+  const ref  = storage.ref(storagePath);
+  const snap = await ref.put(blob, { contentType:'image/jpeg' });
+  const url  = await snap.ref.getDownloadURL();
+  return { url, storagePath };
+}
+
+/* Storage 파일 삭제 */
+async function deleteStorageFile(urlOrPath) {
+  if (!storage || !urlOrPath) return;
+  try {
+    const ref = urlOrPath.startsWith('http') ? storage.refFromURL(urlOrPath) : storage.ref(urlOrPath);
+    await ref.delete();
+  } catch (e) {
+    if (e.code !== 'storage/object-not-found') console.warn('[Storage 삭제]', e.message);
+  }
+}
+
+/* =====================================================
+   ⑨ ROUTER
+===================================================== */
+function goto(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const target = $('page-' + pageId);
+  if (target) { target.classList.add('active'); document.getElementById('pages').scrollTop = 0; }
+  document.querySelectorAll('.nb').forEach(b => b.classList.toggle('active', b.dataset.p === pageId));
+  /* 모바일 하단 네비바 동기화 */
+  document.querySelectorAll('.mbn[data-p]').forEach(b => b.classList.toggle('active', b.dataset.p === pageId));
+  document.querySelectorAll('.mob-ditem[data-p]').forEach(b => b.classList.toggle('active', b.dataset.p === pageId));
+  S.currentPage = pageId;
+  /* 서브페이지 breadcrumb 시계 업데이트 */
+  if (pageId !== 'home') _updateSubClock();
+  switch (pageId) {
+    case 'home':         renderHome();                    break;
+    case 'electric':     renderManualCat('electric');     break;
+    case 'mechanical':   renderManualCat('mechanical');   break;
+    case 'construction': renderManualCat('construction'); break;
+    case 'fire':         renderManualCat('fire');         break;
+    case 'records':      renderRecords();                 break;
+    case 'records-detail': /* 데이터는 openLogDetail에서 주입 */ break;
+    case 'memo':         renderMemo();                    break;
+    case 'memo-detail':  /* openMemoDetail에서 주입 */    break;
+    case 'roadmap':      renderRoadmap();                 break;
+    case 'schedule-detail': renderSchDetail();             break;
+    case 'form-schedule': /* openSchForm에서 주입 */      break;
+    case 'contacts':     renderContacts();                break;
+    case 'stats':        renderStats();                   break;
+    case 'manual-detail':renderManualDetail();            break;
+    case 'search':       /* input focus로 트리거 */       break;
+    case 'tools-catalog':renderToolsCatalog();            break;
+    case 'tool-form':    /* openToolForm()에서 주입 */    break;
+  }
+}
+
+/* =====================================================
+   ⑩ MODAL (공용)
+   ※ 진짜 모달(overlay): openSchModal(), previewPhoto()
+   ※ 풀페이지 폼:        openLogForm(), openMemoForm(), openManualForm()
+===================================================== */
+function openModal(html) {
+  $('modal-box').innerHTML = html;
+  $('modal-overlay').classList.add('open');
+}
+function closeModal() {
+  $('modal-overlay').classList.remove('open');
+  S.uploadPhotos = [];
+}
+
+/* =====================================================
+   ⑪ HOME
+===================================================== */
+function renderHome() {
+  /* 날짜 + 실시간 시계 */
+  function _tickClock() {
+    const de = $('home-date');
+    if (!de) return;
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('ko-KR', {year:'numeric',month:'long',day:'numeric',weekday:'long'});
+    const hh = String(now.getHours()).padStart(2,'0');
+    const mm = String(now.getMinutes()).padStart(2,'0');
+    const ss = String(now.getSeconds()).padStart(2,'0');
+    const ampm = now.getHours() < 12 ? 'AM' : 'PM';
+    de.innerHTML = `<div class="home-clock-wrap">
+      <span class="home-clock-date">${dateStr}</span>
+      <span class="home-clock-divider"></span>
+      <span class="home-clock-time">${hh}<span class="home-clock-colon">:</span>${mm}<span class="home-clock-colon">:</span>${ss}</span>
+      <span class="home-clock-ampm">${ampm}</span>
+    </div>`;
+  }
+  _tickClock();
+  if (window._clockTimer) clearInterval(window._clockTimer);
+  window._clockTimer = setInterval(_tickClock, 1000);
+
+  /* 최근 작업 2건 — Before/After 나란히 + 큰 이미지 */
+  const mr = $('home-mini-row');
+  if (mr) {
+    if (logs.length) {
+      mr.innerHTML = logs.slice(0, 2).map(l => {
+        const beforeSrc = (l.beforePhotos||[])[0] || l.imageUrl || (l.photos||[])[0] || '';
+        const afterSrc  = (l.afterPhotos||[])[0]  || (l.photos||[])[1] || '';
+        const sc = STATUS_COLOR[l.status] || 'var(--t3)';
+
+        /* Before/After 사진이 모두 있으면 나란히, 하나만 있으면 단독 */
+        const photoHtml = (beforeSrc && afterSrc) ? `
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px;height:120px">
+            <div style="position:relative;overflow:hidden">
+              <img src="${beforeSrc}"
+                style="width:100%;height:120px;object-fit:cover;display:block">
+              <span style="position:absolute;bottom:4px;left:4px;background:rgba(244,63,94,.8);
+                color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px">BEFORE</span>
+            </div>
+            <div style="position:relative;overflow:hidden">
+              <img src="${afterSrc}"
+                style="width:100%;height:120px;object-fit:cover;display:block">
+              <span style="position:absolute;bottom:4px;left:4px;background:rgba(16,185,129,.8);
+                color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px">AFTER</span>
+            </div>
+          </div>` : beforeSrc ? `
+          <div style="height:120px;overflow:hidden">
+            <img src="${beforeSrc}"
+              style="width:100%;height:120px;object-fit:cover;display:block">
+          </div>` : `
+          <div style="height:80px;background:rgba(255,255,255,.05);
+            display:flex;align-items:center;justify-content:center;
+            font-size:28px;color:var(--t4)">${CAT_ICON[l.cat]||'📋'}</div>`;
+
+        return `
+        <div class="mini" style="cursor:pointer;padding:0;overflow:hidden;border-radius:12px;
+             border:1px solid rgba(255,255,255,.1);flex:1;min-width:140px"
+             onclick="openLogDetail('${l.id}')">
+          ${photoHtml}
+          <div style="padding:10px 12px">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+              <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;
+                background:${sc}22;color:${sc};border:1px solid ${sc}44">${esc(l.status||'')}</span>
+              <span style="font-size:11px;color:var(--t3)">${esc(l.cat||'')}</span>
+            </div>
+            <div style="font-size:13px;font-weight:600;color:var(--t1);
+              white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(l.title)}</div>
+            <div style="font-size:11px;color:var(--t4);margin-top:3px">
+              ${l.worker?esc(l.worker)+' · ':''}${l.date||''}
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+    } else {
+      mr.innerHTML = `
+        <div class="mini" style="opacity:.5;font-size:13px;color:var(--t3);
+          text-align:center;padding:24px;border-radius:12px;
+          border:1px dashed rgba(255,255,255,.12);flex:1">
+          <div style="font-size:28px;margin-bottom:8px;opacity:.4">📋</div>
+          작업기록 없음<br>
+          <button class="btn-o" style="margin:12px auto 0;display:flex;font-size:12px;padding:7px 14px"
+            onclick="openLogForm()">＋ 첫 기록 작성</button>
+        </div>`;
+    }
+  }
+
+  /* 이번 달 로드맵 */
+  const rmm = $('home-rm-month');
+  if (rmm) rmm.textContent = MONTH_NAMES[S.activeMonth] + ' 주요 일정';
+  const rml = $('home-rm-list');
+  if (rml) {
+    const list = schedules.filter(s => s.month === S.activeMonth).slice(0, 5);
+    rml.innerHTML = list.length ? list.map(s => {
+      const done = false;
+      return `<div class="ri">
+        <div class="rdot ${done ? 'done' : 'todo'}"></div>
+        <span class="rtxt">${esc(s.title)}</span>
+        <span class="rb rb-todo">${esc(s.type)}</span>
+      </div>`;
+    }).join('') : '<div class="ri"><div class="rdot todo"></div><span class="rtxt" style="color:var(--t4)">이번 달 일정 없음</span></div>';
+  }
+
+  /* 통계 */
+  const sv = (id, v) => { const e=$(id); if(e) e.textContent=v; };
+  sv('h-stat-done', logs.filter(l=>l.status==='완료').length);
+  sv('h-stat-prog', logs.filter(l=>l.status==='진행중').length);
+  sv('h-stat-wait', logs.filter(l=>l.status==='대기').length);
+  sv('h-stat-memo', memos.length);
+
+  /* 체크리스트 */
+  document.querySelectorAll('#home-ck-list .chk').forEach(chk => {
+    if (!chk._bound) {
+      chk._bound = true;
+      chk.onclick = () => {
+        chk.classList.toggle('on');
+        chk.textContent = chk.classList.contains('on') ? '✓' : '';
+        const ct = chk.nextElementSibling;
+        if (ct) ct.classList.toggle('done', chk.classList.contains('on'));
+        updateHomeProgress();
+      };
+    }
+  });
+  updateHomeProgress();
+
+  /* 공구 도감 슬라이더 */
+  renderToolsSlider();
+}
+
+function updateHomeProgress() {
+  const all  = document.querySelectorAll('#home-ck-list .chk').length;
+  const done = document.querySelectorAll('#home-ck-list .chk.on').length;
+  const pct  = all ? Math.round(done/all*100) : 0;
+  const pf=$('pf'); if(pf) pf.style.width=pct+'%';
+  const cc=$('ck-count'); if(cc) cc.textContent=done+' / '+all+' 완료';
+  const cp=$('ck-pct');   if(cp) cp.textContent=pct+'%';
+}
+
+/* =====================================================
+   공구 도감 — 헬퍼 & 공용 상수
+===================================================== */
+const TOOL_CAT_COLORS = {
+  전기:'#f59e0b', 기계:'#3b82f6', 영선:'#10b981', 소방:'#ef4444', 공통:'#6366f1',
+};
+
+/* Firestore 문서를 앱 내부 표현으로 정규화 */
+function _normTool(d) {
+  return {
+    id:            d.id,
+    title:         d.standardName || d.title || '',
+    nickname:      d.nickname      || '',
+    usage:         d.purpose       || d.usage || '',
+    size:          d.size          || '',
+    location:      d.storageLocation || d.location || '',
+    memo:          d.comparisonMemo  || d.memo || '',
+    cat:           d.cat           || '공통',
+    photoUrl:      d.photoURL      || d.photoUrl || '',
+    createdAt:     d.createdAt     || Date.now(),
+    /* 검색 인덱스용 합성 텍스트 */
+    _idx: ((d.standardName||'') + ' ' + (d.nickname||'') + ' ' +
+           (d.purpose||'') + ' ' + (d.size||'')).toLowerCase(),
+  };
+}
+
+/* 단일 tool-card HTML 생성 (슬라이더 + 풀페이지 공용) */
+function _toolCardHtml(t, { showActions = false } = {}) {
+  const cc = TOOL_CAT_COLORS[t.cat] || '#6366f1';
+  const photoHtml = t.photoUrl
+    ? `<img src="${esc(t.photoUrl)}" alt="${esc(t.title)}">`
+    : '';
+  const actionsHtml = showActions ? `
+    <div class="tool-card__actions" onclick="event.stopPropagation()">
+      <button class="lc-btn lc-btn-edit" onclick="openToolForm('${esc(t.id)}')">✏️</button>
+      <button class="lc-btn lc-btn-del"  onclick="deleteTool('${esc(t.id)}')">🗑</button>
+    </div>` : '';
+  return `
+  <div class="tool-card glass" onclick="openToolDetail('${esc(t.id)}')">
+    <div class="tool-card__photo${t.photoUrl ? '' : ' tool-card__photo--empty'}">
+      ${photoHtml}
+      <span class="tool-card__badge" style="background:${cc}dd">${esc(t.cat||'기타')}</span>
     </div>
-  </div>
-
-  <!-- 메인 영역 -->
-  <div id="main">
-
-    <!-- 헤더 -->
-    <header id="hdr">
-      <div class="h-logo"><a href="/">K-<em>Facility</em></a></div>
-      <div class="srch">
-        <i class="fa-solid fa-magnifying-glass"></i>
-        <input type="search" id="si" placeholder="작업기록, 장비, 메모 검색..." autocomplete="off"/>
+    <div class="tool-card__body">
+      <div class="tool-card__name">${esc(t.title)}</div>
+      ${t.nickname ? `<div class="tool-card__nick">${esc(t.nickname)}</div>` : ''}
+      <div class="tool-card__meta">
+        ${t.usage    ? `<span>📌 ${esc(t.usage)}</span>`    : ''}
+        ${t.size     ? `<span>📐 ${esc(t.size)}</span>`     : ''}
+        ${t.location ? `<span>📦 ${esc(t.location)}</span>` : ''}
       </div>
-      <div class="h-right">
-        <button class="ibtn ibtn--dot" id="btn-alarm">
-          <i class="fa-solid fa-bell"></i>
-        </button>
-        <div class="ava" id="ava">KF</div>
-        <span class="uname" id="uname">관리자</span>
-        <button class="tsw" id="tsw"><div class="tsk" id="tsk"></div></button>
+    </div>
+    ${actionsHtml}
+  </div>`;
+}
+
+/* =====================================================
+   공구 도감 슬라이더 (대시보드 홈)
+===================================================== */
+function renderToolsSlider() {
+  const el = $('tools-slider');
+  if (!el) return;
+
+  /* 로그인 여부와 무관하게 빈 배열이면 SAMPLE_TOOLS 폴백 */
+  const list = tools.length ? tools
+    : SAMPLE_TOOLS.map(t => _normTool({ id: t.id,
+        standardName: t.title, purpose: t.usage, size: t.size,
+        storageLocation: t.location, cat: t.cat,
+        photoURL: '', createdAt: t.createdAt }));
+
+  if (!list.length) {
+    el.innerHTML = `
+      <div class="tool-card glass" style="flex:0 0 200px;display:flex;flex-direction:column;
+           align-items:center;justify-content:center;min-height:200px;gap:10px;padding:1.5rem!important">
+        <div style="font-size:2.5rem;opacity:.35">🔧</div>
+        <div style="font-size:13px;color:var(--t4);text-align:center">
+          등록된 공구 없음<br>
+          <button class="btn-o" style="margin:12px auto 0;display:flex;font-size:12px;padding:7px 14px"
+            onclick="openToolForm()">＋ 첫 공구 등록</button>
+        </div>
+      </div>`;
+    return;
+  }
+
+  const cardsHtml = list.map(t => _toolCardHtml(t)).join('');
+  const moreCard  = `
+    <div class="tool-card tool-card--more" onclick="goto('tools-catalog')">
+      <div class="tool-card--more__icon">🗂️</div>
+      <div class="tool-card--more__text">전체 도감<br>보기 →</div>
+    </div>`;
+
+  el.innerHTML = cardsHtml + moreCard;
+}
+
+/* =====================================================
+   공구 도감 풀페이지 (검색 포함)
+===================================================== */
+function renderToolsCatalog() {
+  const el    = $('tools-full-list');
+  const cnt   = $('tools-list-count');
+  if (!el) return;
+
+  /* 검색어 필터링 */
+  const q = ($('tool-search-input') || {}).value || '';
+  const kw = q.trim().toLowerCase();
+  const list = (tools.length ? tools
+    : SAMPLE_TOOLS.map(t => _normTool({ id: t.id,
+        standardName: t.title, purpose: t.usage, size: t.size,
+        storageLocation: t.location, cat: t.cat,
+        photoURL: '', createdAt: t.createdAt }))
+  ).filter(t => !kw || t._idx.includes(kw) || t.location.toLowerCase().includes(kw));
+
+  if (cnt) cnt.textContent = list.length + '건';
+
+  if (!list.length) {
+    el.innerHTML = `
+      <div class="glass" style="padding:3rem;text-align:center;grid-column:1/-1">
+        <div style="font-size:2.5rem;opacity:.3;margin-bottom:12px">🔧</div>
+        <div style="font-size:15px;color:var(--t4)">
+          ${kw ? `"${esc(q)}"에 대한 결과 없음` : '등록된 공구가 없습니다'}
+        </div>
+        ${!kw ? `<button class="btn-o" style="margin:16px auto 0;display:flex" onclick="openToolForm()">＋ 첫 공구 추가</button>` : ''}
+      </div>`;
+    return;
+  }
+
+  el.innerHTML = list.map(t => _toolCardHtml(t, { showActions: true })).join('');
+}
+
+/* =====================================================
+   공구 상세 모달
+===================================================== */
+function openToolDetail(toolId) {
+  const allTools = tools.length ? tools
+    : SAMPLE_TOOLS.map(t => _normTool({ id: t.id,
+        standardName: t.title, purpose: t.usage, size: t.size,
+        storageLocation: t.location, cat: t.cat,
+        photoURL: '', createdAt: t.createdAt }));
+  const t = allTools.find(x => x.id === toolId);
+  if (!t) return;
+
+  const cc = TOOL_CAT_COLORS[t.cat] || '#6366f1';
+  const photoHtml = t.photoUrl
+    ? `<img src="${esc(t.photoUrl)}" style="width:100%;height:200px;object-fit:cover;
+         border-radius:14px;margin-bottom:1.25rem;display:block">`
+    : `<div style="width:100%;height:130px;border-radius:14px;margin-bottom:1.25rem;
+         background:linear-gradient(135deg,rgba(99,102,241,.12),rgba(139,92,246,.10));
+         display:flex;align-items:center;justify-content:center;font-size:3.5rem">🔧</div>`;
+
+  const rows = [
+    ['📌 용도',      t.usage],
+    ['📐 사이즈',    t.size],
+    ['📦 보관 위치', t.location],
+    ['💬 메모',      t.memo],
+  ].filter(([, v]) => v);
+
+  openModal(`
+    <div style="padding:1.5rem;max-width:360px;width:90vw">
+      ${photoHtml}
+      <span style="display:inline-block;padding:3px 12px;border-radius:99px;
+           font-size:11px;font-weight:700;margin-bottom:.75rem;
+           background:${cc}22;color:${cc};border:1px solid ${cc}44">
+        ${esc(t.cat || '기타')}
+      </span>
+      <h3 style="font-size:18px;font-weight:800;color:var(--t1);margin:0">${esc(t.title)}</h3>
+      ${t.nickname ? `<div style="font-size:13px;color:var(--t4);margin:.25rem 0 .75rem">"${esc(t.nickname)}"</div>` : '<div style="margin-bottom:.75rem"></div>'}
+      ${rows.map(([label, val]) => `
+        <div style="display:flex;gap:8px;align-items:baseline;padding:9px 0;
+             border-bottom:1px solid rgba(0,0,0,.06)">
+          <span style="font-size:12px;color:var(--t4);width:86px;flex-shrink:0">${label}</span>
+          <span style="font-size:14px;font-weight:600;color:var(--t1)">${esc(val)}</span>
+        </div>`).join('')}
+      <div style="display:flex;gap:8px;margin-top:1.25rem">
+        <button class="btn-o" style="flex:1;justify-content:center"
+          onclick="closeModal();openToolForm('${esc(t.id)}')">✏️ 수정</button>
+        <button class="btn-gh" style="flex:1;justify-content:center"
+          onclick="closeModal();goto('tools-catalog')">목록 보기</button>
       </div>
-    </header>
+    </div>`);
+}
 
-    <!-- 페이지 컨테이너 -->
-    <div id="pages">
+/* =====================================================
+   공구 추가 / 수정 폼 열기
+===================================================== */
+function openToolForm(toolId) {
+  S.editToolId     = toolId || null;
+  S.toolPhotoBlob  = null;
+  S.toolPhotoExist = '';
 
-      <!-- ===== 홈 ===== -->
-      <section id="page-home" class="page active">
-        <div class="pi">
-          <div class="breadcrumb">
-            <span class="bc-ico">🏠</span>
-            <span class="bc-sep">/</span>
-            <span class="bc-cur">홈 대시보드</span>
-            <span class="bc-date" id="home-date"></span>
-          </div>
-          <div class="bento-top">
+  const isEdit = !!toolId;
+  const titleEl = $('form-tool-title');
+  if (titleEl) titleEl.textContent = isEdit ? '공구 수정' : '공구 추가';
 
-            <!-- 최근 작업기록 -->
-            <div class="glass wcard">
-              <div class="card-head">
-                <div>
-                  <div class="slbl">최근 작업기록</div>
-                  <div class="ctitle">Before / After 요약</div>
-                </div>
-                <button class="btn-o" onclick="openLogForm()">＋ 새 기록</button>
-              </div>
-              <div id="home-mini-row" class="mini-row">
-                <div class="mini">
-                  <div class="ml">불러오는 중</div>
-                  <div class="mv">-</div>
-                  <div class="md">-</div>
-                </div>
-              </div>
-            </div>
+  /* 폼 초기화 */
+  ['tf-title','tf-nickname','tf-size','tf-usage','tf-location','tf-memo'].forEach(id => {
+    const el = $(id); if (el) el.value = '';
+  });
+  const catEl = $('tf-cat'); if (catEl) catEl.value = '전기';
+  _renderToolPhotoPreview(null);
 
-            <!-- 이번 달 로드맵 -->
-            <div class="glass rcard">
-              <div class="card-head">
-                <div>
-                  <div class="slbl">이번 달 로드맵</div>
-                  <div class="ctitle" id="home-rm-month">-</div>
-                </div>
-                <button class="btn-b" data-goto="roadmap">전체 보기 →</button>
-              </div>
-              <div id="home-rm-list">
-                <div class="ri">
-                  <div class="rdot rdot--todo"></div>
-                  <span class="rtxt">불러오는 중...</span>
-                </div>
-              </div>
-            </div>
+  if (isEdit) {
+    const allTools = tools.length ? tools
+      : SAMPLE_TOOLS.map(t => _normTool({ id: t.id,
+          standardName: t.title, purpose: t.usage, size: t.size,
+          storageLocation: t.location, cat: t.cat,
+          photoURL: '', createdAt: t.createdAt }));
+    const t = allTools.find(x => x.id === toolId);
+    if (t) {
+      ['title','nickname','size','usage','location','memo'].forEach(k => {
+        const el = $('tf-' + k); if (el) el.value = t[k] || '';
+      });
+      if (catEl) catEl.value = t.cat || '전기';
+      if (t.photoUrl) {
+        S.toolPhotoExist = t.photoUrl;
+        _renderToolPhotoPreview(t.photoUrl);
+      }
+    }
+  }
 
-            <!-- 체크리스트 + 통계 -->
-            <div class="glass ccard">
-              <div class="slbl">오늘 체크리스트</div>
-              <div class="ck-prog-row">
-                <span id="ck-count">0 / 7 완료</span>
-                <span id="ck-pct">0%</span>
-              </div>
-              <div class="pw"><div class="pf" id="pf"></div></div>
-              <div class="ck-list" id="home-ck-list">
-                <div class="ci"><div class="chk" data-idx="0"></div><span class="ct">소화기 위치 확인</span></div>
-                <div class="ci"><div class="chk" data-idx="1"></div><span class="ct">3F 전등 교체</span></div>
-                <div class="ci"><div class="chk" data-idx="2"></div><span class="ct">보일러실 점검</span></div>
-                <div class="ci"><div class="chk" data-idx="3"></div><span class="ct">누수 여부 확인</span></div>
-                <div class="ci"><div class="chk" data-idx="4"></div><span class="ct">냉각탑 수위 체크</span></div>
-                <div class="ci"><div class="chk" data-idx="5"></div><span class="ct">비상구 점등 확인</span></div>
-                <div class="ci"><div class="chk" data-idx="6"></div><span class="ct">일지 기록 업로드</span></div>
-              </div>
-              <div class="sdiv"></div>
-              <div class="slbl">이번 달 통계</div>
-              <div class="sgrid">
-                <div class="sbox">
-                  <div class="snum snum--orange" id="h-stat-done">0</div>
-                  <div class="slb2">완료 작업</div>
-                </div>
-                <div class="sbox">
-                  <div class="snum snum--blue" id="h-stat-prog">0</div>
-                  <div class="slb2">진행중</div>
-                </div>
-                <div class="sbox">
-                  <div class="snum snum--green" id="h-stat-wait">0</div>
-                  <div class="slb2">대기</div>
-                </div>
-                <div class="sbox">
-                  <div class="snum snum--purple" id="h-stat-memo">0</div>
-                  <div class="slb2">메모</div>
-                </div>
-              </div>
-            </div>
+  goto('tool-form');
+}
 
-            <!-- 메뉴 그리드 -->
-            <div class="msec">
-              <div class="slbl slbl--mb">메뉴</div>
-              <div class="mgrid">
-                <div class="gc mc" data-goto="electric">
-                  <div class="mi mi--electric">⚡</div>
-                  <div class="mn">전기</div>
-                  <div class="ms">전기설비 관리</div>
-                </div>
-                <div class="gc mc" data-goto="mechanical">
-                  <div class="mi mi--mechanical">⚙️</div>
-                  <div class="mn">기계</div>
-                  <div class="ms">기계설비 관리</div>
-                </div>
-                <div class="gc mc" data-goto="construction">
-                  <div class="mi mi--construction">🔨</div>
-                  <div class="mn">영선</div>
-                  <div class="ms">건축·인테리어</div>
-                </div>
-                <div class="gc mc" data-goto="fire">
-                  <div class="mi mi--fire">🔥</div>
-                  <div class="mn">소방</div>
-                  <div class="ms">소방설비 관리</div>
-                </div>
-                <div class="gc mc" data-goto="records">
-                  <div class="mi mi--records">📋</div>
-                  <div class="mn">작업기록</div>
-                  <div class="ms">전체 기록 보기</div>
-                </div>
-                <div class="gc mc" data-goto="memo">
-                  <div class="mi mi--memo">📒</div>
-                  <div class="mn">학습메모</div>
-                  <div class="ms">노트 & 자료</div>
-                </div>
-                <div class="gc mc mc-wide" data-goto="roadmap">
-                  <div class="mi mi--roadmap">📅</div>
-                  <div class="mc-wide-body">
-                    <div class="mn">연간 로드맵</div>
-                    <div class="ms">2025년 전체 계획</div>
-                  </div>
-                </div>
-              </div>
-            </div>
+/* 공구 사진 핸들러 */
+function handleToolPhoto(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  S.toolPhotoBlob = file;
+  const url = URL.createObjectURL(file);
+  _renderToolPhotoPreview(url);
+}
 
-          </div><!-- /bento-top -->
+function _renderToolPhotoPreview(url) {
+  const wrap = $('tf-photo-preview');
+  if (!wrap) return;
+  if (!url) { wrap.innerHTML = ''; return; }
+  wrap.innerHTML = `
+    <div style="position:relative;display:inline-block;margin-top:8px">
+      <img src="${url}" style="width:160px;height:120px;object-fit:cover;
+           border-radius:12px;border:2px solid var(--gborder);display:block">
+      <button onclick="S.toolPhotoBlob=null;S.toolPhotoExist='';_renderToolPhotoPreview(null)"
+        style="position:absolute;top:-8px;right:-8px;background:#ef4444;color:#fff;
+               border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;
+               font-size:14px;line-height:24px;text-align:center">×</button>
+    </div>`;
+}
 
-          <!-- ===== 공구 도감 슬라이더 ===== -->
-          <div class="tools-slider-section">
-            <div class="tools-slider-header">
-              <div class="slbl tools-slider-title">🔧 공구 도감</div>
-              <button class="btn-o btn-o--sm" onclick="goto('tool-form')">＋ 공구 추가</button>
-            </div>
-            <div class="tools-slider-track-wrap">
-              <div class="tools-slider-track" id="tools-slider">
-                <div class="tool-card glass tool-card--skeleton">
-                  <div class="tool-card__photo tool-card__photo--empty"></div>
-                  <div class="tool-card__body">
-                    <div class="tool-card__name" style="opacity:.3">불러오는 중...</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <!-- /공구 도감 슬라이더 -->
+/* =====================================================
+   공구 저장 (추가 & 수정)
+===================================================== */
+async function saveTool() {
+  const title    = ($('tf-title')    || {}).value.trim();
+  if (!title) { toast('⚠️ 표준 명칭을 입력하세요'); return; }
 
+  const btn = $('btn-save-tool');
+  if (btn) { btn.disabled = true; btn.textContent = '저장 중...'; }
+
+  try {
+    /* 사진 업로드 */
+    let photoURL = S.toolPhotoExist || '';
+    if (S.toolPhotoBlob && storage) {
+      const path  = `tools/${S.editToolId || genId()}_${Date.now()}.jpg`;
+      const result = await uploadPhoto(S.toolPhotoBlob, path);
+      photoURL = result.url;
+      /* 기존 사진 삭제 */
+      if (S.toolPhotoExist) await deleteStorageFile(S.toolPhotoExist);
+    }
+
+    const data = {
+      standardName:    title,
+      nickname:        ($('tf-nickname')  || {}).value.trim(),
+      purpose:         ($('tf-usage')     || {}).value.trim(),
+      size:            ($('tf-size')      || {}).value.trim(),
+      storageLocation: ($('tf-location')  || {}).value.trim(),
+      comparisonMemo:  ($('tf-memo')      || {}).value.trim(),
+      cat:             ($('tf-cat')       || {}).value || '전기',
+      photoURL,
+    };
+
+    if (S.fbReady && !S.isGuest) {
+      if (S.editToolId) {
+        await db.collection('tools').doc(S.editToolId).update(data);
+        toast('✅ 공구 정보가 수정됐습니다');
+      } else {
+        data.createdAt = Date.now();
+        await db.collection('tools').add(data);
+        toast('✅ 공구가 등록됐습니다');
+      }
+    } else {
+      /* 게스트 모드 — 로컬 메모리 */
+      const norm = _normTool({ id: S.editToolId || genId(), ...data,
+        createdAt: Date.now() });
+      if (S.editToolId) {
+        const idx = tools.findIndex(x => x.id === S.editToolId);
+        if (idx >= 0) tools[idx] = norm; else tools.unshift(norm);
+      } else {
+        tools.unshift(norm);
+      }
+      renderToolsSlider();
+      renderToolsCatalog();
+      toast('✅ 저장됐습니다 (게스트 모드)');
+    }
+
+    formBack('tool');
+  } catch (err) {
+    console.error('[saveTool]', err);
+    toast('⚠️ 저장 실패: ' + err.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '💾 저장'; }
+  }
+}
+
+/* =====================================================
+   공구 삭제
+===================================================== */
+async function deleteTool(toolId) {
+  if (!confirm('이 공구를 삭제할까요?')) return;
+  try {
+    const t = tools.find(x => x.id === toolId);
+    if (t && t.photoUrl && storage) await deleteStorageFile(t.photoUrl);
+
+    if (S.fbReady && !S.isGuest) {
+      await db.collection('tools').doc(toolId).delete();
+      toast('🗑 삭제됐습니다');
+    } else {
+      tools = tools.filter(x => x.id !== toolId);
+      renderToolsSlider();
+      renderToolsCatalog();
+      toast('🗑 삭제됐습니다 (게스트 모드)');
+    }
+  } catch (err) {
+    console.error('[deleteTool]', err);
+    toast('⚠️ 삭제 실패: ' + err.message);
+  }
+}
+function renderManualCat(catKey) {
+  const list = manuals[catKey] || [];
+  const cnt  = $(catKey + '-count'); if (cnt) cnt.textContent = '매뉴얼 ' + list.length + '건';
+  const el   = $('manual-list-' + catKey); if (!el) return;
+
+  el.innerHTML = list.length ? list.map(m => {
+    /* ★ imageUrl 있으면 썸네일 표시 */
+    const thumb = m.imageUrl
+      ? `<img src="${m.imageUrl}" onclick="event.stopPropagation();previewPhoto('${m.imageUrl}')"
+           class="mc-thumb" title="매뉴얼 대표 사진">`
+      : `<div class="mc-num-badge">${(m.steps||[]).length}<span>단계</span></div>`;
+    return `
+    <div class="gc manual-card" onclick="viewManual('${catKey}','${m.id}')">
+      ${thumb}
+      <div class="mc-body">
+        <div class="mc-title">${esc(m.title)}</div>
+        <div class="mc-meta">
+          <span>📦 준비물 ${(m.supplies||[]).length}개</span>
+          <span>✅ 체크리스트 ${(m.checklist||[]).length}항목</span>
+          <span>🔧 절차 ${(m.steps||[]).length}단계</span>
         </div>
-      </section>
+        <div class="mc-tags">${(m.tags||[]).map(t=>`<span class="m-tag">${esc(t)}</span>`).join('')}</div>
+      </div>
+      <div class="mc-actions" onclick="event.stopPropagation()">
+        <button class="lc-btn lc-btn-edit" onclick="openManualForm('${catKey}','${m.id}')">✏️</button>
+        <button class="lc-btn lc-btn-del"  onclick="deleteManual('${catKey}','${m.id}')">🗑</button>
+      </div>
+      <div class="mc-arrow">›</div>
+    </div>`;
+  }).join('') :
+  `<div class="gc" style="padding:48px;text-align:center;color:var(--t4)">
+    <div style="font-size:36px;opacity:.3;margin-bottom:12px">📋</div>
+    <div style="font-size:15px">등록된 매뉴얼이 없습니다</div>
+    <button class="btn-o" style="margin:16px auto 0;display:flex" onclick="openManualForm('${catKey}')">＋ 첫 매뉴얼 추가</button>
+  </div>`;
+}
 
-      <!-- ===== 전기 설비 ===== -->
-      <section id="page-electric" class="page">
-        <div class="pi">
-          <div class="breadcrumb">
-            <span class="bc-ico bc-link" data-goto="home">🏠</span>
-            <span class="bc-sep">/</span>
-            <span class="bc-cur">전기 설비</span>
-            <span class="bc-date"></span>
-          </div>
-          <div class="glass cat-hero">
-            <div class="cat-icon cat-icon--electric">⚡</div>
-            <div class="cat-info">
-              <div class="cat-name">전기 설비</div>
-              <div class="cat-sub">전기설비 점검 및 수리 절차 매뉴얼</div>
-              <div class="cat-count" id="electric-count">매뉴얼 0건</div>
-            </div>
-            <button class="btn-o" onclick="openManualForm('electric')">＋ 매뉴얼 추가</button>
-          </div>
-          <div class="slbl slbl--mb">매뉴얼 목록</div>
-          <div class="manual-list" id="manual-list-electric"></div>
+function viewManual(catKey, id) {
+  S.viewManualCat = catKey;
+  S.viewManualId  = id;
+  goto('manual-detail');
+}
+
+/* =====================================================
+   ⑬ 매뉴얼 상세
+===================================================== */
+function renderManualDetail() {
+  const catKey = S.viewManualCat;
+  const id     = S.viewManualId;
+  if (!catKey || !id) return;
+  const m = (manuals[catKey] || []).find(x => x.id === id);
+  if (!m) return;
+  const ckKey = catKey + '_' + id;
+  if (!S.checklistState[ckKey]) S.checklistState[ckKey] = [];
+
+  /* 빵가루 */
+  const bc = $('md-bread-cat');
+  if (bc) { bc.textContent = CAT_KEY_MAP[catKey] || catKey; bc.onclick = () => goto(catKey); }
+  const bt = $('md-bread-title'); if (bt) bt.textContent = m.title;
+
+  /* 헤더 */
+  const sv = (id, v) => { const e=$(id); if(e) e.textContent=v; };
+  sv('md-cat-badge', (CAT_ICON[CAT_KEY_MAP[catKey]]||'') + ' ' + (CAT_KEY_MAP[catKey]||catKey));
+  sv('md-title',          m.title);
+  sv('md-stat-steps',     '단계 '       + (m.steps     ||[]).length);
+  sv('md-stat-supplies',  '준비물 '     + (m.supplies  ||[]).length);
+  sv('md-stat-checklist', '체크리스트 ' + (m.checklist ||[]).length + '항목');
+  const tagsEl = $('md-tags'); if (tagsEl) tagsEl.innerHTML = (m.tags||[]).map(t=>`<span class="m-tag">${esc(t)}</span>`).join('');
+
+  /* 대표 사진 (다중) */
+  const thumbWrap = $('md-thumb-wrap');
+  const allThumbUrls = (m.imageUrls && m.imageUrls.length)
+    ? m.imageUrls
+    : (m.imageUrl ? [m.imageUrl] : []);
+  const fallbackUrl = (m.steps||[]).find(s=>s.imgUrls?.[0])?.imgUrls[0] || '';
+  const thumbUrls = allThumbUrls.length ? allThumbUrls : (fallbackUrl ? [fallbackUrl] : []);
+
+  if (thumbWrap) {
+    if (thumbUrls.length) {
+      thumbWrap.classList.remove('hidden');
+      thumbWrap.innerHTML = thumbUrls.map(url =>
+        `<img class="md-thumb-img" src="${url}" alt="대표 사진" onclick="previewPhoto('${url}')">`
+      ).join('');
+    } else {
+      thumbWrap.classList.add('hidden');
+      thumbWrap.innerHTML = '';
+    }
+  }
+
+  /* 개요 */
+  const ow = $('md-overview-wrap');
+  if (ow) {
+    const p = $('md-overview-text');
+    if (m.overview) {
+      ow.classList.remove('hidden');
+      if (p) p.textContent = m.overview;
+    } else {
+      ow.classList.add('hidden');
+    }
+  }
+
+  /* ① 준비물 */
+  const sw = $('md-supplies-wrap');
+  if (sw) {
+    (m.supplies||[]).length ? sw.classList.remove('hidden') : sw.classList.add('hidden');
+    const sc=$('md-supplies-count'); if(sc) sc.textContent=(m.supplies||[]).length+'개';
+    const sl=$('md-supplies-list');
+    if (sl) sl.innerHTML = (m.supplies||[]).map((s,i)=>`
+      <div class="supply-item"><div class="supply-num">${i+1}</div><div class="supply-name">${esc(s)}</div></div>`).join('');
+  }
+
+  /* ② 안전주의사항 */
+  const cauW = $('md-cautions-wrap');
+  if (cauW) {
+    (m.cautions||[]).length ? cauW.classList.remove('hidden') : cauW.classList.add('hidden');
+    const cl=$('md-cautions-list');
+    if (cl) cl.innerHTML = (m.cautions||[]).map((c,i)=>`
+      <div class="caution-row"><div class="caution-num">${i+1}</div><div class="caution-txt">${esc(c)}</div></div>`).join('');
+  }
+
+  /* ③ 절차 타임라인 — {text, imgUrl} 신형 / {title, desc} 구형 / 문자열 모두 지원
+       출력: 번호 → 설명 → 사진 순서로 1:1 매칭 */
+  /* step-container = #step-container (index.html), fallback: md-steps-list */
+  /* ③ 절차 — renderSteps()에 위임 */
+  renderSteps(m.steps, 'step-container');
+
+  /* ④ 체크리스트 */
+  const ckW = $('md-checklist-wrap');
+  if (ckW) {
+    (m.checklist||[]).length ? ckW.classList.remove('hidden') : ckW.classList.add('hidden');
+    updateCkUI(ckKey, m.checklist||[]);
+    const rst = $('md-ck-reset');
+    if (rst) rst.onclick = () => { S.checklistState[ckKey]=[]; updateCkUI(ckKey,m.checklist||[]); renderCkRows(ckKey,m.checklist||[]); };
+    renderCkRows(ckKey, m.checklist||[]);
+  }
+
+  /* ⑤ 주의/팁 */
+  const cb = $('md-caution-box');
+  if (cb) {
+    m.caution ? cb.classList.remove('hidden') : cb.classList.add('hidden');
+    const ct = $('md-caution-text');
+    if (ct) ct.innerHTML = '<strong>주의:</strong> ' + esc(m.caution||'');
+  }
+  const tb = $('md-tip-box');
+  if (tb) {
+    m.tip ? tb.classList.remove('hidden') : tb.classList.add('hidden');
+    const tt = $('md-tip-text');
+    if (tt) tt.innerHTML = '<strong>Tip:</strong> ' + esc(m.tip||'');
+  }
+
+  /* 수정/삭제 버튼 */
+  const editBtn = $('md-edit-btn');
+  const delBtn  = $('md-del-btn');
+  if (editBtn) editBtn.onclick = () => openManualForm(catKey, id);
+  if (delBtn)  delBtn.onclick  = () => deleteManual(catKey, id);
+}
+
+function renderCkRows(ckKey, checklist) {
+  const el = $('md-ck-list'); if (!el) return;
+  el.innerHTML = checklist.map((c,i) => {
+    const done = S.checklistState[ckKey].includes(i);
+    return `<div class="ck-row${done?' ck-done':''}" id="ck-row-${ckKey}-${i}" onclick="toggleCk('${ckKey}',${i})">
+      <span class="ck-num">${i+1}</span>
+      <span class="ck-txt">${esc(c)}</span>
+      <span class="ck-chk">${done
+        ?'<svg width="18" height="18" viewBox="0 0 24 24" stroke="var(--green)" fill="none" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>'
+        :'<div class="ck-circle"></div>'
+      }</span>
+    </div>`;
+  }).join('');
+}
+
+function toggleCk(ckKey, idx) {
+  if (!S.checklistState[ckKey]) S.checklistState[ckKey] = [];
+  const arr = S.checklistState[ckKey];
+  const pos = arr.indexOf(idx);
+  if (pos===-1) arr.push(idx); else arr.splice(pos,1);
+  const done = arr.includes(idx);
+  const row  = $('ck-row-'+ckKey+'-'+idx);
+  if (row) {
+    row.classList.toggle('ck-done', done);
+    row.querySelector('.ck-chk').innerHTML = done
+      ? '<svg width="18" height="18" viewBox="0 0 24 24" stroke="var(--green)" fill="none" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>'
+      : '<div class="ck-circle"></div>';
+  }
+  const cat = ckKey.split('_')[0];
+  const m   = (manuals[cat]||[]).find(x => x.id === ckKey.split('_')[1]);
+  if (m) updateCkUI(ckKey, m.checklist||[]);
+}
+
+function updateCkUI(ckKey, checklist) {
+  const done  = (S.checklistState[ckKey]||[]).length;
+  const total = checklist.length;
+  const pct   = total ? Math.round(done/total*100) : 0;
+  const c=$('md-ck-counter'); if(c) c.textContent=done+'/'+total;
+  const b=$('md-ck-bar');     if(b) b.style.width=pct+'%';
+}
+
+/* ── 매뉴얼 추가/수정 — 풀페이지 ── */
+function openManualForm(catKey, id) {
+  S.editManualCat  = catKey;
+  S.editManualId   = id || null;
+  S.uploadPhotos   = [];
+  S.photoTarget    = 'mf-photo-preview';
+  S.photoSide      = 'main';
+  S.stepItems      = [];
+  const m = id ? (manuals[catKey]||[]).find(x=>x.id===id) : null;
+
+  const existingSteps = (m?.steps||[]).map(s => {
+    if (typeof s === 'string') return { text: s, imgUrls:[], imgPaths:[], files:[], previewUrls:[] };
+    const t = typeof s.title === 'string' ? ((s.title||'').trim() + (s.desc ? ' — '+(s.desc||'').trim() : '')) : '';
+    const text = s.text !== undefined ? s.text : t;
+    const imgUrls  = s.imgUrls  || (s.imgUrl  ? [s.imgUrl]  : []);
+    const imgPaths = s.imgPaths || (s.imgPath ? [s.imgPath] : []);
+    return { text, imgUrls, imgPaths, files:[], previewUrls:[] };
+  }).filter(si => si.text);
+  S.stepItems = existingSteps.length
+    ? existingSteps
+    : [{ text:'', imgUrls:[], imgPaths:[], files:[], previewUrls:[] }];
+
+  const ckText = (m?.checklist||[]).join('\n');
+
+  /* 폼 페이지 제목 */
+  const titleEl = document.getElementById('form-manual-title');
+  if (titleEl) titleEl.textContent = m ? '매뉴얼 수정' : '매뉴얼 추가';
+
+  /* 카테고리 select 세팅 */
+  const catSel = document.getElementById('mf-cat');
+  if (catSel) catSel.value = catKey;
+
+  /* 필드 값 채우기 */
+  const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+  setVal('mf-title',      m?.title   || '');
+  setVal('mf-overview',   m?.overview|| '');
+  setVal('mf-tags',       (m?.tags||[]).join(', '));
+  setVal('mf-supplies',   (m?.supplies||[]).join('\n'));
+  setVal('mf-safety',     (m?.cautions||[]).join('\n'));
+  setVal('mf-check',      ckText);
+  setVal('mf-tip-caution',m?.caution || '');
+  setVal('mf-tip',        m?.tip     || '');
+
+  /* 대표 사진 미리보기 초기화 */
+  const prevEl = document.getElementById('mf-photo-preview');
+  if (prevEl) prevEl.innerHTML = '';
+  /* 기존 대표 사진 복원 (다중) */
+  const existingUrls  = (m?.imageUrls && m.imageUrls.length) ? m.imageUrls : (m?.imageUrl ? [m.imageUrl] : []);
+  const existingPaths = m?.imageStoragePaths || (m?.imageStoragePath ? [m.imageStoragePath] : []);
+  if (existingUrls.length) {
+    S.uploadPhotos = existingUrls.map((url, i) => ({
+      url, existing: true, side: 'main', storagePath: existingPaths[i] || '', file: null
+    }));
+    _refreshManualPhotoPreview();
+  }
+
+  /* 절차 항목 렌더링 */
+  renderStepItems();
+
+  goto('form-manual');
+}
+
+/* ═══════════════════════════════════════════════════
+   절차 항목 동적 UI (설명 + 사진 1:1 세트)
+   S.stepItems = [{text, imgUrl, imgPath, file, previewUrl}]
+═══════════════════════════════════════════════════ */
+
+/** 항목 전체를 #mf-steps-container에 렌더링 */
+function renderStepItems() {
+  const container = document.getElementById('mf-steps-container');
+  if (!container) return;
+
+  container.innerHTML = S.stepItems.map((item, i) => {
+    /* 미리보기: 기존 저장 URL + 새로 선택한 파일 base64 합산 */
+    const allPreviews = [
+      ...(item.imgUrls   || []).map(url  => ({ src: url,  isNew: false })),
+      ...(item.previewUrls || []).map(url => ({ src: url,  isNew: true  })),
+    ];
+    const thumbsHtml = allPreviews.map((p, pi) => `
+      <div class="step-thumb-wrap">
+        <img class="step-thumb" src="${p.src}" onclick="previewPhoto('${p.src}')">
+        <button type="button" class="step-thumb-del"
+          onclick="removeStepPhoto(${i},${pi})">×</button>
+      </div>`).join('');
+
+    return `
+    <div class="step-item-block" id="step-block-${i}">
+      <div class="step-item-block__header">
+        <span class="step-item-block__num">${i + 1}</span>
+        <span class="step-item-block__label">절차 ${i + 1}</span>
+        ${S.stepItems.length > 1
+          ? `<button type="button" class="step-item-block__del" onclick="removeStepItem(${i})">삭제</button>`
+          : ''}
+      </div>
+      <div class="step-item-block__body">
+        <textarea id="step-text-${i}" class="lf-textarea" rows="2"
+          placeholder="예: 주 차단기를 OFF하고 검전기로 무전압 확인"
+          oninput="S.stepItems[${i}].text=this.value"
+        >${esc(item.text)}</textarea>
+      </div>
+      <div class="step-item-block__photo">
+        <!-- 가로 스크롤 썸네일 행 -->
+        ${allPreviews.length ? `<div class="step-thumbs-row">${thumbsHtml}</div>` : ''}
+        <!-- 사진 추가 버튼 -->
+        <div class="step-item-block__btns">
+          <label class="step-item-block__btn">
+            📷 카메라
+            <input type="file" accept="image/*" capture="environment" multiple
+              class="hidden" onchange="handleStepPhoto(event,${i})"/>
+          </label>
+          <label class="step-item-block__btn">
+            🖼 갤러리
+            <input type="file" accept="image/*" multiple
+              class="hidden" onchange="handleStepPhoto(event,${i})"/>
+          </label>
         </div>
-      </section>
+      </div>
+    </div>`;
+  }).join('');
+}
 
-      <!-- ===== 기계 설비 ===== -->
-      <section id="page-mechanical" class="page">
-        <div class="pi">
-          <div class="breadcrumb">
-            <span class="bc-ico bc-link" data-goto="home">🏠</span>
-            <span class="bc-sep">/</span>
-            <span class="bc-cur">기계 설비</span>
-            <span class="bc-date"></span>
-          </div>
-          <div class="glass cat-hero">
-            <div class="cat-icon cat-icon--mechanical">⚙️</div>
-            <div class="cat-info">
-              <div class="cat-name">기계 설비</div>
-              <div class="cat-sub">기계설비 유지보수 절차 매뉴얼</div>
-              <div class="cat-count" id="mechanical-count">매뉴얼 0건</div>
-            </div>
-            <button class="btn-o" onclick="openManualForm('mechanical')">＋ 매뉴얼 추가</button>
-          </div>
-          <div class="slbl slbl--mb">매뉴얼 목록</div>
-          <div class="manual-list" id="manual-list-mechanical"></div>
+/** 절차 항목 추가 */
+function addStepItem() {
+  S.stepItems.push({ text:'', imgUrls:[], imgPaths:[], files:[], previewUrls:[] });
+  renderStepItems();
+  /* 새 항목으로 스크롤 */
+  const container = document.getElementById('mf-steps-container');
+  if (container) container.lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+/** 절차 항목 삭제 */
+function removeStepItem(i) {
+  S.stepItems.splice(i, 1);
+  if (S.stepItems.length === 0)
+    S.stepItems.push({ text:'', imgUrls:[], imgPaths:[], files:[], previewUrls:[] });
+  renderStepItems();
+}
+
+/** 절차 항목 사진 선택 */
+function handleStepPhoto(e, idx) {
+  const files = [...e.target.files];
+  if (!files.length) return;
+  const MAX_PER_STEP = 5;
+  const item = S.stepItems[idx];
+  if (!item.files)       item.files       = [];
+  if (!item.previewUrls) item.previewUrls = [];
+
+  files.forEach(file => {
+    const total = (item.imgUrls||[]).length + item.files.length;
+    if (total >= MAX_PER_STEP) { toast('절차당 최대 ' + MAX_PER_STEP + '장까지 등록 가능합니다'); return; }
+    const reader = new FileReader();
+    reader.onload = ev => {
+      item.files.push(file);
+      item.previewUrls.push(ev.target.result);
+      renderStepItems();
+    };
+    reader.readAsDataURL(file);
+  });
+  e.target.value = '';
+}
+
+/** 절차 항목 사진 개별 제거 (stepIdx, photoIdx)
+ *  photoIdx < imgUrls.length → 기존 저장 사진 제거
+ *  else → 새로 선택한 파일 제거 */
+function removeStepPhoto(stepIdx, photoIdx) {
+  const item = S.stepItems[stepIdx];
+  if (!item) return;
+  const existingCount = (item.imgUrls || []).length;
+  if (photoIdx < existingCount) {
+    item.imgUrls  = item.imgUrls.filter((_,i) => i !== photoIdx);
+    item.imgPaths = (item.imgPaths||[]).filter((_,i) => i !== photoIdx);
+  } else {
+    const newIdx = photoIdx - existingCount;
+    item.files       = (item.files||[]).filter((_,i) => i !== newIdx);
+    item.previewUrls = (item.previewUrls||[]).filter((_,i) => i !== newIdx);
+  }
+  renderStepItems();
+}
+
+/* 매뉴얼 전용 사진 핸들러 — 모달 내 input에서 직접 호출 */
+function handleManualPhoto(e) {
+  const files = [...e.target.files];
+  if (!files.length) return;
+  const MAX = 10;  /* 매뉴얼 대표 사진 최대 10장 */
+  files.slice(0, MAX).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const cur = S.uploadPhotos.filter(p => p.side === 'main');
+      if (cur.length >= MAX) {
+        toast('사진은 최대 ' + MAX + '장까지 등록 가능합니다');
+        return;
+      }
+      S.uploadPhotos.push({ file, url: ev.target.result, existing: false, side: 'main', storagePath: '' });
+      _refreshManualPhotoPreview();
+    };
+    reader.readAsDataURL(file);
+  });
+  e.target.value = '';
+}
+
+function removeManualPhoto(idx) {
+  /* side=main 인 것 중 idx번째 제거 */
+  let mainCount = 0;
+  S.uploadPhotos = S.uploadPhotos.filter(p => {
+    if (p.side !== 'main') return true;
+    return mainCount++ !== idx;
+  });
+  _refreshManualPhotoPreview();
+}
+
+function _refreshManualPhotoPreview() {
+  const wrap = $('mf-photo-preview');
+  if (!wrap) return;
+  const list = S.uploadPhotos.filter(p => p.side === 'main');
+  if (!list.length) {
+    wrap.innerHTML = '<div style="font-size:12px;color:var(--t4);padding:6px 0">사진 없음</div>';
+    return;
+  }
+  wrap.innerHTML = list.map((p, i) => `
+    <div class="photo-preview-item">
+      <img src="${p.url}" onclick="previewPhoto('${p.url}')"
+        style="width:80px;height:80px;object-fit:cover;border-radius:10px;
+               border:1px solid rgba(255,255,255,.15);cursor:zoom-in">
+      <button class="photo-preview-del" onclick="removeManualPhoto(${i})">×</button>
+    </div>`).join('');
+}
+
+async function saveManual() {
+  const title = $('mf-title')?.value.trim();
+  if (!title) { toast('⚠️ 제목을 입력하세요'); $('mf-title')?.focus(); return; }
+  const btn = $('btn-save-manual');
+  if (btn) { btn.disabled=true; btn.textContent='저장 중...'; }
+  toast('📤 저장 중...');
+
+  /* ★ 카테고리는 select에서 읽음 (사용자가 변경했을 수 있음) */
+  const catKey = $('mf-cat')?.value || S.editManualCat;
+  S.editManualCat = catKey; /* 동기화 */
+
+  /* ── ① 5섹션 파싱 ── */
+
+  /* 섹션1: 준비물 */
+  const supplies = ($('mf-supplies')?.value||'').split('\n').map(s=>s.trim()).filter(Boolean);
+
+  /* 섹션2: 안전주의사항 */
+  const cautions = ($('mf-safety')?.value||'').split('\n').map(s=>s.trim()).filter(Boolean);
+
+  /* ★ 섹션3: S.stepItems → imgUrls 배열로 Storage 업로드 */
+  const uid_step  = S.user?.uid || 'guest';
+  const docIdStep = S.editManualId || (db ? db.collection('manuals').doc().id : 'local_'+genId());
+  const steps = [];
+  for (let si = 0; si < S.stepItems.length; si++) {
+    const item = S.stepItems[si];
+    const text = (document.getElementById('step-text-'+si)?.value || item.text || '').trim();
+    if (!text) continue;  /* 빈 항목 제외 */
+
+    /* 기존 저장된 URL 유지 */
+    const imgUrls  = [...(item.imgUrls  || [])];
+    const imgPaths = [...(item.imgPaths || [])];
+
+    /* 새로 선택한 파일들 → Storage 업로드 */
+    const newFiles = item.files || [];
+    for (let fi = 0; fi < newFiles.length; fi++) {
+      const file = newFiles[fi];
+      if (S.fbReady && !S.isGuest && storage) {
+        try {
+          const fname = 'step' + si + '_f' + fi + '_' + Date.now() + '.jpg';
+          const spath = 'manuals/' + uid_step + '/' + docIdStep + '/' + fname;
+          const res   = await uploadPhoto(file, spath);
+          imgUrls.push(res.url);
+          imgPaths.push(res.storagePath);
+        } catch(se) {
+          console.warn('[절차 사진 업로드 실패]', se.message);
+        }
+      } else {
+        /* 게스트: base64 그대로 */
+        imgUrls.push((item.previewUrls||[])[fi] || '');
+        imgPaths.push('');
+      }
+    }
+    steps.push({ text, imgUrls, imgPaths });
+  }
+
+  /* ★ 중복 step 제거: text가 완전히 동일한 항목 제거 */
+  const seen = new Set();
+  const stepsDeduped = steps.filter(s => {
+    if (seen.has(s.text)) return false;
+    seen.add(s.text);
+    return true;
+  });
+
+  /* 섹션4: 체크리스트 */
+  const checklist = ($('mf-check')?.value||'').split('\n').map(s=>s.trim()).filter(Boolean);
+
+  /* 섹션5: 주의사항(mf-tip-caution) + Tip(mf-tip) 분리 읽기 */
+  const caution = $('mf-tip-caution')?.value.trim() || $('mf-tip')?.value.trim() || '';
+  const tip     = $('mf-tip')?.value.trim() || '';
+
+  /* ── ② 대표 사진 Storage 업로드 (최대 10장) ── */
+  const imageUrls        = [];
+  const imageStoragePaths = [];
+  const photoBuf = S.uploadPhotos.filter(p => p.side === 'main');
+  const uid_  = S.user?.uid || 'guest';
+  const docId = S.editManualId || (db ? db.collection('manuals').doc().id : 'local_'+genId());
+
+  for (const p of photoBuf) {
+    if (p.existing) {
+      imageUrls.push(p.url);
+      imageStoragePaths.push(p.storagePath || '');
+    } else if (S.fbReady && !S.isGuest && storage && p.file) {
+      try {
+        const fname = `manual_${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
+        const spath = `manuals/${uid_}/${docId}/${fname}`;
+        const result = await uploadPhoto(p.file, spath);
+        imageUrls.push(result.url);
+        imageStoragePaths.push(result.storagePath);
+      } catch(uploadErr) {
+        console.warn('[매뉴얼 사진 업로드 실패]', uploadErr.message);
+        toast('⚠️ 사진 업로드 실패 (일부 사진 제외됨)');
+      }
+    } else {
+      /* 게스트: base64 그대로 */
+      imageUrls.push(p.url);
+      imageStoragePaths.push('');
+    }
+  }
+  /* 하위 호환: 첫 번째 URL을 imageUrl에도 유지 */
+  const imageUrl         = imageUrls[0] || '';
+  const imageStoragePath = imageStoragePaths[0] || '';
+
+  /* ── ③ Firestore 저장 객체 구성 ── */
+  const data = {
+    cat:              catKey,
+    title,
+    overview:         $('mf-overview')?.value.trim() || '',
+    tags:             ($('mf-tags')?.value||'').split(',').map(t=>t.trim()).filter(Boolean),
+    /* ★ 5섹션 데이터 */
+    supplies,          /* 준비물 배열 */
+    cautions,          /* 안전주의사항 배열 */
+    steps: stepsDeduped,  /* ★ 중복 제거된 절차 배열 */
+    checklist,         /* 체크리스트 배열 */
+    caution,           /* 최종 주의 (한 줄) */
+    tip,               /* Tip (한 줄) */
+    /* ★ 대표 사진 — 다중(최대 10장) */
+    imageUrl:          imageUrl || (steps[0]?.imgUrl || ''),          /* 하위 호환용 첫 번째 URL */
+    imageUrls:         imageUrls.length ? imageUrls : (imageUrl ? [imageUrl] : []),
+    imageStoragePath:  imageStoragePath || (steps[0]?.imgPath || ''),
+    imageStoragePaths: imageStoragePaths,
+    updatedAt: new Date().toISOString(),
+  };
+
+  try {
+    if (S.fbReady && !S.isGuest && db) {
+      if (S.editManualId) {
+        await db.collection('manuals').doc(S.editManualId).update(data);
+      } else {
+        data.createdAt = new Date().toISOString();
+        await db.collection('manuals').add(data);
+      }
+      /* onSnapshot이 자동으로 manuals 배열 갱신 + 카테고리 목록 재렌더 */
+    } else {
+      /* 게스트 / 오프라인 */
+      if (!manuals[catKey]) manuals[catKey] = [];
+      if (S.editManualId) {
+        const idx = manuals[catKey].findIndex(x=>x.id===S.editManualId);
+        if (idx !== -1) manuals[catKey][idx] = { id: S.editManualId, ...data };
+      } else {
+        manuals[catKey].push({ id: 'local_'+genId(), ...data });
+      }
+      renderManualCat(catKey);
+    }
+    S.uploadPhotos = [];
+    if (btn) { btn.disabled=false; btn.textContent='💾 저장'; }
+    toast('✅ 저장됐습니다');
+    goto(catKey);           /* ★ 저장 후 해당 카테고리 목록으로 이동 */
+  } catch(e) {
+    console.error('[saveManual]', e);
+    toast('⚠️ 저장 실패: '+e.message);
+    if (btn) { btn.disabled=false; btn.textContent='💾 저장'; }
+  }
+}
+
+async function deleteManual(catKey, id) {
+  if (!confirm('이 매뉴얼을 삭제하시겠습니까?')) return;
+  try {
+    if (S.fbReady && !S.isGuest && db) {
+      await db.collection('manuals').doc(id).delete();
+    } else {
+      if (manuals[catKey]) manuals[catKey] = manuals[catKey].filter(m=>m.id!==id);
+      renderManualCat(catKey);
+    }
+    toast('🗑 삭제됐습니다');
+    goto(catKey);
+  } catch(e) { toast('⚠️ 삭제 실패: '+e.message); }
+}
+
+/* =====================================================
+   ⑭ 작업기록
+===================================================== */
+const LOG_CATS   = ['전체','전기','기계','영선','소방','기타'];
+const LOG_STATUS = ['전체','완료','진행중','대기'];
+
+function renderRecords() {
+  const sv = (id,v) => { const e=$(id); if(e) e.textContent=v; };
+  sv('log-stat-total', logs.length);
+  sv('log-stat-done',  logs.filter(l=>l.status==='완료').length);
+  sv('log-stat-prog',  logs.filter(l=>l.status==='진행중').length);
+  sv('log-stat-wait',  logs.filter(l=>l.status==='대기').length);
+
+  const cf=$('log-cat-filter');    if(cf) cf.innerHTML = LOG_CATS.map(c=>`<button class="fchip${S.logCatFilter===c?' on':''}" onclick="setLogCat('${c}')">${c}</button>`).join('');
+  const sf=$('log-status-filter'); if(sf) sf.innerHTML = LOG_STATUS.map(s=>`<button class="fchip${S.logStatusFilter===s?' on':''}" onclick="setLogStatus('${s}')">${s}</button>`).join('');
+
+  let list = [...logs].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  if (S.logCatFilter!=='전체')    list = list.filter(l=>l.cat===S.logCatFilter);
+  if (S.logStatusFilter!=='전체') list = list.filter(l=>l.status===S.logStatusFilter);
+
+  const lc=$('log-list-count'); if(lc) lc.textContent=list.length+'건';
+  const ll=$('log-list');        if(!ll) return;
+
+  ll.innerHTML = list.length ? list.map(l => {
+    const sc = STATUS_COLOR[l.status]||'var(--t3)';
+    /* ★ imageUrl 우선 → beforePhotos[0] → photos[0] 순으로 썸네일 */
+    const thumbUrl = l.imageUrl || (l.beforePhotos||[])[0] || (l.photos||[])[0] || '';
+    const thumb = thumbUrl
+      ? `<img src="${thumbUrl}" onclick="event.stopPropagation();previewPhoto('${thumbUrl}')"
+           style="width:56px;height:56px;border-radius:9px;object-fit:cover;flex-shrink:0;border:1px solid rgba(255,255,255,.14);cursor:zoom-in">`
+      : '';
+    return `
+    <div class="gc log-card" onclick="openLogDetail('${l.id}')">
+      <div class="lc-left">
+        <div class="lc-cat-icon">${CAT_ICON[l.cat]||'📋'}</div>
+        <div class="lc-status-dot" style="background:${sc}"></div>
+      </div>
+      <div class="lc-body">
+        <div class="lc-title">${esc(l.title)}</div>
+        <div class="lc-meta">
+          <span class="lc-badge" style="background:${sc}22;color:${sc};border:1px solid ${sc}44">${esc(l.status)}</span>
+          <span>${esc(l.cat||'')}</span>
+          ${l.date?`<span>📅 ${esc(l.date)}</span>`:''}
+          ${l.worker?`<span>👤 ${esc(l.worker)}</span>`:''}
         </div>
-      </section>
+        ${l.desc?`<div class="lc-desc">${esc(l.desc)}</div>`:''}
+      </div>
+      ${thumb}
+      <div class="lc-actions" onclick="event.stopPropagation()">
+        <button class="lc-btn lc-btn-edit" onclick="openLogForm('${l.id}')">✏️</button>
+        <button class="lc-btn lc-btn-del"  onclick="deleteLog('${l.id}')">🗑</button>
+      </div>
+    </div>`;
+  }).join('') :
+  `<div class="gc" style="padding:48px;text-align:center;color:var(--t4)">
+    <div style="font-size:36px;opacity:.3;margin-bottom:12px">📋</div>
+    <div style="font-size:15px">해당하는 기록이 없습니다</div>
+    <button class="btn-o" style="margin:16px auto 0;display:flex" onclick="openLogForm()">＋ 첫 기록 작성</button>
+  </div>`;
+}
 
-      <!-- ===== 영선 ===== -->
-      <section id="page-construction" class="page">
-        <div class="pi">
-          <div class="breadcrumb">
-            <span class="bc-ico bc-link" data-goto="home">🏠</span>
-            <span class="bc-sep">/</span>
-            <span class="bc-cur">영선 / 보수</span>
-            <span class="bc-date"></span>
-          </div>
-          <div class="glass cat-hero">
-            <div class="cat-icon cat-icon--construction">🔨</div>
-            <div class="cat-info">
-              <div class="cat-name">영선 / 보수</div>
-              <div class="cat-sub">건축·인테리어 보수 절차 매뉴얼</div>
-              <div class="cat-count" id="construction-count">매뉴얼 0건</div>
+function setLogCat(f)    { S.logCatFilter=f;    renderRecords(); }
+function setLogStatus(f) { S.logStatusFilter=f; renderRecords(); }
+
+/* 작업기록 상세 */
+function openLogDetail(id) {
+  const l = logs.find(x => x.id === id);
+  if (!l) return;
+  S.editLogId = id;
+
+  /* ── 텍스트 필드 ── */
+  const sc  = STATUS_COLOR[l.status] || 'var(--t3)';
+  const set = (elId, val) => { const e = $(elId); if (e) e.textContent = val; };
+  set('log-detail-breadcrumb', l.title);
+  set('log-detail-title',      l.title);
+  set('log-detail-cat',        l.cat    || '-');
+  set('log-detail-worker',     l.worker || '-');
+  set('log-detail-date',       l.date   || '-');
+  set('log-detail-updated',    l.updatedAt ? '수정: ' + l.updatedAt.slice(0, 10) : '');
+
+  const sb = $('log-detail-status-badge');
+  if (sb) sb.innerHTML = `<span class="lc-badge"
+    style="background:${sc}22;color:${sc};border:1px solid ${sc}44;
+           font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px">
+    ${esc(l.status)}</span>`;
+
+  const sv2 = $('log-detail-statusval');
+  if (sv2) sv2.innerHTML = `<span style="color:${sc};font-weight:700">${esc(l.status)}</span>`;
+
+  /* ── 상세 내용 ── */
+  const dw = $('log-detail-desc-wrap');
+  const de = $('log-detail-desc');
+  if (dw && de) {
+    if (l.desc && l.desc.trim()) {
+      dw.classList.remove('hidden');
+      de.textContent = l.desc;
+    } else {
+      dw.classList.add('hidden');
+    }
+  }
+
+  /* ── Before / After 사진 ──────────────────────────────
+     ★ 빈 배열 [] 은 truthy → length 로 존재 확인 (|| 사용 금지)
+  ─────────────────────────────────────────────────────── */
+  const pw = $('log-detail-photos');
+  if (pw) {
+    /* beforePhotos/afterPhotos 우선, 없으면 photos 전체를 반씩 분할 */
+    let before = Array.isArray(l.beforePhotos) && l.beforePhotos.length
+      ? l.beforePhotos.filter(u => u && u.trim())
+      : [];
+    let after  = Array.isArray(l.afterPhotos)  && l.afterPhotos.length
+      ? l.afterPhotos.filter(u => u && u.trim())
+      : [];
+
+    /* fallback: photos 배열 분할 */
+    if (!before.length && !after.length) {
+      const all = (l.photos || []).filter(u => u && u.trim());
+      const mid = Math.ceil(all.length / 2);
+      before = all.slice(0, mid);
+      after  = all.slice(mid);
+    }
+
+    /* imageUrl 단독인 경우 after에 배치 */
+    if (!before.length && !after.length && l.imageUrl) {
+      after = [l.imageUrl];
+    }
+
+    /* 사진이 하나라도 있으면 표시 */
+    if (before.length || after.length) {
+      pw.classList.remove('hidden');
+      pw.innerHTML = `
+        <div class="slbl slbl--mb">📷 작업 전/후 사진 비교</div>
+        <div class="ba-detail-grid">
+
+          <!-- BEFORE -->
+          <div class="ba-detail-col">
+            <div class="ba-col-header ba-col-before">🔴 BEFORE — 작업 전</div>
+            <div class="ba-col-body">
+              ${before.length
+                ? before.map(u => `
+                    <img src="${u}" class="ba-detail-img detail-img"
+                      onclick="previewPhoto('${u}')" alt="Before 사진"
+                      onerror="this.style.display='none'">`).join('')
+                : '<div class="ba-no-photo">사진 없음</div>'}
             </div>
-            <button class="btn-o" onclick="openManualForm('construction')">＋ 매뉴얼 추가</button>
           </div>
-          <div class="slbl slbl--mb">매뉴얼 목록</div>
-          <div class="manual-list" id="manual-list-construction"></div>
+
+          <!-- AFTER -->
+          <div class="ba-detail-col">
+            <div class="ba-col-header ba-col-after">🟢 AFTER — 작업 후</div>
+            <div class="ba-col-body">
+              ${after.length
+                ? after.map(u => `
+                    <img src="${u}" class="ba-detail-img detail-img"
+                      onclick="previewPhoto('${u}')" alt="After 사진"
+                      onerror="this.style.display='none'">`).join('')
+                : '<div class="ba-no-photo">사진 없음</div>'}
+            </div>
+          </div>
+
+        </div>`;
+    } else {
+      pw.classList.add('hidden');
+    }
+  }
+
+  /* ── 버튼 ── */
+  const eb  = $('btn-log-detail-edit');
+  const db2 = $('btn-log-detail-del');
+  if (eb)  eb.onclick  = () => openLogForm(id);
+  if (db2) db2.onclick = () => deleteLog(id);
+
+  goto('records-detail');
+}
+
+/* 작업기록 추가/수정 — 풀페이지 */
+function openLogForm(id) {
+  S.editLogId   = id || null;
+  S.uploadPhotos = [];
+  const l = id ? logs.find(x=>x.id===id) : null;
+
+  /* 제목 */
+  const titleEl = document.getElementById('form-log-title');
+  if (titleEl) titleEl.textContent = l ? '작업기록 수정' : '새 작업기록';
+
+  /* 필드 세팅 */
+  const catSel = document.getElementById('lm-cat');
+  if (catSel) {
+    catSel.innerHTML = ['전기','기계','영선','소방','기타']
+      .map(c=>`<option${l?.cat===c?' selected':''}>${c}</option>`).join('');
+  }
+  const stSel = document.getElementById('lm-status');
+  if (stSel) {
+    stSel.innerHTML = ['완료','진행중','대기']
+      .map(s=>`<option${l?.status===s?' selected':''}>${s}</option>`).join('');
+  }
+  const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+  setVal('lm-title',  l?.title  || '');
+  setVal('lm-worker', l?.worker || '');
+  setVal('lm-date',   l?.date   || today());
+  setVal('lm-desc',   l?.desc   || '');
+
+  /* 사진 미리보기 초기화 */
+  const bPrev = document.getElementById('lm-before-preview');
+  const aPrev = document.getElementById('lm-after-preview');
+  if (bPrev) bPrev.innerHTML = '';
+  if (aPrev) aPrev.innerHTML = '';
+
+  if (l) {
+    const before = Array.isArray(l.beforePhotos) && l.beforePhotos.length
+      ? l.beforePhotos.filter(Boolean)
+      : (l.photos||[]).slice(0, 1);
+    const after  = Array.isArray(l.afterPhotos)  && l.afterPhotos.length
+      ? l.afterPhotos.filter(Boolean)
+      : (l.photos||[]).slice(1);
+    S.uploadPhotos = [
+      ...before.map((url, i) => ({ url, existing:true, side:'before', storagePath:(l.storagePaths||[])[i]||'', file:null })),
+      ...after.map((url, i)  => ({ url, existing:true, side:'after',  storagePath:(l.storagePaths||[])[before.length+i]||'', file:null })),
+    ];
+    renderFormPhotoPreview('lm-before-preview', 'before');
+    renderFormPhotoPreview('lm-after-preview',  'after');
+  }
+
+  goto('form-log');
+}
+
+/* 사진 input 트리거 (type, side, wrapperId 모두 지원) */
+function triggerPhotoInput(type, side, wrapperId) {
+  S.photoTarget  = wrapperId || 'lm-before-preview';
+  S.photoSide    = side || 'before';
+  const inp = $(type==='camera' ? 'photo-input-camera' : 'photo-input-gallery');
+  if (inp) { inp.onchange = handlePhotoSelect; inp.click(); }
+}
+
+function handlePhotoSelect(e) {
+  const files  = [...e.target.files];
+  const side   = S.photoSide   || 'before';
+  const target = S.photoTarget || 'lm-before-preview';
+  if (!files.length) return;
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      S.uploadPhotos.push({ file, url:ev.target.result, existing:false, side, storagePath:'' });
+      renderPhotoPreview(target, side);
+    };
+    reader.readAsDataURL(file);
+  });
+  e.target.value = '';
+}
+
+function renderPhotoPreview(wrapperId, side) {
+  const wrap = $(wrapperId); if (!wrap) return;
+  /* side가 지정되면 해당 side 사진만, 없으면 전체 표시 */
+  const list = side
+    ? S.uploadPhotos.map((p,i)=>({...p,_i:i})).filter(p=>p.side===side)
+    : S.uploadPhotos.map((p,i)=>({...p,_i:i}));
+  wrap.innerHTML = list.length
+    ? list.map(p => `
+        <div class="photo-preview-item">
+          <img src="${p.url}" onclick="previewPhoto('${p.url}')">
+          <button class="photo-preview-del" onclick="removeUploadPhoto(${p._i})">×</button>
+        </div>`).join('')
+    : '<div style="font-size:12px;color:var(--t4);padding:8px 0">사진 없음 — 위 버튼으로 추가</div>';
+}
+
+function removeUploadPhoto(i) {
+  const removed = S.uploadPhotos.splice(i, 1)[0];
+  const side    = removed?.side || 'before';
+  const target  = side==='after' ? 'lm-after-preview' : 'lm-before-preview';
+  renderPhotoPreview(target, side);
+}
+
+
+/* ══════════════════════════════════════════════════════
+   공용 폼 사진 핸들러 — openLogForm / openMemoForm 공유
+   handleFormPhoto(e, side, previewId)
+   renderFormPhotoPreview(previewId, side)
+══════════════════════════════════════════════════════ */
+
+/** 사진 선택 핸들러 (inline label+input 전용) */
+function handleFormPhoto(e, side, previewId) {
+  const files = [...e.target.files];
+  if (!files.length) return;
+  const MAX = 3;
+  const cur = S.uploadPhotos.filter(p => p.side === side).length;
+  if (cur >= MAX) { toast('사진은 최대 ' + MAX + '장까지 등록 가능합니다'); e.target.value=''; return; }
+
+  files.slice(0, MAX - cur).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      S.uploadPhotos.push({ file, url: ev.target.result, existing: false, side, storagePath: '' });
+      renderFormPhotoPreview(previewId, side);
+    };
+    reader.readAsDataURL(file);
+  });
+  e.target.value = '';
+}
+
+/** 미리보기 렌더링 */
+function renderFormPhotoPreview(previewId, side) {
+  const wrap = $(previewId);
+  if (!wrap) return;
+  const list = S.uploadPhotos.map((p, i) => ({...p, _i: i})).filter(p => p.side === side);
+  wrap.innerHTML = list.length
+    ? list.map(p => `
+        <div class="photo-preview-item">
+          <img src="${p.url}" onclick="previewPhoto('${p.url}')">
+          <button class="photo-preview-del"
+            onclick="removeFormPhoto(${p._i},'${previewId}','${side}')">×</button>
+        </div>`).join('')
+    : '<span class="photo-hint-empty">사진 없음</span>';
+}
+
+/** 사진 개별 삭제 */
+function removeFormPhoto(idx, previewId, side) {
+  S.uploadPhotos.splice(idx, 1);
+  renderFormPhotoPreview(previewId, side);
+}
+
+/* saveLog: Firestore + Storage 동시 저장 */
+async function saveLog() {
+  const title = $('lm-title')?.value.trim();
+  if (!title) { toast('⚠️ 제목을 입력하세요'); return; }
+  const btn = $('btn-save-log');
+  if (btn) { btn.disabled=true; btn.textContent='저장 중...'; }
+  toast('📤 저장 중...');
+
+  try {
+    const uid_   = S.user?.uid || 'guest';
+    const docId  = S.editLogId || (db ? db.collection('logs').doc().id : 'local_'+genId());
+    const finalPhotos = [];
+    const finalPaths  = [];
+
+    /* Before / After 각각 업로드 */
+    const beforePhotos = []; const beforePaths = [];
+    const afterPhotos  = []; const afterPaths  = [];
+
+    for (const p of S.uploadPhotos) {
+      const isBefore = (p.side !== 'after');
+      if (p.existing) {
+        if (isBefore) { beforePhotos.push(p.url); beforePaths.push(p.storagePath||''); }
+        else          { afterPhotos.push(p.url);  afterPaths.push(p.storagePath||''); }
+      } else if (S.fbReady && !S.isGuest && storage) {
+        const side  = p.side || 'before';
+        const fname = `${side}_${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
+        const spath = `logs/${uid_}/${docId}/${fname}`;
+        const { url } = await uploadPhoto(p.file, spath);
+        if (isBefore) { beforePhotos.push(url); beforePaths.push(spath); }
+        else          { afterPhotos.push(url);  afterPaths.push(spath); }
+        finalPhotos.push(url); finalPaths.push(spath);
+      } else {
+        /* 게스트: base64 그대로 */
+        if (isBefore) { beforePhotos.push(p.url); beforePaths.push(''); }
+        else          { afterPhotos.push(p.url);  afterPaths.push(''); }
+        finalPhotos.push(p.url); finalPaths.push('');
+      }
+    }
+    /* finalPhotos = before + after 합산 */
+    finalPhotos.splice(0, finalPhotos.length, ...beforePhotos, ...afterPhotos);
+    finalPaths.splice(0, finalPaths.length,   ...beforePaths,  ...afterPaths);
+
+    const data = {
+      title,
+      cat:          $('lm-cat')?.value    || '기타',
+      status:       $('lm-status')?.value || '완료',
+      worker:       $('lm-worker')?.value.trim() || '',
+      date:         $('lm-date')?.value   || today(),
+      desc:         $('lm-desc')?.value.trim()   || '',
+      photos:       finalPhotos,
+      storagePaths: finalPaths,
+      /* ★ imageUrl: 썸네일 (before 첫 번째) */
+      imageUrl:     beforePhotos[0] || finalPhotos[0] || '',
+      beforePhotos,
+      afterPhotos,
+      updatedAt:    new Date().toISOString(),
+    };
+
+    if (S.fbReady && !S.isGuest && db) {
+      if (S.editLogId) {
+        await db.collection('logs').doc(S.editLogId).update(data);
+      } else {
+        data.createdAt = new Date().toISOString();
+        await db.collection('logs').doc(docId).set(data);
+      }
+    } else {
+      data.id = docId;
+      if (S.editLogId) {
+        const idx = logs.findIndex(x=>x.id===S.editLogId);
+        if (idx!==-1) logs[idx]=data;
+      } else { logs.unshift(data); }
+      renderRecords();
+    }
+
+    S.editLogId = null;
+    if (btn) { btn.disabled=false; btn.textContent='💾 저장'; }
+    toast('✅ 저장됐습니다');
+    goto('records');        /* ★ 무조건 목록으로 이동 */
+
+  } catch(e) {
+    console.error('[saveLog]', e);
+    toast('⚠️ 저장 실패: '+e.message, 4000);
+    if (btn) { btn.disabled=false; btn.textContent='💾 저장'; }
+  }
+}
+
+/* deleteLog: Firestore + Storage 동시 삭제 */
+async function deleteLog(id) {
+  if (!confirm('이 기록을 삭제하시겠습니까?\n첨부 사진도 함께 삭제됩니다.')) return;
+  const l = logs.find(x=>x.id===id);
+  toast('🗑 삭제 중...');
+  try {
+    if (l) {
+      const paths = l.storagePaths?.length ? l.storagePaths : (l.photos||[]);
+      for (const p of paths) if(p) await deleteStorageFile(p);
+    }
+    if (S.fbReady && !S.isGuest && db) {
+      await db.collection('logs').doc(id).delete();
+    } else {
+      logs = logs.filter(x=>x.id!==id);
+      renderRecords();
+    }
+    toast('🗑 삭제됐습니다');
+    if (S.currentPage==='records-detail') goto('records');
+  } catch(e) { toast('⚠️ 삭제 실패: '+e.message, 4000); }
+}
+
+/* =====================================================
+   ⑮ 학습메모
+===================================================== */
+const MEMO_CATS = ['전체','전기','기계','영선','소방','일반'];
+
+function renderMemo() {
+  const fe=$('memo-filter'); if(fe) fe.innerHTML=MEMO_CATS.map(c=>`<button class="fchip${S.memoFilter===c?' on':''}" onclick="setMemoFilter('${c}')">${c}</button>`).join('');
+  let list=[...memos].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  if(S.memoFilter!=='전체') list=list.filter(m=>m.cat===S.memoFilter);
+  const lc=$('memo-list-count'); if(lc) lc.textContent=list.length+'건';
+  const ll=$('memo-list');       if(!ll) return;
+
+  ll.innerHTML = list.length ? list.map(m => {
+    const bg      = MEMO_COLORS[m.cat] || 'rgba(255,255,255,.1)';
+    const preview = (m.content||'').slice(0,100) + ((m.content||'').length > 100 ? '…' : '');
+    /* 대표 이미지: imgUrls 배열 첫 번째 */
+    const thumbUrl = Array.isArray(m.imgUrls) && m.imgUrls[0] ? m.imgUrls[0] : '';
+    /* 썸네일: 64px 고정 높이 소형 */
+    const thumbHtml = thumbUrl
+      ? `<img class="memo-card-thumb" src="${thumbUrl}"
+           onclick="event.stopPropagation();previewPhoto('${thumbUrl}')"
+           alt="참고 사진" onerror="this.style.display='none'">`
+      : '';
+    return `
+    <div class="gc memo-card" onclick="openMemoDetail('${m.id}')">
+      <div class="memo-card-head">
+        <span class="memo-cat-badge" style="background:${bg}">${esc(m.cat)}</span>
+        <span style="font-size:11px;color:var(--t4)">${m.date||''}</span>
+      </div>
+      <div class="memo-card-title">${esc(m.title)}</div>
+      <div class="memo-card-preview">${esc(preview)}</div>
+      <div class="memo-tags">${(m.tags||[]).map(t=>`<span class="m-tag">${esc(t)}</span>`).join('')}</div>
+      ${thumbHtml}
+      <div class="card-action-row" onclick="event.stopPropagation()">
+        <button class="lc-btn lc-btn-edit" onclick="openMemoForm('${m.id}')">✏️ 수정</button>
+        <button class="lc-btn lc-btn-del"  onclick="deleteMemo('${m.id}')">🗑 삭제</button>
+      </div>
+    </div>`;
+  }).join('') :
+  `<div class="gc" style="padding:48px;text-align:center;color:var(--t4);grid-column:1/-1">
+    <div style="font-size:36px;opacity:.3;margin-bottom:12px">📒</div>
+    <div style="font-size:15px">등록된 메모가 없습니다</div>
+    <button class="btn-o" style="margin:16px auto 0;display:flex" onclick="openMemoForm()">＋ 첫 메모 작성</button>
+  </div>`;
+}
+
+function setMemoFilter(f){ S.memoFilter=f; renderMemo(); }
+
+function openMemoDetail(id) {
+  const m = memos.find(x => x.id === id); if (!m) return;
+  S.editMemoId = id;
+  const bg = MEMO_COLORS[m.cat] || 'rgba(255,255,255,.1)';
+  const sv = (el, v) => { const e=$(el); if(e) e.textContent=v; };
+  sv('memo-detail-breadcrumb', m.title);
+  sv('memo-detail-title',      m.title);
+  sv('memo-detail-date',       '📅 ' + (m.date||'-'));
+  const cb = $('memo-detail-cat-badge');
+  if (cb) { cb.textContent = m.cat; cb.style.background = bg; }
+  const tg = $('memo-detail-tags');
+  if (tg) tg.innerHTML = (m.tags||[]).map(t=>`<span class="m-tag">${esc(t)}</span>`).join('');
+  const co = $('memo-detail-content');
+  if (co) co.textContent = m.content || '';
+
+  /* ★ 참고 사진 */
+  const pw = $('memo-detail-photos');
+  const pg = $('memo-detail-photos-grid');
+  if (pw && pg) {
+    const imgs = (m.imgUrls||[]).filter(u => u && u.trim());
+    if (imgs.length) {
+      pw.classList.remove('hidden');
+      pg.innerHTML = imgs.map(u => `
+        <img src="${u}" class="memo-detail-img"
+          onclick="previewPhoto('${u}')"
+          alt="참고 사진"
+          onerror="this.style.display='none'">`).join('');
+    } else {
+      pw.classList.add('hidden');
+    }
+  }
+
+  const eb  = $('btn-memo-detail-edit');
+  const db3 = $('btn-memo-detail-del');
+  if (eb)  eb.onclick  = () => openMemoForm(id);
+  if (db3) db3.onclick = () => deleteMemo(id);
+  goto('memo-detail');
+}
+
+/* 메모 추가/수정 — 풀페이지 */
+function openMemoForm(id) {
+  S.editMemoId  = id || null;
+  S.uploadPhotos = [];
+  const m = id ? memos.find(x=>x.id===id) : null;
+
+  /* 페이지 제목 */
+  const titleEl = document.getElementById('form-memo-title');
+  if (titleEl) titleEl.textContent = m ? '메모 수정' : '새 메모 작성';
+
+  /* 카테고리 select */
+  const catSel = document.getElementById('mm-cat');
+  if (catSel) {
+    catSel.innerHTML = ['전기','기계','영선','소방','일반']
+      .map(c=>`<option${m?.cat===c?' selected':''}>${c}</option>`).join('');
+  }
+
+  /* 필드 값 채우기 */
+  const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+  setVal('mm-date',    m?.date    || today());
+  setVal('mm-title',   m?.title   || '');
+  setVal('mm-tags',    (m?.tags||[]).join(', '));
+  setVal('mm-content', m?.content || '');
+
+  /* 사진 미리보기 초기화 */
+  const prevEl = document.getElementById('mm-photo-preview');
+  if (prevEl) prevEl.innerHTML = '';
+
+  if (m && Array.isArray(m.imgUrls) && m.imgUrls.length) {
+    S.uploadPhotos = m.imgUrls.filter(Boolean).map((url, i) => ({
+      url, existing: true, side: 'memo',
+      storagePath: (m.imgPaths||[])[i] || '', file: null,
+    }));
+    renderFormPhotoPreview('mm-photo-preview', 'memo');
+  }
+
+  goto('form-memo');
+}
+
+async function saveMemo() {
+  const title = $('mm-title')?.value.trim();
+  if (!title) { toast('⚠️ 제목을 입력하세요'); return; }
+  const btn = $('btn-save-memo');
+  if (btn) { btn.disabled=true; btn.textContent='저장 중...'; }
+  toast('📤 저장 중...');
+
+  /* ── 사진 업로드 ── */
+  const uid_  = S.user?.uid || 'guest';
+  const docId = S.editMemoId || (db ? db.collection('memos').doc().id : 'local_'+genId());
+  const imgUrls  = [];
+  const imgPaths = [];
+
+  for (const p of S.uploadPhotos.filter(x => x.side === 'memo')) {
+    if (p.existing) {
+      imgUrls.push(p.url);
+      imgPaths.push(p.storagePath || '');
+    } else if (S.fbReady && !S.isGuest && storage && p.file) {
+      try {
+        const fname = 'memo_' + Date.now() + '_' + Math.random().toString(36).slice(2) + '.jpg';
+        const spath = 'memos/' + uid_ + '/' + docId + '/' + fname;
+        const res   = await uploadPhoto(p.file, spath);
+        imgUrls.push(res.url);
+        imgPaths.push(res.storagePath);
+      } catch (ue) {
+        console.warn('[메모 사진 업로드 실패]', ue.message);
+      }
+    } else if (p.file) {
+      /* 게스트: base64 그대로 */
+      imgUrls.push(p.url);
+      imgPaths.push('');
+    }
+  }
+
+  const data = {
+    title,
+    content:  $('mm-content')?.value.trim() || '',
+    cat:      $('mm-cat')?.value  || '일반',
+    date:     $('mm-date')?.value || today(),
+    tags:     ($('mm-tags')?.value||'').split(',').map(t=>t.trim()).filter(Boolean),
+    imgUrls,    /* ★ 사진 URL 배열 */
+    imgPaths,   /* ★ Storage 경로 배열 */
+    updatedAt: new Date().toISOString(),
+  };
+
+  try {
+    if (S.fbReady && !S.isGuest && db) {
+      if (S.editMemoId) {
+        await db.collection('memos').doc(S.editMemoId).update(data);
+      } else {
+        data.createdAt = new Date().toISOString();
+        await db.collection('memos').doc(docId).set(data);
+      }
+    } else {
+      data.id = docId;
+      if (S.editMemoId) {
+        const idx = memos.findIndex(x => x.id === S.editMemoId);
+        if (idx !== -1) memos[idx] = data; else memos.unshift(data);
+      } else { memos.unshift(data); }
+      renderMemo();
+    }
+    S.editMemoId  = null;
+    S.uploadPhotos = [];
+    if (btn) { btn.disabled=false; btn.textContent='💾 저장'; }
+    toast('✅ 저장됐습니다');
+    goto('memo');
+  } catch(e) {
+    toast('⚠️ 저장 실패: ' + e.message);
+    if (btn) { btn.disabled=false; btn.textContent='💾 저장'; }
+  }
+}
+
+async function deleteMemo(id) {
+  if(!confirm('이 메모를 삭제하시겠습니까?')) return;
+  try {
+    if(S.fbReady&&!S.isGuest&&db){ await db.collection('memos').doc(id).delete(); }
+    else { memos=memos.filter(m=>m.id!==id); renderMemo(); }
+    toast('🗑 삭제됐습니다');
+    if(S.currentPage==='memo-detail') goto('memo');
+  } catch(e){ toast('⚠️ 삭제 실패: '+e.message); }
+}
+
+/* =====================================================
+   ⑯ 연간 로드맵
+===================================================== */
+function renderRoadmap(dir) {
+  /* ── 연도 셀렉터 ── */
+  const yw = $('rm-year-selector');
+  if (yw) {
+    yw.innerHTML = `
+      <button class="rm-year-btn" onclick="setRmYear(${S.activeYear-1},'left')">‹</button>
+      <span class="rm-year-label" id="rm-year-label">${S.activeYear}</span>
+      <button class="rm-year-btn" onclick="setRmYear(${S.activeYear+1},'right')">›</button>`;
+  }
+
+  /* ── 연도 필터된 일정 ── */
+  const yearSchedules = schedules.filter(s => {
+    if (s.year) return Number(s.year) === S.activeYear;
+    return true; /* year 필드 없는 기존 데이터는 모두 표시 */
+  });
+
+  /* ── 12칸 월별 그리드 ── */
+  const yg = $('rm-year-grid');
+  const gridEl = yg?.closest('.rm-minimap-body') || yg;
+  if (yg) {
+    const newHtml = Array.from({length:12},(_,i)=>i+1).map(m=>{
+      const sl = yearSchedules.filter(s=>s.month===m);
+      const types = [...new Set(sl.map(s=>s.type))];
+      const active = m===S.activeMonth;
+      return `<div class="rm-month-chip${active?' rm-month-active':sl.length?' rm-month-has':''}" onclick="setRmMonth(${m})">
+        <span class="rm-chip-label">${MONTH_NAMES[m]}</span>
+        ${sl.length?`<span class="rm-chip-count">${sl.length}</span>`:''}
+        <div class="rm-chip-dots">
+          ${types.includes('법정')?'<span class="rm-dot" style="background:var(--red)"></span>'  :''}
+          ${types.includes('정기')?'<span class="rm-dot" style="background:var(--blue)"></span>' :''}
+          ${types.includes('계절')?'<span class="rm-dot" style="background:var(--green)"></span>':''}
         </div>
-      </section>
+      </div>`;
+    }).join('');
+    /* 슬라이드 애니메이션 */
+    if (dir) {
+      yg.classList.add(dir==='right' ? 'rm-slide-out-left' : 'rm-slide-out-right');
+      setTimeout(()=>{
+        yg.innerHTML = newHtml;
+        yg.classList.remove('rm-slide-out-left','rm-slide-out-right');
+        yg.classList.add(dir==='right' ? 'rm-slide-in-right' : 'rm-slide-in-left');
+        setTimeout(()=>yg.classList.remove('rm-slide-in-right','rm-slide-in-left'), 300);
+      }, 180);
+    } else {
+      yg.innerHTML = newHtml;
+    }
+  }
 
-      <!-- ===== 소방 ===== -->
-      <section id="page-fire" class="page">
-        <div class="pi">
-          <div class="breadcrumb">
-            <span class="bc-ico bc-link" data-goto="home">🏠</span>
-            <span class="bc-sep">/</span>
-            <span class="bc-cur">소방 설비</span>
-            <span class="bc-date"></span>
-          </div>
-          <div class="glass cat-hero">
-            <div class="cat-icon cat-icon--fire">🔥</div>
-            <div class="cat-info">
-              <div class="cat-name">소방 설비</div>
-              <div class="cat-sub">소방설비 점검 및 관리 절차 매뉴얼</div>
-              <div class="cat-count" id="fire-count">매뉴얼 0건</div>
-            </div>
-            <button class="btn-o" onclick="openManualForm('fire')">＋ 매뉴얼 추가</button>
-          </div>
-          <div class="slbl slbl--mb">매뉴얼 목록</div>
-          <div class="manual-list" id="manual-list-fire"></div>
+  /* ── 월 탭 ── */
+  const mt = $('rm-month-tabs');
+  if (mt) mt.innerHTML = Array.from({length:12},(_,i)=>i+1).map(m=>{
+    const has = yearSchedules.some(s=>s.month===m);
+    const active = m===S.activeMonth;
+    return `<button class="rm-tab${active?' rm-tab-active':has?' rm-tab-has':''}" onclick="setRmMonth(${m})">${MONTH_NAMES[m]}</button>`;
+  }).join('');
+
+  /* ── 선택 월 일정 목록 ── */
+  const list = yearSchedules.filter(s=>s.month===S.activeMonth);
+  const lc = $('rm-list-count');
+  if (lc) lc.textContent = S.activeYear+'년 '+MONTH_NAMES[S.activeMonth]+' 일정 '+list.length+'건';
+  const ll = $('rm-list'); if (!ll) return;
+
+  ll.innerHTML = list.length ? list.map(s=>{
+    const ts = SCH_TYPE_STYLE[s.type]||{bg:'rgba(255,255,255,.07)',border:'rgba(255,255,255,.12)',color:'var(--t3)'};
+    const hasPhotos = (s.imageUrls||[]).length > 0;
+    return `<div class="gc rm-sch-card" style="cursor:pointer" onclick="openSchDetail('${s.id}')">
+      <div class="rm-sch-type" style="background:${ts.bg};border:1px solid ${ts.border};color:${ts.color}">${esc(s.type||'')}</div>
+      <div class="rm-sch-body">
+        <div class="rm-sch-title">${esc(s.title)}</div>
+        ${s.desc?`<div class="rm-sch-desc">${esc(s.desc)}</div>`:''}
+        ${hasPhotos?`<div class="rm-sch-photo-hint">📷 사진 ${s.imageUrls.length}장</div>`:''}
+      </div>
+      <div class="rm-sch-acts" onclick="event.stopPropagation()">
+        <button class="lc-btn lc-btn-edit" onclick="openSchForm('${s.id}')">✏️</button>
+        <button class="lc-btn lc-btn-del"  onclick="deleteSchedule('${s.id}')">🗑</button>
+      </div>
+    </div>`;
+  }).join('') :
+  `<div class="gc" style="padding:48px;text-align:center;color:var(--t4)">
+    <div style="font-size:36px;opacity:.3;margin-bottom:12px">📭</div>
+    <div style="font-size:15px">일정이 없습니다</div>
+    <button class="btn-o" style="margin:16px auto 0;display:flex" onclick="openSchForm()">＋ 일정 추가</button>
+  </div>`;
+}
+
+function setRmMonth(m){ S.activeMonth=m; renderRoadmap(); }
+function setRmYear(y, dir){
+  S.activeYear=y;
+  /* 연도 숫자 롤링 애니메이션 */
+  const lbl=$('rm-year-label');
+  if(lbl){
+    lbl.classList.add(dir==='right'?'rm-year-roll-up':'rm-year-roll-down');
+    setTimeout(()=>{
+      lbl.classList.remove('rm-year-roll-up','rm-year-roll-down');
+    },350);
+  }
+  renderRoadmap(dir);
+}
+
+function openSchForm(id) {
+  S.editSchId = id || null;
+  const s = id ? schedules.find(x => String(x.id) === String(id)) : null;
+
+  /* 페이지 제목 */
+  const titleEl = document.getElementById('form-schedule-title');
+  if (titleEl) titleEl.textContent = s ? '일정 수정' : '일정 추가';
+
+  /* 월 그리드 렌더링 */
+  const grid = document.getElementById('sch-month-grid');
+  if (grid) {
+    const activeMonth = s ? s.month : S.activeMonth;
+    grid.innerHTML = Array.from({length: 12}, (_, i) => i + 1).map(m => `
+      <button type="button" class="sch-month-btn${activeMonth === m ? ' on' : ''}"
+        data-month="${m}" onclick="schSelectMonth(${m}, this)">${MONTH_NAMES[m]}</button>
+    `).join('');
+  }
+
+  /* 유형 칩 초기화 */
+  const activeType = s ? (s.type || '정기') : '정기';
+  document.querySelectorAll('.sch-type-chip').forEach(chip => {
+    chip.classList.remove('on--legal', 'on--regular', 'on--season');
+    if (chip.dataset.type === activeType) _applySchTypeClass(chip, activeType);
+  });
+  const hiddenType = document.getElementById('sm-type-hidden');
+  if (hiddenType) hiddenType.value = activeType;
+
+  /* 필드 값 */
+  const setVal = (elId, v) => { const el = document.getElementById(elId); if (el) el.value = v; };
+  setVal('sm-title', s?.title || '');
+  setVal('sm-desc',  s?.desc  || '');
+
+  /* ★ type 스냅샷: goto 이전에 반드시 기록 — 사진 async 중 유실 방지 */
+  S._schTypeSnap = activeType;
+
+  /* 기존 사진 로드 */
+  S.uploadPhotos = S.uploadPhotos.filter(p => p.side !== 'sch');
+  if (s) {
+    const existingUrls  = s.imageUrls?.length  ? s.imageUrls  : (s.imageUrl  ? [s.imageUrl]  : []);
+    const existingPaths = s.imageStoragePaths?.length ? s.imageStoragePaths : (s.imageStoragePath ? [s.imageStoragePath] : []);
+    existingUrls.forEach((url, i) => {
+      S.uploadPhotos.push({ file: null, url, existing: true, side: 'sch', storagePath: existingPaths[i]||'' });
+    });
+  }
+
+  goto('form-schedule');
+  /* DOM이 활성화된 뒤 프리뷰 업데이트 */
+  setTimeout(() => _refreshSchPhotoPreview(), 30);
+}
+
+/* 내부: 유형 칩 클래스 적용 */
+function _applySchTypeClass(chip, type) {
+  if (type === '법정') chip.classList.add('on--legal');
+  else if (type === '정기') chip.classList.add('on--regular');
+  else if (type === '계절') chip.classList.add('on--season');
+}
+
+function schSelectType(type, chipEl) {
+  document.querySelectorAll('.sch-type-chip').forEach(c =>
+    c.classList.remove('on--legal', 'on--regular', 'on--season'));
+  _applySchTypeClass(chipEl, type);
+  const h = document.getElementById('sm-type-hidden');
+  if (h) h.value = type;
+}
+
+function schSelectMonth(m, btnEl) {
+  document.querySelectorAll('.sch-month-btn').forEach(b => b.classList.remove('on'));
+  if (btnEl) btnEl.classList.add('on');
+}
+
+/* 기존 모달 방식도 호환 유지 (내부에서 풀페이지로 위임) */
+function openSchModal(id) { openSchForm(id); }
+
+async function saveSchedule() {
+  const title = $('sm-title')?.value.trim();
+  if (!title) { toast('⚠️ 제목을 입력하세요'); $('sm-title')?.focus(); return; }
+
+  /* 월: .on 버튼 → fallback: activeMonth */
+  const onMonthBtn = document.querySelector('.sch-month-btn.on');
+  const month = onMonthBtn ? parseInt(onMonthBtn.dataset.month) : S.activeMonth;
+
+  /* ★ 유형 — 3중 보호:
+     ① 현재 선택된 칩 data-type (가장 신뢰)
+     ② sm-type-hidden value
+     ③ 저장 전 스냅샷 S._schTypeSnap
+     ④ fallback '정기' */
+  const selectedChip = document.querySelector(
+    '.sch-type-chip.on--legal, .sch-type-chip.on--regular, .sch-type-chip.on--season'
+  );
+  const type = (selectedChip?.dataset?.type)
+    || ($('sm-type-hidden')?.value || '')
+    || (S._schTypeSnap || '')
+    || '정기';
+
+  const btn = $('btn-save-sch');
+  if (btn) { btn.disabled = true; btn.textContent = '저장 중...'; }
+
+  /* ── 사진 업로드 ── */
+  const imageUrls         = [];
+  const imageStoragePaths = [];
+  const uid_  = S.user?.uid || 'guest';
+  const docId = S.editSchId || (db ? db.collection('schedules').doc().id : 'local_' + genId());
+  const photoBuf = S.uploadPhotos.filter(p => p.side === 'sch');
+
+  for (const p of photoBuf) {
+    if (p.existing) {
+      imageUrls.push(p.url);
+      imageStoragePaths.push(p.storagePath || '');
+    } else if (S.fbReady && !S.isGuest && storage && p.file) {
+      try {
+        const fname = `sch_${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
+        const spath = `schedules/${uid_}/${docId}/${fname}`;
+        const result = await uploadPhoto(p.file, spath);
+        imageUrls.push(result.url);
+        imageStoragePaths.push(result.storagePath);
+      } catch(uploadErr) {
+        console.warn('[일정 사진 업로드 실패]', uploadErr.message);
+        toast('⚠️ 사진 업로드 실패 (일부 제외됨)');
+      }
+    } else {
+      /* 게스트: base64 그대로 */
+      imageUrls.push(p.url);
+      imageStoragePaths.push('');
+    }
+  }
+
+  const data = {
+    month,
+    year:  S.activeYear,   /* ★ year 필드 추가 */
+    type,                   /* ★ 3중 보호된 type */
+    title,
+    desc:              $('sm-desc')?.value.trim() || '',
+    imageUrl:          imageUrls[0] || '',
+    imageUrls:         imageUrls,
+    imageStoragePath:  imageStoragePaths[0] || '',
+    imageStoragePaths: imageStoragePaths,
+    updatedAt:         new Date().toISOString(),
+  };
+
+  try {
+    if (S.fbReady && !S.isGuest && db) {
+      if (S.editSchId) {
+        await db.collection('schedules').doc(S.editSchId).update(data);
+      } else {
+        data.createdAt = new Date().toISOString();
+        await db.collection('schedules').add(data);
+      }
+    } else {
+      data.id = S.editSchId || genId();
+      if (S.editSchId) {
+        const idx = schedules.findIndex(x => String(x.id) === String(S.editSchId));
+        if (idx !== -1) schedules[idx] = { ...schedules[idx], ...data };
+        else schedules.push(data);
+      } else {
+        schedules.push(data);
+      }
+      S.activeMonth = month;
+      renderRoadmap();
+    }
+    S.activeMonth = month;
+    S.uploadPhotos = S.uploadPhotos.filter(p => p.side !== 'sch');
+    S._schTypeSnap = null;
+    S.editSchId = null;
+    if (btn) { btn.disabled = false; btn.textContent = '💾 저장'; }
+    toast('✅ 저장됐습니다');
+    goto('roadmap');
+  } catch(e) {
+    console.error('[saveSchedule]', e);
+    toast('⚠️ 저장 실패: ' + e.message);
+    if (btn) { btn.disabled = false; btn.textContent = '💾 저장'; }
+  }
+}
+
+async function deleteSchedule(id) {
+  if(!confirm('이 일정을 삭제하시겠습니까?')) return;
+  try {
+    if(S.fbReady&&!S.isGuest&&db){ await db.collection('schedules').doc(String(id)).delete(); }
+    else{ schedules=schedules.filter(s=>String(s.id)!==String(id)); renderRoadmap(); }
+    toast('🗑 삭제됐습니다');
+    if (S.currentPage === 'schedule-detail') goto('roadmap');
+  } catch(e){ toast('⚠️ 삭제 실패: '+e.message); }
+}
+
+/* ─────────────────────────────────────────
+   일정 상세 페이지
+───────────────────────────────────────── */
+function openSchDetail(id) {
+  S.viewSchId = id;
+  goto('schedule-detail');
+}
+
+function renderSchDetail() {
+  const id = S.viewSchId;
+  if (!id) return;
+  const s = schedules.find(x => String(x.id) === String(id));
+  if (!s) { goto('roadmap'); return; }
+
+  const bt = $('sd-bread-title'); if (bt) bt.textContent = s.title;
+
+  const ts = SCH_TYPE_STYLE[s.type] || {bg:'rgba(255,255,255,.07)',border:'rgba(255,255,255,.12)',color:'var(--t3)'};
+  const badge = $('sd-type-badge');
+  if (badge) {
+    badge.textContent  = s.type || '';
+    badge.style.background = ts.bg;
+    badge.style.border = `1px solid ${ts.border}`;
+    badge.style.color  = ts.color;
+  }
+
+  const titleEl = $('sd-title'); if (titleEl) titleEl.textContent = s.title || '';
+  const monthEl = $('sd-month'); if (monthEl) monthEl.textContent = (s.year || S.activeYear) + '년 ' + (MONTH_NAMES[s.month] || '');
+  const typeEl  = $('sd-type-text'); if (typeEl) typeEl.textContent = s.type || '';
+
+  /* 사진 */
+  const photosWrap = $('sd-photos-wrap');
+  const photosGrid = $('sd-photos-grid');
+  const imgUrls = s.imageUrls?.length ? s.imageUrls : (s.imageUrl ? [s.imageUrl] : []);
+  if (photosWrap && photosGrid) {
+    if (imgUrls.length) {
+      photosWrap.classList.remove('hidden');
+      photosGrid.innerHTML = imgUrls.map(url =>
+        `<img class="sd-photo-thumb" src="${url}" alt="사진" onclick="previewPhoto('${url}')">`
+      ).join('');
+    } else {
+      photosWrap.classList.add('hidden');
+      photosGrid.innerHTML = '';
+    }
+  }
+
+  /* 설명 */
+  const descWrap = $('sd-desc-wrap');
+  const descEl   = $('sd-desc');
+  if (descWrap) {
+    if (s.desc) {
+      descWrap.classList.remove('hidden');
+      if (descEl) descEl.textContent = s.desc;
+    } else {
+      descWrap.classList.add('hidden');
+    }
+  }
+
+  const editBtn = $('sd-edit-btn'); if (editBtn) editBtn.onclick = () => openSchForm(id);
+  const delBtn  = $('sd-del-btn');  if (delBtn)  delBtn.onclick  = () => deleteSchedule(id);
+}
+
+/* ── 일정 폼 사진 핸들러 ── */
+function handleSchPhoto(e) {
+  const files = [...e.target.files];
+  if (!files.length) return;
+  const MAX = 10;
+  files.forEach(file => {
+    if (S.uploadPhotos.filter(p => p.side === 'sch').length >= MAX) {
+      toast('사진은 최대 ' + MAX + '장까지 등록 가능합니다');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = ev => {
+      S.uploadPhotos.push({ file, url: ev.target.result, existing: false, side: 'sch', storagePath: '' });
+      _refreshSchPhotoPreview();
+    };
+    reader.readAsDataURL(file);
+  });
+  e.target.value = '';
+}
+
+function removeSchPhoto(idx) {
+  let cnt = 0;
+  S.uploadPhotos = S.uploadPhotos.filter(p => {
+    if (p.side !== 'sch') return true;
+    return cnt++ !== idx;
+  });
+  _refreshSchPhotoPreview();
+}
+
+function _refreshSchPhotoPreview() {
+  const wrap = $('sm-photo-preview');
+  if (!wrap) return;
+  const list = S.uploadPhotos.filter(p => p.side === 'sch');
+  if (!list.length) {
+    wrap.innerHTML = '<div style="font-size:12px;color:var(--t4);padding:6px 0">사진 없음</div>';
+    return;
+  }
+  wrap.innerHTML = list.map((p, i) => `
+    <div class="photo-preview-item">
+      <img src="${p.url}" onclick="previewPhoto('${p.url}')"
+        style="width:80px;height:80px;object-fit:cover;border-radius:10px;
+               border:1px solid rgba(255,255,255,.15);cursor:zoom-in">
+      <button class="photo-preview-del" onclick="removeSchPhoto(${i})">×</button>
+    </div>`).join('');
+}
+
+/* =====================================================
+   ⑰ 연락처
+===================================================== */
+function renderContacts() {
+  const el=$('contacts-list'); if(!el) return;
+  el.innerHTML = contacts.length ? contacts.map((c,i)=>`
+    <div class="gc contact-card">
+      <div class="contact-avatar" style="background:${CONTACT_COLORS[i%CONTACT_COLORS.length]}22;color:${CONTACT_COLORS[i%CONTACT_COLORS.length]}">
+        ${(c.name||'?')[0].toUpperCase()}
+      </div>
+      <div class="contact-info">
+        <div class="contact-name">${esc(c.name)}</div>
+        <div class="contact-role">${esc(c.role||'')}${c.company?' · '+esc(c.company):''}</div>
+        ${c.phone?`<div class="contact-phone">${esc(c.phone)}</div>`:''}
+      </div>
+      <div style="display:flex;gap:6px">
+        ${c.phone?`<a href="tel:${c.phone}" class="lc-btn lc-btn-edit" style="text-decoration:none;display:flex;align-items:center;padding:10px">📞</a>`:''}
+        ${c.email?`<a href="mailto:${esc(c.email)}" class="lc-btn lc-btn-edit" style="text-decoration:none;display:flex;align-items:center;padding:10px">✉️</a>`:''}
+      </div>
+    </div>`).join('') :
+  `<div class="gc" style="padding:48px;text-align:center;color:var(--t4)">
+    <div style="font-size:36px;opacity:.3;margin-bottom:12px">📇</div>
+    <div style="font-size:15px">연락처가 없습니다</div>
+  </div>`;
+}
+
+function openContactModal() { toast('연락처 추가 기능은 준비 중입니다.'); }
+
+/* =====================================================
+   ⑱ 통계
+===================================================== */
+function renderStats() {
+  const sv=(id,v)=>{ const e=$(id); if(e) e.textContent=v; };
+  sv('stats-total', logs.length);
+  sv('stats-done',  logs.filter(l=>l.status==='완료').length);
+  sv('stats-prog',  logs.filter(l=>l.status==='진행중').length);
+  sv('stats-memo',  memos.length);
+}
+
+/* =====================================================
+   ⑲ 검색
+===================================================== */
+function doSearch(q) {
+  const el=$('search-results'); if(!el) return;
+  if(!q.trim()){ el.innerHTML='<div style="text-align:center;padding:48px;color:var(--t4)"><div style="font-size:32px;opacity:.3;margin-bottom:12px">🔍</div><div style="font-size:15px">검색어를 입력하세요</div></div>'; return; }
+  const ql=q.toLowerCase();
+  const results=[];
+  ['electric','mechanical','construction','fire'].forEach(cat=>{
+    (manuals[cat]||[]).forEach(m=>{
+      if(m.title.toLowerCase().includes(ql)||(m.overview||'').toLowerCase().includes(ql)||(m.tags||[]).some(t=>t.toLowerCase().includes(ql)))
+        results.push({type:'manual',cat,item:m});
+    });
+  });
+  logs.forEach(l=>{ if((l.title||'').toLowerCase().includes(ql)||(l.desc||'').toLowerCase().includes(ql)) results.push({type:'log',item:l}); });
+  memos.forEach(m=>{ if((m.title||'').toLowerCase().includes(ql)||(m.content||'').toLowerCase().includes(ql)) results.push({type:'memo',item:m}); });
+
+  if(!results.length){ el.innerHTML=`<div style="text-align:center;padding:48px;color:var(--t4)"><div style="font-size:32px;opacity:.3;margin-bottom:12px">🔍</div><div style="font-size:15px">"${esc(q)}" 결과 없음</div></div>`; return; }
+  const typeEmoji={manual:'📋',log:'📝',memo:'📒'};
+  el.innerHTML=`<div style="font-size:13px;color:var(--t3);margin-bottom:12px">${results.length}개 결과</div>`
+    +results.map(r=>{
+      let title='',sub='',action='';
+      if(r.type==='manual'){title=r.item.title;sub=CAT_KEY_MAP[r.cat]+'  매뉴얼';action=`viewManual('${r.cat}','${r.item.id}')`;}
+      else if(r.type==='log'){title=r.item.title;sub=`${r.item.status} · ${r.item.cat||''} · ${r.item.date||''}`;action=`openLogDetail('${r.item.id}')`;}
+      else{title=r.item.title;sub=`${r.item.cat||''} 메모 · ${r.item.date||''}`;action=`openMemoDetail('${r.item.id}')`;}
+      return `<div class="gc" style="padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;margin-bottom:8px" onclick="${action}">
+        <div style="font-size:20px;flex-shrink:0">${typeEmoji[r.type]}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:15px;font-weight:700;color:var(--t1)">${esc(title)}</div>
+          <div style="font-size:12px;color:var(--t3);margin-top:3px">${esc(sub)}</div>
         </div>
-      </section>
+        <span style="color:var(--t4)">›</span>
+      </div>`;
+    }).join('');
+}
 
-      <!-- ===== 매뉴얼 상세 ===== -->
-      <section id="page-manual-detail" class="page">
-        <div class="pi">
-          <div class="breadcrumb">
-            <span class="bc-ico bc-link" data-goto="home">🏠</span>
-            <span class="bc-sep">/</span>
-            <span class="bc-link" id="md-bread-cat">전기</span>
-            <span class="bc-sep">/</span>
-            <span class="bc-cur" id="md-bread-title">매뉴얼 상세</span>
-            <span class="bc-date"></span>
-          </div>
-          <!-- 헤더 -->
-          <div class="glass md-header-card">
-            <div class="md-cat-badge" id="md-cat-badge"></div>
-            <h2 class="md-main-title" id="md-title">-</h2>
-            <!-- 대표 사진 (JS가 동적으로 채움) -->
-            <div id="md-thumb-wrap" class="md-thumb-wrap hidden"></div>
-            <div class="md-stat-row">
-              <span class="md-stat" id="md-stat-steps">단계 0</span>
-              <span class="md-stat" id="md-stat-supplies">준비물 0</span>
-              <span class="md-stat" id="md-stat-checklist">체크리스트 0항목</span>
-            </div>
-            <div class="md-tags-row" id="md-tags"></div>
-          </div>
-          <!-- 개요 -->
-          <div class="glass md-overview hidden" id="md-overview-wrap">
-            <p id="md-overview-text"></p>
-          </div>
-          <!-- 준비물 -->
-          <div class="glass md-section hidden" id="md-supplies-wrap">
-            <div class="md-sec-title">
-              <span>📦</span> 준비물 / 자재
-              <span class="md-sec-count" id="md-supplies-count"></span>
-            </div>
-            <div class="supply-grid" id="md-supplies-list"></div>
-          </div>
-          <!-- 안전주의사항 -->
-          <div class="caution-section hidden" id="md-cautions-wrap">
-            <div class="caution-header">⚠️ 안전주의사항 — 작업 전 필독</div>
-            <div class="caution-body" id="md-cautions-list"></div>
-          </div>
-          <!-- 작업 절차 -->
-          <div class="slbl slbl--mb-lg">상세 작업 절차</div>
-          <!-- 상세 작업 절차: renderSteps()가 [{text,imgUrl}] 배열을 렌더링 -->
-          <div id="step-container" class="steps-wrap"></div>
-          <!-- 체크리스트 -->
-          <div class="glass md-section hidden" id="md-checklist-wrap">
-            <div class="md-sec-title">
-              <span>✅</span> 점검 체크리스트
-              <span class="md-sec-count" id="md-ck-counter">0/0</span>
-              <button class="ck-reset-btn" id="md-ck-reset">초기화</button>
-            </div>
-            <div class="ck-progress-wrap">
-              <div class="ck-progress-fill" id="md-ck-bar"></div>
-            </div>
-            <div class="ck-list">
-              <div class="ck-header">
-                <span class="ck-h-num">No.</span>
-                <span class="ck-h-item">점검 항목</span>
-                <span class="ck-h-check">확인</span>
-              </div>
-              <div id="md-ck-list"></div>
-            </div>
-          </div>
-          <!-- 주의·팁 -->
-          <div class="alert-box alert-caution hidden" id="md-caution-box">
-            <span class="alert-icon">⚠️</span>
-            <div id="md-caution-text"></div>
-          </div>
-          <div class="alert-box alert-tip hidden" id="md-tip-box">
-            <span class="alert-icon">💡</span>
-            <div id="md-tip-text"></div>
-          </div>
-          <!-- 수정/삭제 -->
-          <div class="detail-actions">
-            <button class="btn-o detail-actions__edit" id="md-edit-btn">✏️ 수정하기</button>
-            <button class="btn-gh detail-actions__del" id="md-del-btn">🗑 삭제</button>
-          </div>
-          <!-- 작업 기록 -->
-          <div class="glass md-action-bar">
-            <button class="btn-o btn--full" onclick="openLogForm()">＋ 이 작업 기록하기</button>
-          </div>
+/* =====================================================
+   ⑳ 데이터 내보내기
+===================================================== */
+function exportData() {
+  const data={logs,memos,schedules,contacts};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`kfacility_${today()}.json`;
+  a.click();
+  toast('📥 내보내기 완료');
+}
+
+function clearLocalData() {
+  if(!confirm('로컬 임시 데이터를 모두 삭제하시겠습니까?')) return;
+  logs=[]; memos=[]; schedules=[...SAMPLE_SCHEDULES]; contacts=[...SAMPLE_CONTACTS];
+  manuals=JSON.parse(JSON.stringify(SAMPLE_MANUALS));
+  renderHome(); toast('초기화됐습니다');
+}
+
+/* =====================================================
+   ㉑ 모바일 키보드 대응
+===================================================== */
+function initMobileInputFix() {
+  if (typeof window.visualViewport === 'undefined') return;
+  const pages = $('pages');
+  if (!pages) return;
+  window.visualViewport.addEventListener('resize', () => {
+    const vh  = window.visualViewport.height;
+    const hdr = $('hdr')?.offsetHeight || 58;
+    pages.style.maxHeight = (vh - hdr) + 'px';
+  });
+}
+
+/* =====================================================
+   ㉒ BOOT
+===================================================== */
+document.addEventListener('DOMContentLoaded', () => {
+  /* ★ 안전망: 3초 안에 onAuthStateChanged 응답 없으면 강제로 로그인 화면 표시 */
+  const _safetyTimer = setTimeout(() => {
+    const app = document.getElementById('app');
+    if (app && (app.classList.contains('hidden') || app.style.display === 'none')) {
+      console.warn('[K-Facility] ⚠️ 인증 타임아웃 — 로그인 화면으로 강제 전환');
+      hideAuthLoader();
+      showLoginScreen();
+    }
+  }, 3000);
+  /* onAuthStateChanged가 정상 응답하면 타이머 의미 없어짐 (이미 표시됨) */
+
+  /* 로그인 */
+  $('btn-google')?.addEventListener('click', loginGoogle);
+  $('btn-guest')?.addEventListener('click',  loginGuest);
+  $('btn-logout')?.addEventListener('click', logout);
+
+  /* 사이드바 */
+  document.querySelectorAll('.nb[data-p]').forEach(btn => {
+    btn.addEventListener('click', () => goto(btn.dataset.p));
+  });
+
+  /* data-goto 전역 위임 */
+  document.addEventListener('click', e => {
+    const el = e.target.closest('[data-goto]');
+    if (el && !e.defaultPrevented) goto(el.dataset.goto);
+  });
+
+  /* 헤더 검색 */
+  const si = $('si');
+  if (si) si.addEventListener('focus', () => goto('search'));
+  const sInp = $('search-input');
+  if (sInp) sInp.addEventListener('input', e => doSearch(e.target.value));
+
+/* =====================================================
+   ★ 테마 토글 완전 수정판 (클래스 강제 적용 + 저장)
+===================================================== */
+function initTheme() {
+  let theme = localStorage.getItem('kfacility-theme') || 'light';   // 기본을 light로 변경
+  if (theme === 'light') {
+    document.body.classList.add('light-mode');
+    const knob = document.getElementById('tsk');
+    if (knob) knob.style.left = '3px';
+  } else {
+    document.body.classList.remove('light-mode');
+  }
+  console.log('✅ 현재 테마:', theme);   // 디버그용
+}
+
+const tsw = document.getElementById('tsw');
+if (tsw) {
+  tsw.addEventListener('click', () => {
+    const isLight = document.body.classList.toggle('light-mode');
+    const knob = document.getElementById('tsk');
+    if (knob) knob.style.left = isLight ? '3px' : '22px';
+    
+    localStorage.setItem('kfacility-theme', isLight ? 'light' : 'dark');
+    toast(isLight ? '☀️ 라이트 모드 ON' : '🌙 다크 모드');
+    console.log('테마 전환 →', isLight ? 'light' : 'dark');   // 디버그용
+  });
+}
+
+  initMobileInputFix();
+  initTheme();
+  initFirebase();
+   
+});
+
+/* ═══════════════════════════════════════════════
+   renderSteps(steps, containerId)
+   역할: [{text, imgUrl}] 배열을 받아 step-container에 렌더링
+   - 페이지 로드 시 renderManualDetail()이 내부 호출
+   - 외부에서도 renderSteps(steps) 로 직접 호출 가능
+═══════════════════════════════════════════════ */
+function renderSteps(steps, containerId) {
+  const el = $(containerId || 'step-container') || $('md-steps-list');
+  if (!el) return;
+
+  /* 데이터 정규화: 문자열 / {title,desc} 구형 / {text,imgUrl(s)} 모두 처리 */
+  const list = (steps || []).map(s => {
+    if (typeof s === 'string') return { text: s, imgUrls: [] };
+    const text = s.text !== undefined ? s.text
+      : ((s.title||'').trim() + (s.desc ? ' — '+(s.desc||'').trim() : ''));
+    /* 구형 단일 imgUrl → 배열로 */
+    const imgUrls = s.imgUrls || (s.imgUrl ? [s.imgUrl] : []);
+    return { text, imgUrls };
+  }).filter(s => s.text.trim());
+
+  if (!list.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-state__icon">📋</div><div class="empty-state__text">등록된 절차가 없습니다</div></div>';
+    return;
+  }
+
+  el.innerHTML = list.map((s, i) => `
+    <div class="step-row">
+      <div class="step-left">
+        <div class="step-num-circle">${i + 1}</div>
+        ${i < list.length - 1 ? '<div class="step-connector"></div>' : ''}
+      </div>
+      <div class="glass step-card">
+        <div class="step-card-head">
+          <div class="step-title">${esc(s.text)}</div>
+          ${s.imgUrls.length ? `
+            <div class="step-photos-row">
+              ${s.imgUrls.map(url => `
+                <img class="step-photo-thumb" src="${url}"
+                  onclick="previewPhoto('${url}')" alt="절차 ${i+1} 사진">`
+              ).join('')}
+            </div>` : ''}
         </div>
-      </section>
+      </div>
+    </div>`).join('');
+}
 
-      <!-- ===== 작업기록 목록 ===== -->
-      <section id="page-records" class="page">
-        <div class="pi">
-          <div class="breadcrumb">
-            <span class="bc-ico bc-link" data-goto="home">🏠</span>
-            <span class="bc-sep">/</span>
-            <span class="bc-cur">작업기록</span>
-            <span class="bc-date"></span>
-          </div>
-          <div class="glass log-hero">
-            <div class="log-hero-left">
-              <div class="log-hero-icon log-hero-icon--records">📋</div>
-              <div>
-                <div class="hero-title">작업기록</div>
-                <div class="hero-sub">시설 작업 이력 관리</div>
-              </div>
-            </div>
-            <button class="btn-o" onclick="openLogForm()">＋ 새 기록</button>
-          </div>
-          <div class="log-stats-row">
-            <div class="log-stat-box">
-              <div class="log-stat-num" id="log-stat-total">0</div>
-              <div class="log-stat-lbl">전체</div>
-            </div>
-            <div class="log-stat-box">
-              <div class="log-stat-num log-stat-num--done" id="log-stat-done">0</div>
-              <div class="log-stat-lbl">완료</div>
-            </div>
-            <div class="log-stat-box">
-              <div class="log-stat-num log-stat-num--prog" id="log-stat-prog">0</div>
-              <div class="log-stat-lbl">진행중</div>
-            </div>
-            <div class="log-stat-box">
-              <div class="log-stat-num log-stat-num--wait" id="log-stat-wait">0</div>
-              <div class="log-stat-lbl">대기</div>
-            </div>
-          </div>
-          <div class="filter-wrap">
-            <div class="filter-scroll" id="log-cat-filter"></div>
-            <div class="filter-scroll filter-scroll--mt" id="log-status-filter"></div>
-          </div>
-          <div class="slbl slbl--mb" id="log-list-count">0건</div>
-          <div class="log-list" id="log-list"></div>
-        </div>
-      </section>
+/* ── 풀페이지 폼 뒤로 가기 ── */
+function formBack(type) {
+  if (type === 'log')      goto('records');
+  else if (type === 'memo')     goto('memo');
+  else if (type === 'manual')   goto(S.editManualCat || 'electric');
+  else if (type === 'schedule') goto('roadmap');
+  else if (type === 'tool')     goto(S._prevToolPage || 'tools-catalog');
+  else goto('home');
+}
 
-      <!-- ===== 작업기록 상세 ===== -->
-      <section id="page-records-detail" class="page">
-        <div class="pi">
-          <div class="breadcrumb">
-            <span class="bc-ico bc-link" data-goto="home">🏠</span>
-            <span class="bc-sep">/</span>
-            <span class="bc-link" data-goto="records">작업기록</span>
-            <span class="bc-sep">/</span>
-            <span class="bc-cur" id="log-detail-breadcrumb">상세</span>
-            <span class="bc-date"></span>
-          </div>
-          <div class="glass detail-card">
-            <div class="detail-card__top">
-              <div id="log-detail-status-badge"></div>
-              <div class="detail-card__updated" id="log-detail-updated"></div>
-            </div>
-            <h2 class="detail-title" id="log-detail-title"></h2>
-            <div class="spg">
-              <div class="spi"><div class="spll">작업 유형</div><div class="spvl" id="log-detail-cat"></div></div>
-              <div class="spi"><div class="spll">상태</div><div class="spvl" id="log-detail-statusval"></div></div>
-              <div class="spi"><div class="spll">작업자</div><div class="spvl" id="log-detail-worker"></div></div>
-              <div class="spi"><div class="spll">작업일</div><div class="spvl" id="log-detail-date"></div></div>
-            </div>
-          </div>
-          <div class="glass detail-desc-wrap hidden" id="log-detail-desc-wrap">
-            <div class="slbl slbl--mb">상세 내용</div>
-            <p class="detail-desc" id="log-detail-desc"></p>
-          </div>
-          <div class="glass detail-photos-wrap hidden" id="log-detail-photos">
-            <div class="slbl slbl--mb">📷 현장 사진</div>
-            <div id="log-detail-photos-grid" class="detail-photos-grid"></div>
-          </div>
-          <div class="detail-actions">
-            <button class="btn-o detail-actions__edit" id="btn-log-detail-edit">✏️ 수정하기</button>
-            <button class="btn-gh detail-actions__del" id="btn-log-detail-del">🗑 삭제</button>
-          </div>
-        </div>
-      </section>
+/* ── 서브페이지 breadcrumb 실시간 시계 ── */
+function _updateSubClock() {
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('ko-KR', {year:'numeric',month:'long',day:'numeric',weekday:'long'});
+  const hh = String(now.getHours()).padStart(2,'0');
+  const mm = String(now.getMinutes()).padStart(2,'0');
+  const ss = String(now.getSeconds()).padStart(2,'0');
+  const ampm = now.getHours() < 12 ? 'AM' : 'PM';
+  const html = `<div class="home-clock-wrap home-clock-wrap--sub">
+    <span class="home-clock-date">${dateStr}</span>
+    <span class="home-clock-divider"></span>
+    <span class="home-clock-time">${hh}<span class="home-clock-colon">:</span>${mm}<span class="home-clock-colon">:</span>${ss}</span>
+    <span class="home-clock-ampm">${ampm}</span>
+  </div>`;
+  /* 현재 active 페이지의 bc-date 요소에만 삽입 */
+  const activePage = document.querySelector('.page.active');
+  if (activePage) {
+    const bcDate = activePage.querySelector('.bc-date');
+    if (bcDate) bcDate.innerHTML = html;
+  }
+}
+/* 서브 시계 타이머 — 1초마다 갱신 */
+if (window._subClockTimer) clearInterval(window._subClockTimer);
+window._subClockTimer = setInterval(() => {
+  if (S.currentPage !== 'home') _updateSubClock();
+}, 1000);
 
-      <!-- ===== 학습메모 목록 ===== -->
-      <section id="page-memo" class="page">
-        <div class="pi">
-          <div class="breadcrumb">
-            <span class="bc-ico bc-link" data-goto="home">🏠</span>
-            <span class="bc-sep">/</span>
-            <span class="bc-cur">학습메모</span>
-            <span class="bc-date"></span>
-          </div>
-          <div class="glass memo-hero">
-            <div class="memo-hero__left">
-              <div class="log-hero-icon log-hero-icon--memo">📒</div>
-              <div>
-                <div class="hero-title">학습 메모</div>
-                <div class="hero-sub">기술 노트 & 현장 지식 아카이브</div>
-              </div>
-            </div>
-            <button class="btn-o" onclick="openMemoForm()">＋ 메모 추가</button>
-          </div>
-          <div class="filter-wrap">
-            <div class="filter-scroll" id="memo-filter"></div>
-          </div>
-          <div class="slbl slbl--mb" id="memo-list-count">0건</div>
-          <div class="memo-grid" id="memo-list"></div>
-        </div>
-      </section>
+/* 전역 노출 */
+window.goto             = goto;
+window.formBack         = formBack;
+window.loginGoogle      = loginGoogle;
+window.loginGuest       = loginGuest;
+window.logout           = logout;
+window.closeModal       = closeModal;
+window.openModal        = openModal;
+window.openLogForm     = openLogForm;
+window.openLogDetail    = openLogDetail;
+window.deleteLog        = deleteLog;
+window.triggerPhotoInput = triggerPhotoInput;
+window.removeUploadPhoto = removeUploadPhoto;
+window.previewPhoto     = previewPhoto;
+window.saveLog          = saveLog;
+window.handleFormPhoto  = handleFormPhoto;
+window.renderFormPhotoPreview = renderFormPhotoPreview;
+window.removeFormPhoto  = removeFormPhoto;
+window.openMemoForm    = openMemoForm;
+window.openMemoDetail   = openMemoDetail;
+window.deleteMemo       = deleteMemo;
+window.saveMemo         = saveMemo;
+window.openManualForm  = openManualForm;
+window.renderStepItems  = renderStepItems;
+window.renderSteps      = renderSteps;
+window.addStepItem      = addStepItem;
+window.removeStepItem   = removeStepItem;
+window.handleStepPhoto  = handleStepPhoto;
+window.removeStepPhoto  = removeStepPhoto;
+window.handleManualPhoto = handleManualPhoto;
+window.removeManualPhoto = removeManualPhoto;
+window._refreshManualPhotoPreview = _refreshManualPhotoPreview;
+window.saveManual       = saveManual;
+window.deleteManual     = deleteManual;
+window.viewManual       = viewManual;
+window.toggleCk         = toggleCk;
+window.setLogCat        = setLogCat;
+window.setLogStatus     = setLogStatus;
+window.setMemoFilter    = setMemoFilter;
+window.setRmMonth       = setRmMonth;
+window.setRmYear        = setRmYear;
+window.openSchModal     = openSchModal;
+window.openSchForm      = openSchForm;
+window.openSchDetail    = openSchDetail;
+window.schSelectType    = schSelectType;
+window.schSelectMonth   = schSelectMonth;
+window.saveSchedule     = saveSchedule;
+window.deleteSchedule   = deleteSchedule;
+window.handleSchPhoto   = handleSchPhoto;
+window.removeSchPhoto   = removeSchPhoto;
+window.openContactModal = openContactModal;
+window.exportData       = exportData;
+window.clearLocalData   = clearLocalData;
+window.doSearch         = doSearch;
+window.renderToolsSlider  = renderToolsSlider;
+window.renderToolsCatalog = renderToolsCatalog;
+window.openToolDetail     = openToolDetail;
+window.openToolForm       = openToolForm;
+window.handleToolPhoto    = handleToolPhoto;
+window._renderToolPhotoPreview = _renderToolPhotoPreview;
+window.saveTool           = saveTool;
+window.deleteTool         = deleteTool;
+window.toggleMobMore      = toggleMobMore;
+window.closeMobMore       = closeMobMore;
 
-      <!-- ===== 학습메모 상세 ===== -->
-      <section id="page-memo-detail" class="page">
-        <div class="pi">
-          <div class="breadcrumb">
-            <span class="bc-ico bc-link" data-goto="home">🏠</span>
-            <span class="bc-sep">/</span>
-            <span class="bc-link" data-goto="memo">학습메모</span>
-            <span class="bc-sep">/</span>
-            <span class="bc-cur" id="memo-detail-breadcrumb">상세</span>
-            <span class="bc-date"></span>
-          </div>
-          <div class="glass detail-card">
-            <div class="detail-card__top">
-              <span class="memo-cat-badge" id="memo-detail-cat-badge"></span>
-              <span class="detail-card__date" id="memo-detail-date"></span>
-            </div>
-            <h2 class="detail-title" id="memo-detail-title"></h2>
-            <div id="memo-detail-tags" class="memo-tags-row"></div>
-            <div class="memo-content-box" id="memo-detail-content"></div>
-          </div>
-          <!-- 참고 사진 (JS가 채움) -->
-          <div class="glass detail-photos-wrap hidden" id="memo-detail-photos">
-            <div class="slbl slbl--mb">📷 참고 사진</div>
-            <div class="memo-photos-grid" id="memo-detail-photos-grid"></div>
-          </div>
-          <div class="detail-actions">
-            <button class="btn-o detail-actions__edit" id="btn-memo-detail-edit">✏️ 수정하기</button>
-            <button class="btn-gh detail-actions__del" id="btn-memo-detail-del">🗑 삭제</button>
-          </div>
-        </div>
-      </section>
-
-      <!-- ===== 연간 로드맵 ===== -->
-      <section id="page-roadmap" class="page">
-        <div class="pi">
-          <div class="breadcrumb">
-            <span class="bc-ico bc-link" data-goto="home">🏠</span>
-            <span class="bc-sep">/</span>
-            <span class="bc-cur">연간 로드맵</span>
-            <span class="bc-date"></span>
-          </div>
-          <div class="glass rm-hero">
-            <div class="rm-hero__left">
-              <div class="log-hero-icon log-hero-icon--roadmap">📅</div>
-              <div>
-                <div class="hero-title">연간 로드맵</div>
-                <div class="hero-sub">월별 법정·정기·계절 점검 일정</div>
-              </div>
-            </div>
-            <button class="btn-o" onclick="openSchForm()">＋ 일정 추가</button>
-          </div>
-          <div class="glass rm-minimap">
-            <div class="rm-year-selector" id="rm-year-selector"></div>
-            <div class="rm-year-grid" id="rm-year-grid"></div>
-            <div class="rm-legend">
-              <span class="rm-leg-item"><span class="rm-dot rm-dot--legal"></span>법정</span>
-              <span class="rm-leg-item"><span class="rm-dot rm-dot--regular"></span>정기</span>
-              <span class="rm-leg-item"><span class="rm-dot rm-dot--season"></span>계절</span>
-            </div>
-          </div>
-          <div class="rm-month-tabs" id="rm-month-tabs"></div>
-          <div class="slbl slbl--mb" id="rm-list-count">0건</div>
-          <div class="rm-list" id="rm-list"></div>
-        </div>
-      </section>
-
-      <!-- ===== 일정 상세 ===== -->
-      <section id="page-schedule-detail" class="page">
-        <div class="pi">
-          <div class="breadcrumb">
-            <span class="bc-ico bc-link" data-goto="home">🏠</span>
-            <span class="bc-sep">/</span>
-            <span class="bc-link" data-goto="roadmap">연간 로드맵</span>
-            <span class="bc-sep">/</span>
-            <span class="bc-cur" id="sd-bread-title">일정 상세</span>
-            <span class="bc-date"></span>
-          </div>
-          <div class="glass sd-header-card">
-            <div class="sd-type-badge" id="sd-type-badge"></div>
-            <h2 class="sd-main-title" id="sd-title">-</h2>
-            <div class="sd-meta-row">
-              <span class="sd-meta-item"><span class="sd-meta-icon">📅</span><span id="sd-month"></span></span>
-              <span class="sd-meta-item"><span class="sd-meta-icon">🏷️</span><span id="sd-type-text"></span></span>
-            </div>
-          </div>
-          <div class="glass sd-section hidden" id="sd-photos-wrap">
-            <div class="md-sec-title"><span>📷</span> 사진</div>
-            <div class="sd-photos-grid" id="sd-photos-grid"></div>
-          </div>
-          <div class="glass sd-section hidden" id="sd-desc-wrap">
-            <div class="md-sec-title"><span>📋</span> 상세 내용</div>
-            <p class="sd-desc-text" id="sd-desc"></p>
-          </div>
-          <div class="detail-actions">
-            <button class="btn-o detail-actions__edit" id="sd-edit-btn">✏️ 수정하기</button>
-            <button class="btn-gh detail-actions__del" id="sd-del-btn">🗑 삭제</button>
-          </div>
-        </div>
-      </section>
-
-      <!-- ===== 검색 ===== -->
-      <section id="page-search" class="page">
-        <div class="pi">
-          <div class="breadcrumb">
-            <span class="bc-ico bc-link" data-goto="home">🏠</span>
-            <span class="bc-sep">/</span>
-            <span class="bc-cur">검색</span>
-            <span class="bc-date"></span>
-          </div>
-          <div class="glass search-bar">
-            <i class="fa-solid fa-magnifying-glass search-bar__icon"></i>
-            <input id="search-input" type="search"
-              placeholder="매뉴얼, 작업기록, 메모 검색..." class="search-bar__input"/>
-          </div>
-          <div id="search-results">
-            <div class="empty-state">
-              <div class="empty-state__icon">🔍</div>
-              <div class="empty-state__text">검색어를 입력하세요</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ===== 연락처 ===== -->
-      <section id="page-contacts" class="page">
-        <div class="pi">
-          <div class="breadcrumb">
-            <span class="bc-ico bc-link" data-goto="home">🏠</span>
-            <span class="bc-sep">/</span>
-            <span class="bc-cur">연락처</span>
-            <span class="bc-date"></span>
-          </div>
-          <div class="glass log-hero">
-            <div class="log-hero-left">
-              <div class="log-hero-icon log-hero-icon--contacts">📇</div>
-              <div>
-                <div class="hero-title">연락처</div>
-                <div class="hero-sub">협력업체 및 담당자</div>
-              </div>
-            </div>
-            <button class="btn-o" onclick="openContactModal()">＋ 추가</button>
-          </div>
-          <div class="contacts-list" id="contacts-list"></div>
-        </div>
-      </section>
-
-      <!-- ===== 통계 ===== -->
-      <section id="page-stats" class="page">
-        <div class="pi">
-          <div class="breadcrumb">
-            <span class="bc-ico bc-link" data-goto="home">🏠</span>
-            <span class="bc-sep">/</span>
-            <span class="bc-cur">통계</span>
-            <span class="bc-date"></span>
-          </div>
-          <div class="glass log-hero">
-            <div class="log-hero-left">
-              <div class="log-hero-icon log-hero-icon--stats">📊</div>
-              <div>
-                <div class="hero-title">통계</div>
-                <div class="hero-sub">작업 완료율 및 현황</div>
-              </div>
-            </div>
-          </div>
-          <div class="log-stats-row">
-            <div class="log-stat-box">
-              <div class="log-stat-num" id="stats-total">0</div>
-              <div class="log-stat-lbl">전체 작업</div>
-            </div>
-            <div class="log-stat-box">
-              <div class="log-stat-num log-stat-num--done" id="stats-done">0</div>
-              <div class="log-stat-lbl">완료</div>
-            </div>
-            <div class="log-stat-box">
-              <div class="log-stat-num log-stat-num--prog" id="stats-prog">0</div>
-              <div class="log-stat-lbl">진행중</div>
-            </div>
-            <div class="log-stat-box">
-              <div class="log-stat-num log-stat-num--memo" id="stats-memo">0</div>
-              <div class="log-stat-lbl">학습메모</div>
-            </div>
-          </div>
-          <div class="glass empty-state-card">
-            <div class="empty-state__icon">📊</div>
-            <div class="empty-state__text">차트 기능 준비 중입니다</div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ===== 설정 ===== -->
-      <section id="page-settings" class="page">
-        <div class="pi">
-          <div class="breadcrumb">
-            <span class="bc-ico bc-link" data-goto="home">🏠</span>
-            <span class="bc-sep">/</span>
-            <span class="bc-cur">설정</span>
-            <span class="bc-date"></span>
-          </div>
-          <div class="glass settings-card">
-            <div class="slbl slbl--mb">계정</div>
-            <div class="settings-row">
-              <div>
-                <div class="settings-label">로그인 계정</div>
-                <div class="settings-desc" id="settings-user-email">-</div>
-              </div>
-              <button class="btn-gh" id="btn-logout">로그아웃</button>
-            </div>
-          </div>
-          <div class="glass settings-card">
-            <div class="slbl slbl--mb">앱 설정</div>
-            <div class="settings-row">
-              <div>
-                <div class="settings-label">Firebase 연결 상태</div>
-                <div class="settings-desc" id="fb-status">확인 중...</div>
-              </div>
-              <span id="fb-status-badge" class="status-badge">-</span>
-            </div>
-          </div>
-          <div class="glass settings-card">
-            <div class="slbl slbl--mb">데이터</div>
-            <div class="settings-row">
-              <div>
-                <div class="settings-label">데이터 내보내기</div>
-                <div class="settings-desc">모든 기록을 JSON으로 저장</div>
-              </div>
-              <button class="btn-gh" onclick="exportData()">내보내기</button>
-            </div>
-            <div class="settings-row">
-              <div>
-                <div class="settings-label">게스트 데이터 초기화</div>
-                <div class="settings-desc">로컬에 임시 저장된 데이터 삭제</div>
-              </div>
-              <button class="btn-gh btn-gh--danger" onclick="clearLocalData()">초기화</button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-
-      <!-- ===== 작업기록 폼 (추가/수정) — 풀페이지 ===== -->
-      <section id="page-form-log" class="page">
-        <div class="fullpage-form-wrap">
-          <!-- 상단 헤더 -->
-          <div class="fpf-header">
-            <button class="fpf-back-btn" onclick="formBack('log')">
-              <span class="fpf-back-icon">←</span>
-              <span class="fpf-back-label">뒤로</span>
-            </button>
-            <h1 class="fpf-title" id="form-log-title">새 작업기록</h1>
-          </div>
-
-          <!-- 콘텐츠 스크롤 영역 -->
-          <div class="fpf-body">
-            <div class="fpf-card">
-              <div class="fpf-section-title">📋 기본 정보</div>
-              <div class="lf-row">
-                <div class="lf-group">
-                  <label class="lf-label">작업 유형</label>
-                  <select class="lf-select" id="lm-cat"></select>
-                </div>
-                <div class="lf-group">
-                  <label class="lf-label">처리 상태</label>
-                  <select class="lf-select" id="lm-status"></select>
-                </div>
-              </div>
-              <div class="lf-group">
-                <label class="lf-label">작업 제목 *</label>
-                <input class="lf-input" id="lm-title" type="text" placeholder="예: 3층 분전반 MCB 교체"/>
-              </div>
-              <div class="lf-row">
-                <div class="lf-group">
-                  <label class="lf-label">작업자</label>
-                  <input class="lf-input" id="lm-worker" type="text" placeholder="이름"/>
-                </div>
-                <div class="lf-group">
-                  <label class="lf-label">작업일</label>
-                  <input class="lf-input" id="lm-date" type="date"/>
-                </div>
-              </div>
-              <div class="lf-group">
-                <label class="lf-label">상세 내용</label>
-                <textarea class="lf-textarea fpf-textarea" id="lm-desc" rows="7" placeholder="작업 내용, 특이사항, 교체 부품..."></textarea>
-              </div>
-            </div>
-
-            <div class="fpf-card">
-              <div class="fpf-section-title">📷 현장 사진 (Before / After)</div>
-              <div class="ba-upload-section">
-                <div class="ba-upload-header ba-upload-before">🔴 BEFORE — 작업 전</div>
-                <div id="lm-before-preview" class="photo-preview-wrap"></div>
-                <div class="photo-btn-row">
-                  <label class="photo-add-btn">📷 카메라<input type="file" accept="image/*" capture="environment" multiple class="hidden" onchange="handleFormPhoto(event,'before','lm-before-preview')"/></label>
-                  <label class="photo-add-btn">🖼 갤러리<input type="file" accept="image/*" multiple class="hidden" onchange="handleFormPhoto(event,'before','lm-before-preview')"/></label>
-                </div>
-              </div>
-              <div class="ba-upload-section" style="margin-top:14px">
-                <div class="ba-upload-header ba-upload-after">🟢 AFTER — 작업 후</div>
-                <div id="lm-after-preview" class="photo-preview-wrap"></div>
-                <div class="photo-btn-row">
-                  <label class="photo-add-btn">📷 카메라<input type="file" accept="image/*" capture="environment" multiple class="hidden" onchange="handleFormPhoto(event,'after','lm-after-preview')"/></label>
-                  <label class="photo-add-btn">🖼 갤러리<input type="file" accept="image/*" multiple class="hidden" onchange="handleFormPhoto(event,'after','lm-after-preview')"/></label>
-                </div>
-              </div>
-              <p class="photo-hint">800px 자동 압축 · Firebase Storage 저장</p>
-            </div>
-          </div>
-
-          <!-- 하단 고정 바 -->
-          <div class="fpf-sticky-bar">
-            <button class="btn-gh fpf-cancel-btn" onclick="formBack('log')">취소</button>
-            <button class="btn-o  fpf-save-btn" id="btn-save-log" onclick="saveLog()">💾 저장</button>
-          </div>
-        </div>
-      </section>
-
-      <!-- ===== 학습메모 폼 (추가/수정) — 풀페이지 ===== -->
-      <section id="page-form-memo" class="page">
-        <div class="fullpage-form-wrap">
-          <div class="fpf-header">
-            <button class="fpf-back-btn" onclick="formBack('memo')">
-              <span class="fpf-back-icon">←</span>
-              <span class="fpf-back-label">뒤로</span>
-            </button>
-            <h1 class="fpf-title" id="form-memo-title">새 메모 작성</h1>
-          </div>
-
-          <div class="fpf-body">
-            <div class="fpf-card">
-              <div class="fpf-section-title">📒 메모 정보</div>
-              <div class="lf-row">
-                <div class="lf-group">
-                  <label class="lf-label">카테고리</label>
-                  <select class="lf-select" id="mm-cat">
-                    <option>전기</option><option>기계</option><option>영선</option><option>소방</option><option>일반</option>
-                  </select>
-                </div>
-                <div class="lf-group">
-                  <label class="lf-label">작성일</label>
-                  <input class="lf-input" id="mm-date" type="date"/>
-                </div>
-              </div>
-              <div class="lf-group">
-                <label class="lf-label">제목 *</label>
-                <input class="lf-input" id="mm-title" type="text" placeholder="메모 제목"/>
-              </div>
-              <div class="lf-group">
-                <label class="lf-label">태그 (쉼표 구분)</label>
-                <input class="lf-input" id="mm-tags" type="text" placeholder="예: MCB, 전기기초"/>
-              </div>
-              <div class="lf-group">
-                <label class="lf-label">내용 *</label>
-                <textarea class="lf-textarea fpf-textarea" id="mm-content" rows="14" placeholder="학습 내용, 현장 메모, 규정 기준..."></textarea>
-              </div>
-            </div>
-
-            <div class="fpf-card">
-              <div class="fpf-section-title">📷 참고 사진 (최대 3장)</div>
-              <div id="mm-photo-preview" class="photo-preview-wrap"></div>
-              <div class="photo-btn-row">
-                <label class="photo-add-btn">📷 카메라<input type="file" accept="image/*" capture="environment" multiple class="hidden" onchange="handleFormPhoto(event,'memo','mm-photo-preview')"/></label>
-                <label class="photo-add-btn">🖼 갤러리<input type="file" accept="image/*" multiple class="hidden" onchange="handleFormPhoto(event,'memo','mm-photo-preview')"/></label>
-              </div>
-              <p class="photo-hint">800px 자동 압축 · Firebase Storage 저장</p>
-            </div>
-          </div>
-
-          <div class="fpf-sticky-bar">
-            <button class="btn-gh fpf-cancel-btn" onclick="formBack('memo')">취소</button>
-            <button class="btn-o  fpf-save-btn"   id="btn-save-memo" onclick="saveMemo()">💾 저장</button>
-          </div>
-        </div>
-      </section>
-
-      <!-- ===== 일정 폼 (추가/수정) — 풀페이지 ===== -->
-      <section id="page-form-schedule" class="page">
-        <div class="fullpage-form-wrap">
-          <div class="fpf-header">
-            <button class="fpf-back-btn" onclick="formBack('schedule')">
-              <span class="fpf-back-icon">←</span>
-              <span class="fpf-back-label">뒤로</span>
-            </button>
-            <h1 class="fpf-title" id="form-schedule-title">일정 추가</h1>
-          </div>
-
-          <div class="fpf-body">
-            <div class="fpf-card">
-              <div class="fpf-section-title">📅 월 선택</div>
-              <div class="sch-month-grid" id="sch-month-grid"></div>
-            </div>
-
-            <div class="fpf-card">
-              <div class="fpf-section-title">🏷️ 유형</div>
-              <div class="sch-type-group">
-                <button type="button" class="sch-type-chip" data-type="법정" onclick="schSelectType('법정',this)">⚖️ 법정</button>
-                <button type="button" class="sch-type-chip" data-type="정기" onclick="schSelectType('정기',this)">🔄 정기</button>
-                <button type="button" class="sch-type-chip" data-type="계절" onclick="schSelectType('계절',this)">🌿 계절</button>
-              </div>
-              <input type="hidden" id="sm-type-hidden" value="정기"/>
-            </div>
-
-            <div class="fpf-card">
-              <div class="fpf-section-title">📋 일정 내용</div>
-              <div class="lf-group">
-                <label class="lf-label">일정 제목 *</label>
-                <input class="lf-input" id="sm-title" type="text" placeholder="점검·작업 제목"/>
-              </div>
-              <div class="lf-group" style="margin-top:16px">
-                <label class="lf-label">설명</label>
-                <textarea class="lf-textarea fpf-textarea" id="sm-desc" rows="5" placeholder="세부 내용, 준비사항..."></textarea>
-              </div>
-            </div>
-
-            <div class="fpf-card">
-              <div class="fpf-section-title">📷 사진 (최대 10장)</div>
-              <div id="sm-photo-preview" class="photo-preview-wrap"></div>
-              <div class="photo-btn-row" style="margin-top:8px">
-                <label class="photo-add-btn">📷 카메라<input type="file" accept="image/*" capture="environment" multiple class="hidden" onchange="handleSchPhoto(event)"/></label>
-                <label class="photo-add-btn">🖼 갤러리<input type="file" accept="image/*" multiple class="hidden" onchange="handleSchPhoto(event)"/></label>
-              </div>
-              <p class="photo-hint">800px 자동 압축 · Firebase Storage 저장</p>
-            </div>
-          </div>
-
-          <div class="fpf-sticky-bar">
-            <button class="btn-gh fpf-cancel-btn" onclick="formBack('schedule')">취소</button>
-            <button class="btn-o  fpf-save-btn" id="btn-save-sch" onclick="saveSchedule()">💾 저장</button>
-          </div>
-        </div>
-      </section>
-
-      <!-- ===== 매뉴얼 폼 (추가/수정) — 풀페이지 ===== -->
-      <section id="page-form-manual" class="page">
-        <div class="fullpage-form-wrap">
-          <div class="fpf-header">
-            <button class="fpf-back-btn" id="form-manual-back-btn" onclick="formBack('manual')">
-              <span class="fpf-back-icon">←</span>
-              <span class="fpf-back-label">뒤로</span>
-            </button>
-            <h1 class="fpf-title" id="form-manual-title">매뉴얼 추가</h1>
-          </div>
-
-          <div class="fpf-body">
-            <!-- 기본 정보 + 대표 사진 -->
-            <div class="fpf-card">
-              <div class="fpf-section-title">🗂 기본 정보</div>
-              <div class="lf-row">
-                <div class="lf-group">
-                  <label class="lf-label">카테고리</label>
-                  <select class="lf-select" id="mf-cat">
-                    <option value="electric">⚡ 전기 설비</option>
-                    <option value="mechanical">⚙️ 기계 설비</option>
-                    <option value="construction">🔨 영선 / 보수</option>
-                    <option value="fire">🔥 소방 설비</option>
-                  </select>
-                </div>
-                <div class="lf-group">
-                  <label class="lf-label">📌 제목 *</label>
-                  <input class="lf-input" id="mf-title" type="text" placeholder="예: 분전반 MCB 교체"/>
-                </div>
-              </div>
-              <div class="lf-row">
-                <div class="lf-group">
-                  <label class="lf-label">개요</label>
-                  <textarea class="lf-textarea" id="mf-overview" rows="3" placeholder="이 매뉴얼의 목적 요약"></textarea>
-                </div>
-                <div class="lf-group">
-                  <label class="lf-label">태그 (쉼표 구분)</label>
-                  <textarea class="lf-textarea" id="mf-tags" rows="3" placeholder="MCB, 차단기, 전기"></textarea>
-                </div>
-              </div>
-              <!-- 대표 사진 (개요 아래) -->
-              <div class="lf-group" style="margin-top:4px">
-                <label class="lf-label">📷 대표 사진 (최대 10장)</label>
-                <div id="mf-photo-preview" class="photo-preview-wrap"></div>
-                <div class="photo-btn-row" style="margin-top:8px">
-                  <label class="photo-add-btn">📷 카메라<input type="file" accept="image/*" capture="environment" class="hidden" onchange="handleManualPhoto(event)"/></label>
-                  <label class="photo-add-btn">🖼 갤러리<input type="file" accept="image/*" multiple class="hidden" onchange="handleManualPhoto(event)"/></label>
-                </div>
-                <p class="photo-hint">800px 자동 압축 · Firebase Storage 저장</p>
-              </div>
-            </div>
-
-            <!-- 준비물 -->
-            <div class="fpf-card">
-              <div class="fpf-section-title">📦 섹션 1 — 준비물 / 자재</div>
-              <div class="lf-group">
-                <label class="lf-label">한 줄에 하나씩 입력</label>
-                <textarea class="lf-textarea fpf-textarea" id="mf-supplies" rows="5" placeholder="드라이버(+/-)&#10;절연 장갑&#10;검전기&#10;교체용 MCB (동일 규격)"></textarea>
-              </div>
-            </div>
-
-            <!-- 안전주의 -->
-            <div class="fpf-card">
-              <div class="fpf-section-title">⚠️ 섹션 2 — 안전주의사항</div>
-              <div class="lf-group">
-                <label class="lf-label">한 줄에 하나씩 입력</label>
-                <textarea class="lf-textarea fpf-textarea" id="mf-safety" rows="5" placeholder="주 차단기 OFF 후 작업&#10;검전기로 무전압 확인&#10;동일 용량 MCB만 사용"></textarea>
-              </div>
-            </div>
-
-            <!-- 상세 절차 -->
-            <div class="fpf-card">
-              <div class="fpf-section-title" style="display:flex;align-items:center">
-                🔧 섹션 3 — 상세 작업 절차
-                <button type="button" class="fpf-add-step-btn" onclick="addStepItem()">＋ 절차 추가</button>
-              </div>
-              <div id="mf-steps-container" class="steps-form-container"></div>
-            </div>
-
-            <!-- 체크리스트 -->
-            <div class="fpf-card">
-              <div class="fpf-section-title">✅ 섹션 4 — 점검 체크리스트</div>
-              <div class="lf-group">
-                <label class="lf-label">한 줄에 하나씩 입력</label>
-                <textarea class="lf-textarea fpf-textarea" id="mf-check" rows="6" placeholder="주 차단기 OFF 확인&#10;검전기 무전압 확인&#10;MCB 사양 메모&#10;결선 사진 촬영&#10;투입 후 전압 측정"></textarea>
-              </div>
-            </div>
-
-            <!-- Tip / 주의 -->
-            <div class="fpf-card">
-              <div class="fpf-section-title">💡 섹션 5 — 주의사항 / Tip</div>
-              <div class="lf-row">
-                <div class="lf-group">
-                  <label class="lf-label">⚠️ 최종 주의사항</label>
-                  <input class="lf-input" id="mf-tip-caution" type="text" placeholder="활선 작업 절대 금지"/>
-                </div>
-                <div class="lf-group">
-                  <label class="lf-label">💡 Tip</label>
-                  <input class="lf-input" id="mf-tip" type="text" placeholder="교체 후 12시간 모니터링 권장"/>
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-          <div class="fpf-sticky-bar">
-            <button class="btn-gh fpf-cancel-btn" id="form-manual-cancel-btn" onclick="formBack('manual')">취소</button>
-            <button class="btn-o  fpf-save-btn"   id="btn-save-manual" onclick="saveManual()">💾 저장</button>
-          </div>
-        </div>
-      </section>
-
-      <!-- ===== 공구 도감 풀페이지 ===== -->
-      <section id="page-tools-catalog" class="page">
-        <div class="pi">
-          <div class="breadcrumb">
-            <span class="bc-ico bc-link" data-goto="home">🏠</span>
-            <span class="bc-sep">/</span>
-            <span class="bc-cur">공구 도감</span>
-            <span class="bc-date"></span>
-          </div>
-
-          <!-- 히어로 -->
-          <div class="glass log-hero">
-            <div class="log-hero-left">
-              <div class="tool-hero-icon">🔧</div>
-              <div>
-                <div class="hero-title">공구 도감</div>
-                <div class="hero-sub">현장 공구 목록 &amp; 보관 위치</div>
-              </div>
-            </div>
-            <button class="btn-o" onclick="openToolForm()">＋ 공구 추가</button>
-          </div>
-
-          <!-- 검색창 -->
-          <div class="glass tool-search-wrap">
-            <i class="fa-solid fa-magnifying-glass tool-search-icon"></i>
-            <input id="tool-search-input" type="search"
-              class="tool-search-input"
-              placeholder="공구명, 용도, 사이즈 검색..."
-              autocomplete="off"
-              oninput="renderToolsCatalog()"/>
-          </div>
-
-          <!-- 카운트 -->
-          <div class="slbl slbl--mb" id="tools-list-count">0건</div>
-
-          <!-- 카드 그리드 (풀페이지용) -->
-          <div class="tools-full-grid" id="tools-full-list"></div>
-        </div>
-      </section>
-
-      <!-- ===== 공구 추가 / 수정 폼 풀페이지 ===== -->
-      <section id="page-tool-form" class="page">
-        <div class="fullpage-form-wrap">
-          <div class="fpf-header">
-            <button class="fpf-back-btn" onclick="formBack('tool')">
-              <span class="fpf-back-icon">←</span>
-              <span class="fpf-back-label">뒤로</span>
-            </button>
-            <h1 class="fpf-title" id="form-tool-title">공구 추가</h1>
-          </div>
-
-          <div class="fpf-body">
-            <!-- 기본 정보 -->
-            <div class="fpf-card">
-              <div class="fpf-section-title">🔧 기본 정보</div>
-              <div class="lf-row">
-                <div class="lf-group">
-                  <label class="lf-label">표준 명칭 *</label>
-                  <input class="lf-input" id="tf-title" type="text" placeholder="예: 드라이버 (+) #2"/>
-                </div>
-                <div class="lf-group">
-                  <label class="lf-label">현장 이름</label>
-                  <input class="lf-input" id="tf-nickname" type="text" placeholder="예: 큰 드라이버"/>
-                </div>
-              </div>
-              <div class="lf-row">
-                <div class="lf-group">
-                  <label class="lf-label">카테고리</label>
-                  <select class="lf-select" id="tf-cat">
-                    <option value="전기">⚡ 전기</option>
-                    <option value="기계">⚙️ 기계</option>
-                    <option value="영선">🔨 영선</option>
-                    <option value="소방">🔥 소방</option>
-                    <option value="공통">🛠️ 공통</option>
-                  </select>
-                </div>
-                <div class="lf-group">
-                  <label class="lf-label">사이즈 / 규격</label>
-                  <input class="lf-input" id="tf-size" type="text" placeholder="예: #2 × 150mm"/>
-                </div>
-              </div>
-              <div class="lf-group">
-                <label class="lf-label">용도</label>
-                <input class="lf-input" id="tf-usage" type="text" placeholder="예: 나사 체결 / 분리"/>
-              </div>
-              <div class="lf-group" style="margin-top:12px">
-                <label class="lf-label">보관 위치</label>
-                <input class="lf-input" id="tf-location" type="text" placeholder="예: 1F 공구함 A"/>
-              </div>
-              <div class="lf-group" style="margin-top:12px">
-                <label class="lf-label">비교 메모</label>
-                <textarea class="lf-textarea fpf-textarea" id="tf-memo" rows="4"
-                  placeholder="유사 공구와의 차이점, 주의사항, 구매처 등 자유 메모..."></textarea>
-              </div>
-            </div>
-
-            <!-- 사진 업로드 -->
-            <div class="fpf-card">
-              <div class="fpf-section-title">📷 공구 사진 (최대 1장)</div>
-              <div id="tf-photo-preview" class="tool-photo-preview-wrap"></div>
-              <div class="photo-btn-row" style="margin-top:10px">
-                <label class="photo-add-btn">📷 카메라
-                  <input type="file" accept="image/*" capture="environment" class="hidden"
-                    onchange="handleToolPhoto(event)"/>
-                </label>
-                <label class="photo-add-btn">🖼 갤러리
-                  <input type="file" accept="image/*" class="hidden"
-                    onchange="handleToolPhoto(event)"/>
-                </label>
-              </div>
-              <p class="photo-hint">800px 자동 압축 · Firebase Storage 저장</p>
-            </div>
-          </div>
-
-          <div class="fpf-sticky-bar">
-            <button class="btn-gh fpf-cancel-btn" onclick="formBack('tool')">취소</button>
-            <button class="btn-o  fpf-save-btn" id="btn-save-tool" onclick="saveTool()">💾 저장</button>
-          </div>
-        </div>
-      </section>
-
-    </div><!-- /pages -->
-  </div><!-- /main -->
-</div><!-- /app -->
-
-<!-- 파일 입력 (사진 업로드) -->
-<input type="file" id="photo-input-camera"  accept="image/*" capture="environment" multiple class="hidden"/>
-<input type="file" id="photo-input-gallery" accept="image/*" multiple class="hidden"/>
-
-<script src="main.js"></script>
-</body>
-</html>
+/* =====================================================
+   모바일 더보기 드로어
+===================================================== */
+function toggleMobMore() {
+  const drawer  = $('mob-drawer');
+  const overlay = $('mob-drawer-overlay');
+  if (!drawer) return;
+  const isOpen = drawer.classList.contains('open');
+  if (isOpen) {
+    closeMobMore();
+  } else {
+    drawer.classList.add('open');
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+}
+function closeMobMore() {
+  const drawer  = $('mob-drawer');
+  const overlay = $('mob-drawer-overlay');
+  if (drawer)  drawer.classList.remove('open');
+  if (overlay) overlay.classList.remove('open');
+  document.body.style.overflow = '';
+}
