@@ -104,63 +104,6 @@
     </button>
   </nav>
 
-  <!-- ===== 모바일 하단 네비바 ===== -->
-  <nav id="mob-nav">
-    <button class="mbn active" data-p="home">
-      <i class="fa-solid fa-house"></i><span>홈</span>
-    </button>
-    <button class="mbn" data-p="search">
-      <i class="fa-solid fa-magnifying-glass"></i><span>검색</span>
-    </button>
-    <button class="mbn mbn--add" onclick="openLogForm()">
-      <i class="fa-solid fa-plus"></i><span>기록</span>
-    </button>
-    <button class="mbn" data-p="tools-catalog">
-      <i class="fa-solid fa-screwdriver-wrench"></i><span>공구</span>
-    </button>
-    <button class="mbn" id="mob-more-btn" onclick="toggleMobMore()">
-      <i class="fa-solid fa-bars"></i><span>더보기</span>
-    </button>
-  </nav>
-
-  <!-- 더보기 드로어 -->
-  <div id="mob-drawer-overlay" onclick="closeMobMore()"></div>
-  <div id="mob-drawer">
-    <div class="mob-drawer-handle"></div>
-    <div class="mob-drawer-grid">
-      <button class="mob-ditem" data-p="electric"      onclick="closeMobMore();goto('electric')">
-        <span class="mob-ditem__ico">⚡</span><span class="mob-ditem__lbl">전기</span>
-      </button>
-      <button class="mob-ditem" data-p="mechanical"    onclick="closeMobMore();goto('mechanical')">
-        <span class="mob-ditem__ico">⚙️</span><span class="mob-ditem__lbl">기계</span>
-      </button>
-      <button class="mob-ditem" data-p="construction"  onclick="closeMobMore();goto('construction')">
-        <span class="mob-ditem__ico">🔨</span><span class="mob-ditem__lbl">영선</span>
-      </button>
-      <button class="mob-ditem" data-p="fire"          onclick="closeMobMore();goto('fire')">
-        <span class="mob-ditem__ico">🔥</span><span class="mob-ditem__lbl">소방</span>
-      </button>
-      <button class="mob-ditem" data-p="records"       onclick="closeMobMore();goto('records')">
-        <span class="mob-ditem__ico">📋</span><span class="mob-ditem__lbl">작업기록</span>
-      </button>
-      <button class="mob-ditem" data-p="memo"          onclick="closeMobMore();goto('memo')">
-        <span class="mob-ditem__ico">📒</span><span class="mob-ditem__lbl">학습메모</span>
-      </button>
-      <button class="mob-ditem" data-p="roadmap"       onclick="closeMobMore();goto('roadmap')">
-        <span class="mob-ditem__ico">📅</span><span class="mob-ditem__lbl">로드맵</span>
-      </button>
-      <button class="mob-ditem" data-p="contacts"      onclick="closeMobMore();goto('contacts')">
-        <span class="mob-ditem__ico">📇</span><span class="mob-ditem__lbl">연락처</span>
-      </button>
-      <button class="mob-ditem" data-p="stats"         onclick="closeMobMore();goto('stats')">
-        <span class="mob-ditem__ico">📊</span><span class="mob-ditem__lbl">통계</span>
-      </button>
-      <button class="mob-ditem" data-p="settings"      onclick="closeMobMore();goto('settings')">
-        <span class="mob-ditem__ico">⚙️</span><span class="mob-ditem__lbl">설정</span>
-      </button>
-    </div>
-  </div>
-
   <!-- 메인 영역 -->
   <div id="main">
 
@@ -313,29 +256,26 @@
               </div>
             </div>
 
-            <!-- ===== 공구 도감 슬라이더 (bento-top 내부, cols 1-2) ===== -->
-            <div class="tools-slider-section bento-tools">
-              <div class="tools-slider-header">
-                <div class="slbl tools-slider-title">🔧 공구 도감</div>
-                <button class="btn-o btn-o--sm" onclick="openToolForm()">＋ 공구 추가</button>
-              </div>
-              <div class="tools-slider-track-wrap"
-                   onmouseenter="pauseToolsAutoplay()"
-                   onmouseleave="resumeToolsAutoplay()">
-                <div class="tools-slider-track" id="tools-slider">
-                  <div class="tool-card glass tool-card--skeleton">
-                    <div class="tool-card__photo tool-card__photo--empty"></div>
-                    <div class="tool-card__body">
-                      <div class="tool-card__name" style="opacity:.3">불러오는 중...</div>
-                    </div>
+          </div><!-- /bento-top -->
+
+          <!-- ===== 공구 도감 슬라이더 ===== -->
+          <div class="tools-slider-section">
+            <div class="tools-slider-header">
+              <div class="slbl tools-slider-title">🔧 공구 도감</div>
+              <button class="btn-o btn-o--sm" onclick="goto('tool-form')">＋ 공구 추가</button>
+            </div>
+            <div class="tools-slider-track-wrap">
+              <div class="tools-slider-track" id="tools-slider">
+                <div class="tool-card glass tool-card--skeleton">
+                  <div class="tool-card__photo tool-card__photo--empty"></div>
+                  <div class="tool-card__body">
+                    <div class="tool-card__name" style="opacity:.3">불러오는 중...</div>
                   </div>
                 </div>
-                <!-- 자동재생 인디케이터 -->
-                <div class="tools-slider-dots" id="tools-slider-dots"></div>
               </div>
             </div>
-
-          </div><!-- /bento-top -->
+          </div>
+          <!-- /공구 도감 슬라이더 -->
 
         </div>
       </section>
