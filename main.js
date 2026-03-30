@@ -793,7 +793,7 @@ function _normTool(d) {
 }
 
 /* 단일 tool-card HTML 생성 (슬라이더 + 풀페이지 공용) */
-function _toolCardHtml(t, { showActions = false } = {}) {
+function _toolCardHtml(t, { showActions = false, sizeClass = '' } = {}) {
   const cc = TOOL_CAT_COLORS[t.cat] || '#6366f1';
   const photoHtml = t.photoUrl
     ? `<img src="${esc(t.photoUrl)}" alt="${esc(t.title)}">`
@@ -803,8 +803,9 @@ function _toolCardHtml(t, { showActions = false } = {}) {
       <button class="lc-btn lc-btn-edit" onclick="openToolForm('${esc(t.id)}')">✏️</button>
       <button class="lc-btn lc-btn-del"  onclick="deleteTool('${esc(t.id)}')">🗑</button>
     </div>` : '';
+  const extraClass = ['tool-card--loaded', sizeClass].filter(Boolean).join(' ');
   return `
-  <div class="tool-card glass" onclick="openToolDetail('${esc(t.id)}')">
+  <div class="tool-card glass ${extraClass}" onclick="openToolDetail('${esc(t.id)}')">
     <div class="tool-card__photo${t.photoUrl ? '' : ' tool-card__photo--empty'}">
       ${photoHtml}
       <span class="tool-card__badge" style="background:${cc}dd">${esc(t.cat||'기타')}</span>
@@ -823,7 +824,7 @@ function _toolCardHtml(t, { showActions = false } = {}) {
 }
 
 /* =====================================================
-   공구 도감 슬라이더 (대시보드 홈)
+   공구 도감 슬라이더 (대시보드 홈) — 무한 마키
 ===================================================== */
 function renderToolsSlider() {
   const el = $('tools-slider');
@@ -850,23 +851,27 @@ function renderToolsSlider() {
     return;
   }
 
-  const cardsHtml = list.map(t => _toolCardHtml(t)).join('');
-  const moreCard  = `
-    <div class="tool-card tool-card--more" onclick="goto('tools-catalog')">
-      <div class="tool-card--more__icon">🗂️</div>
-      <div class="tool-card--more__text">전체 도감<br>보기 →</div>
-    </div>`;
+  /* ── 무한 마키: 카드 2벌 복제 → CSS translateX(-50%) 루프 ── */
+  const singleHtml = list.map(t => _toolCardHtml(t)).join('');
+  el.innerHTML     = singleHtml + singleHtml;   /* 2× for seamless -50% */
 
-  el.innerHTML = cardsHtml + moreCard;
+  /* 카드 수 기반 속도: 카드가 많을수록 느리게 (고급스러운 묵직함) */
+  const dur = Math.max(20, list.length * 4.5);
+  el.style.setProperty('--marquee-dur', dur + 's');
+  /* CSS var 덮어쓰기가 안 되면 직접 duration 적용 */
+  el.style.animationDuration = dur + 's';
 }
 
 /* =====================================================
-   공구 도감 풀페이지 (검색 포함)
+   공구 도감 풀페이지 (검색 + Bento Grid)
 ===================================================== */
 function renderToolsCatalog() {
   const el    = $('tools-full-list');
   const cnt   = $('tools-list-count');
   if (!el) return;
+
+  /* bento-grid 클래스 보장 (HTML에 이미 있지만 안전망) */
+  el.classList.add('tools-bento-grid');
 
   /* 검색어 필터링 */
   const q = ($('tool-search-input') || {}).value || '';
@@ -892,7 +897,15 @@ function renderToolsCatalog() {
     return;
   }
 
-  el.innerHTML = list.map(t => _toolCardHtml(t, { showActions: true })).join('');
+  /* ── Bento Grid 패턴 ──
+     5개 주기 중 index % 5 === 2 → wide (2열)
+     ex: 0,1,[2],3,4, 5,6,[7],8,9, ...
+     첫 번째 카드(i=0)는 항상 normal → 양쪽 빈 채움 없이 자연스러운 시작
+  ── */
+  el.innerHTML = list.map((t, i) => {
+    const sizeClass = (i > 0 && i % 5 === 2) ? 'tool-card--wide' : '';
+    return _toolCardHtml(t, { showActions: true, sizeClass });
+  }).join('');
 }
 
 /* =====================================================
