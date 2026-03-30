@@ -2281,12 +2281,7 @@ textarea { caret-color: var(--orange); }
 .rdot.todo { background: rgba(255,255,255,.2); }
 .rtxt { font-size: 14px; color: var(--t2); flex: 1; line-height: 1.4; }
 .rdt { font-size: 12.5px; color: var(--t4); white-space: nowrap; }
-.ccard { padding: 20px; grid-row: 1/4; }
-/* bento-tools: bento-top 내 col 1-2, row 3 차지 */
-.bento-tools {
-  grid-column: 1 / 3;
-  margin: 0 !important;
-}
+.ccard { padding: 20px; grid-row: 1/3; }
 .ck-prog-row { display: flex; align-items: center; justify-content: space-between; font-size: 14px; margin-bottom: 4px; }
 .pw { background: rgba(255,255,255,.08); border-radius: 99px; height: 5px; margin: 8px 0 14px; }
 .pf { height: 100%; border-radius: 99px; background: linear-gradient(90deg,var(--orange),#f97316); transition: width .4s; width: 0; }
@@ -2685,7 +2680,6 @@ textarea { caret-color: var(--orange); }
   .bento-top { grid-template-columns: 1fr 1fr; }
   .ccard { grid-column: 1/3; grid-row: auto; }
   .msec { grid-column: 1/3; }
-  .bento-tools { grid-column: 1/3; }
   .mgrid { grid-template-columns: repeat(2,1fr); }
   .spg { grid-template-columns: 1fr; }
   .spi.wide { grid-column: 1; }
@@ -2702,7 +2696,6 @@ textarea { caret-color: var(--orange); }
 
   .bento-top { grid-template-columns: 1fr; }
   .ccard, .msec { grid-column: 1; }
-  .bento-tools  { grid-column: 1; }
   .mgrid { grid-template-columns: repeat(2,1fr); }
   .pi { padding: 16px 16px calc(16px + env(safe-area-inset-bottom, 0px)); }
   #page-manual-detail .pi, #page-records-detail .pi, #page-memo-detail .pi { padding: 14px 14px 44px; }
@@ -3471,29 +3464,6 @@ body.light-mode .sd-photo-thumb { border-color:#E5E7EB !important; }
 .tools-slider-title {
   margin-bottom: 0 !important;
 }
-
-/* ── 자동재생 인디케이터 도트 ── */
-.tools-slider-dots {
-  display: flex;
-  justify-content: center;
-  gap: 6px;
-  margin-top: 10px;
-  min-height: 10px;
-}
-.ts-dot {
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background: rgba(255,255,255,.22);
-  transition: background .3s, width .3s;
-  cursor: pointer;
-}
-.ts-dot.active {
-  background: var(--orange);
-  width: 20px;
-  border-radius: 99px;
-}
-body.light-mode .ts-dot { background: rgba(0,0,0,.15); }
-body.light-mode .ts-dot.active { background: #4f46e5; }
 
 /* ── 스크롤 트랙 ── */
 .tools-slider-track-wrap {
