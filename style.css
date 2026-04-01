@@ -115,7 +115,7 @@ body.light-mode .search-bar        { padding: 1.25rem 2rem !important; }
 /* ── 카드 간격: 2rem gap ── */
 body.light-mode .pi            { padding: 2rem 2.5rem 4rem !important; }
 body.light-mode .bento-top     { gap: 16px !important; }
-body.light-mode .mgrid         { gap: 2rem !important; }
+/* body.light-mode .mgrid         { gap: 2rem !important; }*/
 body.light-mode .manual-list   { gap: 1.25rem !important; }
 body.light-mode .log-list      { gap: 1.25rem !important; }
 body.light-mode .memo-grid     { gap: 2rem !important; }
