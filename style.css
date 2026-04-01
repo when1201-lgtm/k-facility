@@ -3733,355 +3733,472 @@ body.light-mode .tool-card__nick { color: #9ca3af !important; }
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   🔧 K-FACILITY — 공구 도감 v2 REDESIGN
-   Hi-Tech Minimalism | Glassmorphism | Bouncy Animations
-   ─────────────────────────────────────────────────────────────
-   ✅ Infinite Marquee (홈 대시보드) — CSS auto-scroll
-   ✅ Bento Grid (풀페이지) — 2×1 리듬 카드
-   ✅ Glassmorphism 강화 (dark) / Clean card (light)
-   ✅ Micro-interaction: cubic-bezier(0.25,1,0.5,1)
-   ✅ Skeleton shimmer + 페이드인 stagger
-   ✅ Dark / Light 완전 대응
+   K-FACILITY REDESIGN v2 — 2026 업데이트
+   ① 전역 폰트 확대 (17px+)
+   ② 연간 로드맵 가독성 개선
+   ③ 연락처 폰트 확대
+   ④ 일정 상세 19px / #000
+   ⑤ 무한 마키 슬라이더 + 터치 스와이프
+   ⑥ Bento Grid (풀페이지)
+   ⑦ Glassmorphism 카드
+   ⑧ Skeleton shimmer + fade-in stagger
 ═══════════════════════════════════════════════════════════════ */
 
-/* ─── 공용 이징 토큰 ─── */
+/* ── 공용 이징 토큰 ── */
 :root {
-  --tc-bounce:  cubic-bezier(0.25, 1, 0.5, 1);
-  --tc-radius:  20px;
-  --tc-dur:     0.38s;
+  --tc-bounce: cubic-bezier(0.25, 1, 0.5, 1);
+  --tc-radius: 20px;
+  --tc-dur:    0.38s;
 }
 
-/* ══════════════════════════════════════════════
-   A. 카드 공통 — 마이크로 인터랙션 강화
-══════════════════════════════════════════════ */
-.tool-card {
-  border-radius: var(--tc-radius) !important;
-  transition:
-    transform      var(--tc-dur) var(--tc-bounce),
-    box-shadow     var(--tc-dur) var(--tc-bounce),
-    border-color   0.22s ease !important;
-  will-change: transform;
+/* ══════════════════════════════════════
+   ① 전역 폰트 확대 — 17px 기준선
+══════════════════════════════════════ */
+/* 라이트모드 전체 기본 */
+body.light-mode { font-size: 17px !important; }
+
+/* 헤더, 브레드크럼, 레이블 */
+body.light-mode .slbl       { font-size: 17px !important; }
+body.light-mode .slb2       { font-size: 16px !important; }
+body.light-mode .bc-cur     { font-size: 17px !important; }
+body.light-mode .bc-link    { font-size: 17px !important; }
+body.light-mode .uname      { font-size: 17px !important; }
+
+/* 작업기록 목록 */
+body.light-mode .lc-title   { font-size: 18px !important; }
+body.light-mode .lc-desc    { font-size: 16px !important; }
+body.light-mode .lc-meta    { font-size: 15px !important; }
+
+/* 학습메모 */
+body.light-mode .memo-card-title   { font-size: 18px !important; }
+body.light-mode .memo-card-preview { font-size: 16px !important; }
+
+/* 메뉴 카드 */
+body.light-mode .mc-title   { font-size: 18px !important; }
+body.light-mode .mc-meta    { font-size: 15px !important; }
+body.light-mode .mn         { font-size: 18px !important; }
+body.light-mode .ms         { font-size: 15px !important; }
+
+/* 매뉴얼 카드 */
+body.light-mode .manual-card .mc-title { font-size: 18px !important; }
+
+/* 모바일도 최소 17px */
+@media (max-width: 768px) {
+  body { font-size: 17px !important; }
+  body.light-mode { font-size: 17px !important; }
+  body.light-mode .slbl  { font-size: 16px !important; }
+  body.light-mode .slb2  { font-size: 15px !important; }
 }
 
-/* ── 다크모드: Glassmorphism ── */
-body:not(.light-mode) .tool-card {
-  background:
-    linear-gradient(
-      140deg,
-      rgba(25, 32, 72, 0.78) 0%,
-      rgba(12, 16, 40, 0.85) 100%
-    ) !important;
-  border: 1px solid rgba(255, 255, 255, 0.09) !important;
-  box-shadow:
-    0 4px 20px rgba(0, 0, 0, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.07) !important;
-  backdrop-filter: blur(22px) saturate(160%) !important;
-  -webkit-backdrop-filter: blur(22px) saturate(160%) !important;
+/* ══════════════════════════════════════
+   ② 연간 로드맵 목록 가독성 개선
+══════════════════════════════════════ */
+.rm-sch-card {
+  align-items: flex-start !important;
+}
+.rm-sch-body {
+  min-width: 0;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+.rm-sch-title {
+  font-size: 17px !important;
+  font-weight: 700 !important;
+  line-height: 1.5 !important;
+  word-break: keep-all !important;
+  overflow-wrap: break-word !important;
+  white-space: normal !important;
+}
+.rm-sch-desc {
+  font-size: 16px !important;
+  line-height: 1.7 !important;
+  word-break: keep-all !important;
+  overflow-wrap: break-word !important;
+  white-space: normal !important;
+  display: block !important;        /* 말줄임 해제 */
+  overflow: visible !important;
+  text-overflow: unset !important;
+}
+body.light-mode .rm-sch-title {
+  font-size: 17px !important;
+  color: #111827 !important;
+  font-weight: 700 !important;
+}
+body.light-mode .rm-sch-desc {
+  font-size: 16px !important;
+  color: #374151 !important;
+  font-weight: 500 !important;
 }
 
-body:not(.light-mode) .tool-card:hover {
-  transform: translateY(-9px) scale(1.03) !important;
-  border-color: rgba(99, 102, 241, 0.55) !important;
-  box-shadow:
-    0 28px 52px rgba(99, 102, 241, 0.30),
-    0 10px 22px rgba(0, 0, 0, 0.40),
-    inset 0 1px 0 rgba(255, 255, 255, 0.13),
-    0 0 0 1px rgba(99, 102, 241, 0.20) !important;
+/* 모바일 로드맵 가독성 */
+@media (max-width: 600px) {
+  .rm-sch-card {
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+  .rm-sch-acts {
+    align-self: flex-end !important;
+  }
+  .rm-sch-title { font-size: 17px !important; }
+  .rm-sch-desc  { font-size: 16px !important; }
 }
 
-body:not(.light-mode) .tool-card__photo {
-  background: linear-gradient(
-    145deg,
-    rgba(40, 50, 100, 0.90) 0%,
-    rgba(20, 26, 60, 0.95) 100%
-  ) !important;
+/* ══════════════════════════════════════
+   ③ 연락처 폰트 확대
+══════════════════════════════════════ */
+.contact-name  {
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  color: var(--t1) !important;
+}
+.contact-role  {
+  font-size: 17px !important;
+  margin-top: 4px !important;
+  line-height: 1.5 !important;
+}
+.contact-phone {
+  font-size: 17px !important;
+  font-weight: 600 !important;
+  margin-top: 4px !important;
+  letter-spacing: 0.02em !important;
+}
+.contact-card  { padding: 20px 22px !important; }
+.contact-avatar {
+  width: 52px !important;
+  height: 52px !important;
+  font-size: 22px !important;
+  flex-shrink: 0 !important;
 }
 
-/* ── 라이트모드: Clean + soft shadow ── */
-body.light-mode .tool-card {
-  background: rgba(255, 255, 255, 0.96) !important;
-  border: 1.5px solid rgba(209, 213, 219, 0.85) !important;
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.05),
-    0 4px 12px rgba(0, 0, 0, 0.06) !important;
-  backdrop-filter: blur(10px) !important;
-  -webkit-backdrop-filter: blur(10px) !important;
+body.light-mode .contact-name  {
+  font-size: 20px !important;
+  color: #111827 !important;
+  font-weight: 700 !important;
+}
+body.light-mode .contact-role  {
+  font-size: 17px !important;
+  color: #4b5563 !important;
+  font-weight: 600 !important;
+}
+body.light-mode .contact-phone {
+  font-size: 17px !important;
+  color: #111827 !important;
+  font-weight: 600 !important;
 }
 
-body.light-mode .tool-card:hover {
-  transform: translateY(-8px) scale(1.028) !important;
-  border-color: rgba(99, 102, 241, 0.42) !important;
-  box-shadow:
-    0 22px 44px rgba(79, 70, 229, 0.14),
-    0 8px 18px rgba(0, 0, 0, 0.09),
-    0 0 0 1px rgba(99, 102, 241, 0.14) !important;
+@media (max-width: 600px) {
+  .contact-name  { font-size: 19px !important; }
+  .contact-role  { font-size: 16px !important; }
+  .contact-phone { font-size: 16px !important; }
 }
 
-body.light-mode .tool-card__photo {
-  background: linear-gradient(
-    145deg,
-    rgba(239, 241, 255, 0.95) 0%,
-    rgba(224, 228, 255, 0.90) 100%
-  ) !important;
-}
-
-/* 사진 zoom 이징 강화 */
-.tool-card .tool-card__photo img {
-  transition: transform 0.52s var(--tc-bounce) !important;
-}
-.tool-card:hover .tool-card__photo img {
-  transform: scale(1.10) !important;
-}
-
-/* 배지 강화 */
-.tool-card__badge {
+/* ══════════════════════════════════════
+   ④ 일정 상세 페이지 — 19px / #000
+══════════════════════════════════════ */
+.sd-main-title {
+  font-size: 26px !important;
   font-weight: 800 !important;
-  letter-spacing: 0.05em !important;
-  backdrop-filter: blur(8px) !important;
-  -webkit-backdrop-filter: blur(8px) !important;
-  transition: transform 0.28s var(--tc-bounce) !important;
+  line-height: 1.35 !important;
+  color: var(--t1) !important;
 }
-.tool-card:hover .tool-card__badge {
-  transform: scale(1.05) !important;
+.sd-desc-text {
+  font-size: 19px !important;
+  line-height: 1.9 !important;
+  white-space: pre-wrap !important;
+  word-break: keep-all !important;
+  overflow-wrap: break-word !important;
+}
+.sd-type-badge {
+  font-size: 15px !important;
+  font-weight: 800 !important;
+  padding: 5px 16px !important;
+  margin-bottom: 14px !important;
+}
+.sd-meta-item {
+  font-size: 17px !important;
 }
 
-/* ══════════════════════════════════════════════
-   B. 무한 마키 — 홈 대시보드
-   구조: .tools-marquee-outer > .tools-slider-track
-══════════════════════════════════════════════ */
+body.light-mode .sd-main-title {
+  color: #000000 !important;
+  font-size: 26px !important;
+}
+body.light-mode .sd-desc-text {
+  color: #000000 !important;
+  font-size: 19px !important;
+  font-weight: 500 !important;
+}
+body.light-mode .sd-meta-item {
+  color: #111827 !important;
+  font-size: 17px !important;
+}
+body.light-mode .sd-header-card { padding: 2.5rem !important; }
+body.light-mode .sd-section     {
+  padding: 2rem 2.5rem !important;
+  background: #FFFFFF !important;
+  border: 2px solid #D1D5DB !important;
+}
+
+@media (max-width: 600px) {
+  .sd-main-title  { font-size: 22px !important; }
+  .sd-desc-text   { font-size: 18px !important; }
+  .sd-meta-item   { font-size: 16px !important; }
+}
+
+/* ══════════════════════════════════════
+   ⑤ 공구 도감 무한 마키 슬라이더
+      + 터치 스와이프 (hover 시 pause)
+══════════════════════════════════════ */
 
 /* outer: clip + 양쪽 fade mask */
 .tools-marquee-outer {
   overflow: hidden !important;
   -webkit-mask-image: linear-gradient(
     to right,
-    transparent   0%,
-    #000          8%,
-    #000         92%,
+    transparent  0%,
+    #000         7%,
+    #000        93%,
     transparent 100%
   );
   mask-image: linear-gradient(
     to right,
-    transparent   0%,
-    #000          8%,
-    #000         92%,
+    transparent  0%,
+    #000         7%,
+    #000        93%,
     transparent 100%
   );
+  cursor: grab;
 }
+.tools-marquee-outer:active { cursor: grabbing; }
 
-/* track: overflow 해제 → 마키 애니메이션 */
+/* track: 마키 애니메이션 */
 .tools-marquee-outer .tools-slider-track {
-  overflow-x:        visible !important;
-  scroll-snap-type:  none    !important;
-  width:             max-content !important;
-  animation:         kf-marquee var(--marquee-dur, 36s) linear infinite;
+  overflow-x:       visible !important;
+  scroll-snap-type: none    !important;
+  width:            max-content !important;
+  animation:        kf-marquee var(--marquee-dur, 38s) linear infinite;
+  user-select:      none;
 }
-
-/* hover 시 일시정지 */
-.tools-marquee-outer:hover .tools-slider-track {
+.tools-marquee-outer:hover .tools-slider-track,
+.tools-marquee-outer.is-dragging .tools-slider-track {
   animation-play-state: paused;
 }
-
-/* 터치 디바이스: 탭 & 드래그 시 일시정지 */
-.tools-marquee-outer:active .tools-slider-track {
-  animation-play-state: paused;
-}
-
 @keyframes kf-marquee {
   from { transform: translateX(0); }
   to   { transform: translateX(-50%); }
 }
 
-/* 마키 내 카드: 고정 너비 + 스냅 해제 */
+/* 마키 내 카드 고정 너비 */
 .tools-marquee-outer .tool-card {
-  flex:              0 0 200px !important;
-  width:             200px    !important;
+  flex:              0 0 196px !important;
+  width:             196px    !important;
   scroll-snap-align: none     !important;
 }
 
-/* 모바일: 조금 더 작게 + 빠르게 */
+/* 모바일: 수동 스와이프 전환 */
 @media (max-width: 640px) {
-  .tools-marquee-outer .tool-card {
-    flex:  0 0 160px !important;
-    width: 160px     !important;
+  .tools-marquee-outer {
+    overflow-x: auto !important;
+    /* mask 해제해서 카드가 끊기지 않게 */
+    -webkit-mask-image: linear-gradient(
+      to right, transparent 0%, #000 4%, #000 96%, transparent 100%
+    ) !important;
+    mask-image: linear-gradient(
+      to right, transparent 0%, #000 4%, #000 96%, transparent 100%
+    ) !important;
+    cursor: default !important;
   }
   .tools-marquee-outer .tools-slider-track {
-    --marquee-dur: 26s;
+    overflow-x:        auto      !important;
+    scroll-snap-type:  x mandatory !important;
+    width:             max-content !important;
+    animation:         none      !important;   /* 모바일: 마키 비활성화 → 수동 스와이프 */
+    -webkit-overflow-scrolling: touch;
+  }
+  .tools-marquee-outer .tool-card {
+    flex:              0 0 170px !important;
+    width:             170px    !important;
+    scroll-snap-align: start    !important;
   }
 }
 
-/* ══════════════════════════════════════════════
-   C. Bento Grid — 풀페이지 공구 도감
-   .tools-full-grid.tools-bento-grid
-══════════════════════════════════════════════ */
+/* ══════════════════════════════════════
+   ⑥ Bento Grid — 풀페이지 공구 도감
+══════════════════════════════════════ */
 .tools-full-grid.tools-bento-grid {
   display:               grid !important;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)) !important;
-  grid-auto-flow:        dense  !important;   /* 빈 칸 자동 채움 */
+  grid-template-columns: repeat(auto-fill, minmax(195px, 1fr)) !important;
+  grid-auto-flow:        dense !important;
   gap:                   1.25rem !important;
 }
-
-/* ── 와이드 카드 (2열 차지) ── */
 .tools-bento-grid .tool-card--wide {
   grid-column:    span 2 !important;
   display:        flex   !important;
   flex-direction: row    !important;
 }
-
 .tools-bento-grid .tool-card--wide .tool-card__photo {
-  width:      44%   !important;
-  height:     auto  !important;
-  min-height: 175px !important;
-  flex-shrink: 0    !important;
+  width:      42%  !important;
+  height:     auto !important;
+  min-height: 170px !important;
+  flex-shrink: 0   !important;
 }
-
 .tools-bento-grid .tool-card--wide .tool-card__body {
-  flex:            1;
-  padding:         20px 18px !important;
-  display:         flex;
-  flex-direction:  column;
+  flex:           1;
+  padding:        18px !important;
+  display:        flex;
+  flex-direction: column;
   justify-content: center;
-  gap:             6px;
+  gap:            6px;
 }
-
 .tools-bento-grid .tool-card--wide .tool-card__name {
-  font-size:      15px !important;
-  font-weight:    800  !important;
-  white-space:    normal !important;
-  overflow:       hidden !important;
-  text-overflow:  ellipsis !important;
-  display:        -webkit-box !important;
-  -webkit-line-clamp:    2 !important;
+  font-size:     16px !important;
+  font-weight:   800 !important;
+  white-space:   normal !important;
+  display:       -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
   -webkit-box-orient: vertical !important;
-  line-height:    1.35 !important;
+  overflow:      hidden !important;
+  line-height:   1.4 !important;
 }
-
-/* 와이드 카드 다크 라이트 */
-body:not(.light-mode) .tools-bento-grid .tool-card--wide {
-  border: 1px solid rgba(99, 102, 241, 0.20) !important;
-}
-body.light-mode .tools-bento-grid .tool-card--wide {
-  border: 1.5px solid rgba(99, 102, 241, 0.18) !important;
-}
-body.light-mode .tools-bento-grid .tool-card--wide:hover {
-  border-color: rgba(99, 102, 241, 0.45) !important;
-}
-
-/* ── 반응형 ── */
 @media (max-width: 820px) {
   .tools-full-grid.tools-bento-grid {
-    grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)) !important;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)) !important;
   }
 }
-
-@media (max-width: 520px) {
+@media (max-width: 500px) {
   .tools-full-grid.tools-bento-grid {
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 0.75rem !important;
   }
-  /* 모바일: 와이드 = 전체 너비 세로 배치 */
   .tools-bento-grid .tool-card--wide {
-    grid-column:    1 / -1    !important;
-    flex-direction: column    !important;
+    grid-column:    1 / -1   !important;
+    flex-direction: column   !important;
   }
   .tools-bento-grid .tool-card--wide .tool-card__photo {
-    width:      100%  !important;
-    height:     155px !important;
-    min-height: 0     !important;
-  }
-  .tools-bento-grid .tool-card--wide .tool-card__body {
-    padding: 14px !important;
+    width:     100%  !important;
+    height:    150px !important;
+    min-height: 0   !important;
   }
 }
 
-/* ══════════════════════════════════════════════
-   D. 스켈레톤 로딩 강화 — Shimmer wave
-══════════════════════════════════════════════ */
+/* ══════════════════════════════════════
+   ⑦ 카드 Glassmorphism + 마이크로 인터랙션
+══════════════════════════════════════ */
+.tool-card {
+  border-radius: var(--tc-radius) !important;
+  transition:
+    transform   var(--tc-dur) var(--tc-bounce),
+    box-shadow  var(--tc-dur) var(--tc-bounce),
+    border-color 0.22s ease !important;
+  will-change: transform;
+}
+body:not(.light-mode) .tool-card {
+  background:
+    linear-gradient(140deg,
+      rgba(25,32,72,.80) 0%,
+      rgba(12,16,40,.88) 100%) !important;
+  border: 1px solid rgba(255,255,255,.09) !important;
+  box-shadow:
+    0 4px 20px rgba(0,0,0,.45),
+    inset 0 1px 0 rgba(255,255,255,.07) !important;
+  backdrop-filter: blur(22px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(160%) !important;
+}
+body:not(.light-mode) .tool-card:hover {
+  transform: translateY(-9px) scale(1.03) !important;
+  border-color: rgba(99,102,241,.55) !important;
+  box-shadow:
+    0 28px 52px rgba(99,102,241,.30),
+    0 10px 22px rgba(0,0,0,.40),
+    inset 0 1px 0 rgba(255,255,255,.13) !important;
+}
+body.light-mode .tool-card {
+  background: rgba(255,255,255,.97) !important;
+  border: 1.5px solid rgba(209,213,219,.85) !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,.05), 0 4px 12px rgba(0,0,0,.07) !important;
+}
+body.light-mode .tool-card:hover {
+  transform: translateY(-8px) scale(1.028) !important;
+  border-color: rgba(99,102,241,.42) !important;
+  box-shadow:
+    0 22px 44px rgba(79,70,229,.14),
+    0 8px 18px rgba(0,0,0,.09) !important;
+}
+.tool-card .tool-card__photo img {
+  transition: transform 0.52s var(--tc-bounce) !important;
+}
+.tool-card:hover .tool-card__photo img {
+  transform: scale(1.10) !important;
+}
+.tool-card__badge {
+  font-weight: 800 !important;
+  letter-spacing: 0.05em !important;
+  transition: transform 0.28s var(--tc-bounce) !important;
+}
+.tool-card:hover .tool-card__badge {
+  transform: scale(1.05) !important;
+}
 
-/* 스켈레톤: hover 무효화 */
+/* ── 카드 내 폰트 ── */
+.tool-card__name {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+}
+.tool-card__meta {
+  font-size: 12px !important;
+}
+.tool-card__nick {
+  font-size: 12px !important;
+}
+
+/* ⑧ Skeleton shimmer */
 .tool-card--skeleton {
   pointer-events: none !important;
   transform:      none !important;
-  animation:      none !important;
 }
-.tool-card--skeleton:hover {
-  transform:  none      !important;
-  box-shadow: inherit   !important;
-}
-
-/* photo 영역에 shimmer wave */
-.tool-card--skeleton .tool-card__photo {
-  position: relative;
-  overflow: hidden;
-}
-
+.tool-card--skeleton:hover { transform: none !important; }
+.tool-card--skeleton .tool-card__photo { position: relative; overflow: hidden; }
 .tool-card--skeleton .tool-card__photo::after {
-  content:   '';
-  position:  absolute;
-  inset:     0;
+  content: '';
+  position: absolute;
+  inset: 0;
   background: linear-gradient(
-    110deg,
-    transparent         25%,
-    rgba(255,255,255,.12) 50%,
-    transparent         75%
+    110deg, transparent 25%, rgba(255,255,255,.13) 50%, transparent 75%
   );
-  transform:  translateX(-100%);
-  animation:  tc-shimmer 1.8s ease-in-out infinite;
+  transform: translateX(-100%);
+  animation: tc-shimmer 1.8s ease-in-out infinite;
 }
-
 body.light-mode .tool-card--skeleton .tool-card__photo::after {
   background: linear-gradient(
-    110deg,
-    transparent          25%,
-    rgba(255,255,255,.65) 50%,
-    transparent          75%
+    110deg, transparent 25%, rgba(255,255,255,.65) 50%, transparent 75%
   ) !important;
 }
-
 @keyframes tc-shimmer {
   from { transform: translateX(-100%); }
-  to   { transform: translateX( 100%); }
+  to   { transform: translateX(100%); }
 }
-
-/* 이름 줄 골격 */
 .tool-card--skeleton .tool-card__name {
-  background:    rgba(255, 255, 255, 0.12) !important;
-  color:         transparent               !important;
+  background:    rgba(255,255,255,.12) !important;
+  color:         transparent          !important;
   border-radius: 6px;
-  width:         68%;
+  width:         70%;
   min-height:    13px;
 }
 body.light-mode .tool-card--skeleton .tool-card__name {
-  background: rgba(0, 0, 0, 0.09) !important;
+  background: rgba(0,0,0,.09) !important;
 }
 
-/* ══════════════════════════════════════════════
-   E. 페이드인 + Stagger — 로드 완료 시
-══════════════════════════════════════════════ */
-
+/* ── Fade-in stagger ── */
 .tool-card--loaded {
   animation: tc-fadein 0.46s var(--tc-bounce) both;
 }
-
 @keyframes tc-fadein {
-  from {
-    opacity:   0;
-    transform: translateY(16px) scale(0.95);
-  }
-  to {
-    opacity:   1;
-    transform: translateY(0)    scale(1);
-  }
+  from { opacity: 0; transform: translateY(14px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
 }
-
-/* stagger: 풀페이지 그리드 기준 */
 .tools-bento-grid .tool-card--loaded:nth-child(1)   { animation-delay: 0.04s; }
 .tools-bento-grid .tool-card--loaded:nth-child(2)   { animation-delay: 0.09s; }
 .tools-bento-grid .tool-card--loaded:nth-child(3)   { animation-delay: 0.14s; }
 .tools-bento-grid .tool-card--loaded:nth-child(4)   { animation-delay: 0.19s; }
 .tools-bento-grid .tool-card--loaded:nth-child(5)   { animation-delay: 0.23s; }
-.tools-bento-grid .tool-card--loaded:nth-child(6)   { animation-delay: 0.27s; }
-.tools-bento-grid .tool-card--loaded:nth-child(7)   { animation-delay: 0.30s; }
-.tools-bento-grid .tool-card--loaded:nth-child(8)   { animation-delay: 0.33s; }
-.tools-bento-grid .tool-card--loaded:nth-child(n+9) { animation-delay: 0.36s; }
+.tools-bento-grid .tool-card--loaded:nth-child(n+6) { animation-delay: 0.28s; }
 
