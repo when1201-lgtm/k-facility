@@ -109,7 +109,7 @@
 
     <!-- 헤더 -->
     <header id="hdr">
-      <div class="h-logo"><a href="/">K-<em>Facility</em></a></div>
+      <div class="h-logo" onclick="goto('home')" style="cursor:pointer">K-<em>Facility</em></div>
       <div class="srch">
         <i class="fa-solid fa-magnifying-glass"></i>
         <input type="search" id="si" placeholder="작업기록, 장비, 메모 검색..." autocomplete="off"/>
@@ -258,16 +258,15 @@
 
           </div><!-- /bento-top -->
 
-          <!-- ===== 공구 도감 슬라이더 (무한 마키) ===== -->
+          <!-- ===== 공구 도감 슬라이더 ===== -->
           <div class="tools-slider-section">
             <div class="tools-slider-header">
               <div class="slbl tools-slider-title">🔧 공구 도감</div>
               <button class="btn-b" onclick="goto('tools-catalog')">전체 보기 →</button>
               <button class="btn-o btn-o--sm" onclick="goto('tool-form')">＋ 공구 추가</button>
             </div>
-            <div class="tools-slider-track-wrap tools-marquee-outer">
+            <div class="tools-slider-track-wrap tools-marquee-outer" id="tools-slider-outer">
               <div class="tools-slider-track" id="tools-slider">
-                <!-- 스켈레톤: JS renderToolsSlider()가 덮어씀 -->
                 <div class="tool-card glass tool-card--skeleton">
                   <div class="tool-card__photo tool-card__photo--empty"></div>
                   <div class="tool-card__body">
