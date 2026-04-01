@@ -824,13 +824,12 @@ function _toolCardHtml(t, { showActions = false, sizeClass = '' } = {}) {
 }
 
 /* =====================================================
-   공구 도감 슬라이더 (대시보드 홈) — 무한 마키
+   공구 도감 슬라이더 (홈) — 무한 마키 + 드래그 스와이프
 ===================================================== */
 function renderToolsSlider() {
   const el = $('tools-slider');
   if (!el) return;
 
-  /* 로그인 여부와 무관하게 빈 배열이면 SAMPLE_TOOLS 폴백 */
   const list = tools.length ? tools
     : SAMPLE_TOOLS.map(t => _normTool({ id: t.id,
         standardName: t.title, purpose: t.usage, size: t.size,
@@ -842,39 +841,65 @@ function renderToolsSlider() {
       <div class="tool-card glass" style="flex:0 0 200px;display:flex;flex-direction:column;
            align-items:center;justify-content:center;min-height:200px;gap:10px;padding:1.5rem!important">
         <div style="font-size:2.5rem;opacity:.35">🔧</div>
-        <div style="font-size:13px;color:var(--t4);text-align:center">
+        <div style="font-size:15px;color:var(--t4);text-align:center">
           등록된 공구 없음<br>
-          <button class="btn-o" style="margin:12px auto 0;display:flex;font-size:12px;padding:7px 14px"
+          <button class="btn-o" style="margin:12px auto 0;display:flex;font-size:13px;padding:7px 14px"
             onclick="openToolForm()">＋ 첫 공구 등록</button>
         </div>
       </div>`;
     return;
   }
 
-  /* ── 무한 마키: 카드 2벌 복제 → CSS translateX(-50%) 루프 ── */
+  /* 카드 2배 복제 → CSS -50% 루프 */
   const singleHtml = list.map(t => _toolCardHtml(t)).join('');
-  el.innerHTML     = singleHtml + singleHtml;   /* 2× for seamless -50% */
+  el.innerHTML = singleHtml + singleHtml;
 
-  /* 카드 수 기반 속도: 카드가 많을수록 느리게 (고급스러운 묵직함) */
-  const dur = Math.max(20, list.length * 4.5);
-  el.style.setProperty('--marquee-dur', dur + 's');
-  /* CSS var 덮어쓰기가 안 되면 직접 duration 적용 */
+  /* 카드 수 기반 속도 (묵직한 고급감) */
+  const dur = Math.max(22, list.length * 4.8);
   el.style.animationDuration = dur + 's';
+
+  /* ── 데스크탑 드래그 스와이프 ── */
+  const outer = $('tools-slider-outer');
+  if (!outer) return;
+  let isDragging = false, startX = 0, startT = 0;
+
+  function onDragStart(e) {
+    isDragging = true;
+    startX = (e.touches ? e.touches[0].clientX : e.clientX);
+    startT = Date.now();
+    outer.classList.add('is-dragging');
+    el.style.animationPlayState = 'paused';
+  }
+  function onDragEnd(e) {
+    if (!isDragging) return;
+    isDragging = false;
+    outer.classList.remove('is-dragging');
+    const dt = Date.now() - startT;
+    /* 드래그가 짧았으면(빠른 탭) 마키 재개 */
+    if (dt < 200) el.style.animationPlayState = 'running';
+    else {
+      /* 1초 후 재개 */
+      setTimeout(() => { el.style.animationPlayState = 'running'; }, 1000);
+    }
+  }
+
+  outer.addEventListener('mousedown',  onDragStart);
+  outer.addEventListener('touchstart', onDragStart, { passive: true });
+  document.addEventListener('mouseup', onDragEnd);
+  document.addEventListener('touchend', onDragEnd, { passive: true });
 }
 
 /* =====================================================
-   공구 도감 풀페이지 (검색 + Bento Grid)
+   공구 도감 풀페이지 (Bento Grid + 스와이프)
 ===================================================== */
 function renderToolsCatalog() {
-  const el    = $('tools-full-list');
-  const cnt   = $('tools-list-count');
+  const el  = $('tools-full-list');
+  const cnt = $('tools-list-count');
   if (!el) return;
 
-  /* bento-grid 클래스 보장 (HTML에 이미 있지만 안전망) */
   el.classList.add('tools-bento-grid');
 
-  /* 검색어 필터링 */
-  const q = ($('tool-search-input') || {}).value || '';
+  const q  = ($('tool-search-input') || {}).value || '';
   const kw = q.trim().toLowerCase();
   const list = (tools.length ? tools
     : SAMPLE_TOOLS.map(t => _normTool({ id: t.id,
@@ -889,7 +914,7 @@ function renderToolsCatalog() {
     el.innerHTML = `
       <div class="glass" style="padding:3rem;text-align:center;grid-column:1/-1">
         <div style="font-size:2.5rem;opacity:.3;margin-bottom:12px">🔧</div>
-        <div style="font-size:15px;color:var(--t4)">
+        <div style="font-size:17px;color:var(--t4)">
           ${kw ? `"${esc(q)}"에 대한 결과 없음` : '등록된 공구가 없습니다'}
         </div>
         ${!kw ? `<button class="btn-o" style="margin:16px auto 0;display:flex" onclick="openToolForm()">＋ 첫 공구 추가</button>` : ''}
@@ -897,11 +922,7 @@ function renderToolsCatalog() {
     return;
   }
 
-  /* ── Bento Grid 패턴 ──
-     5개 주기 중 index % 5 === 2 → wide (2열)
-     ex: 0,1,[2],3,4, 5,6,[7],8,9, ...
-     첫 번째 카드(i=0)는 항상 normal → 양쪽 빈 채움 없이 자연스러운 시작
-  ── */
+  /* Bento 패턴: i%5===2 → wide 카드 (첫 번째 제외) */
   el.innerHTML = list.map((t, i) => {
     const sizeClass = (i > 0 && i % 5 === 2) ? 'tool-card--wide' : '';
     return _toolCardHtml(t, { showActions: true, sizeClass });
